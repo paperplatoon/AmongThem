@@ -1,5 +1,4 @@
 import { gameState } from '../state/gameState.js';
-import { rooms, corridors, doors, shafts } from '../state/mapState.js';
 
 const toggle = () => { gameState.ui.showMinimap = !gameState.ui.showMinimap; };
 
@@ -42,11 +41,13 @@ const strokeRect = (ctx, rect, color, lineWidth) => {
 };
 
 const drawMap = (ctx) => {
+  const { corridors, shafts, rooms, doors } = gameState.map;
   corridors.forEach((rect) => fillRect(ctx, rect, '#0d1b3d'));
   shafts.forEach((rect) => fillRect(ctx, rect, '#103c80'));
   rooms.forEach((room) => strokeRect(ctx, room, '#4f7bd9', 24));
   doors.forEach((door) => {
-    const isOpen = gameState.doorsById[door.id]?.isOpen;
+    const state = gameState.doorsById[door.id];
+    const isOpen = state ? state.isOpen : false;
     fillRect(ctx, door, isOpen ? '#8effd6' : '#4fc3f7');
   });
 };

@@ -8,6 +8,7 @@ import { handleMinimapToggle } from './ui/minimap.js';
 import { handleInventoryToggle } from './ui/inventory.js';
 import { updateDoors } from './doors/doorSystem.js';
 import { handleItemPickup } from './items/itemPickup.js';
+import { buildSolidMask } from './collision/solidMask.js';
 
 const createCanvas = () => {
   const canvas = document.createElement('canvas');
@@ -37,6 +38,7 @@ const stepFrame = (ctx, time) => {
 };
 
 const start = () => {
+  buildSolidMask();
   const canvas = createCanvas();
   const ctx = canvas.getContext('2d');
   mountCanvas(canvas);

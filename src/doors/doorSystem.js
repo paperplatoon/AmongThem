@@ -1,5 +1,4 @@
 import { gameState } from '../state/gameState.js';
-import { getDoorDefinition } from '../state/selectors.js';
 import { distanceToRect } from '../utils/geometry.js';
 
 const clamp01 = (value) => (value < 0 ? 0 : value > 1 ? 1 : value);
@@ -37,40 +36,28 @@ const syncDoorFlags = (door) => {
   door.state = door.target === 1 ? 'opening' : 'closing';
 };
 
-const isPlayerBeyondDoor = (doorDefinition) => {
-  const centerX = doorDefinition.x + doorDefinition.width / 2;
-  const centerY = doorDefinition.y + doorDefinition.height / 2;
-  const player = gameState.player;
-  if (doorDefinition.side === 'north') return player.y > centerY;
-  if (doorDefinition.side === 'south') return player.y < centerY;
-  if (doorDefinition.side === 'west') return player.x > centerX;
-  return player.x < centerX;
-};
-
-const updateDoorTarget = (door, distance, inRoom) => {
+const updateDoorTarget = (door, distance) => {
   const openRange = gameState.config.doorOpenRange;
-  const closeRange = gameState.config.doorAutoCloseDistance;
+  const closeRange = gameState.config.doorAutoCloseDistance || openRange;
   if (distance <= openRange) {
     door.target = 1;
     if (door.state === 'closed') door.state = 'opening';
     return;
   }
-  if (distance >= closeRange && !inRoom) {
+  if (distance >= closeRange) {
     door.target = 0;
     if (door.state === 'open') door.state = 'closing';
   }
 };
 
 const updateDoor = (door, delta, speed) => {
-  const rect = getDoorDefinition(door);
-  const distance = distanceToRect(gameState.player, rect);
-  const inRoom = isPlayerBeyondDoor(rect);
-  updateDoorTarget(door, distance, inRoom);
+  const distance = distanceToRect(gameState.player, door.rect);
+  updateDoorTarget(door, distance);
   advanceProgress(door, delta, speed);
   syncDoorFlags(door);
 };
 
 export const updateDoors = (deltaSeconds) => {
   const speed = doorSpeed();
-  gameState.doorList.forEach((door) => updateDoor(door, deltaSeconds, speed));
+  gameState.doors.forEach((door) => updateDoor(door, deltaSeconds, speed));
 };

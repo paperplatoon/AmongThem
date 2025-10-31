@@ -7,8 +7,6 @@ const isCollected = (item) => item.collected;
 
 const distanceToPlayer = (item) => distanceBetween(item, gameState.player);
 
-const withinRange = (item) => distanceToPlayer(item) <= getRange();
-
 const findPickupCandidate = () => {
   let best = null;
   let bestDistance = Infinity;

@@ -1,119 +1,43 @@
 import { gameState } from '../state/gameState.js';
-import {
-  getDoorDefinition,
-  getOpenRoomRects,
-  listVisibleCorridors,
-  listVisibleRooms,
-  listVisibleDoors,
-  listVisibleShafts
-} from '../state/selectors.js';
-import { renderInventory } from '../ui/inventory.js';
+import { CELL_TYPES } from '../state/gridState.js';
 import { renderMinimap } from '../ui/minimap.js';
+import { renderInventory } from '../ui/inventory.js';
 
-const fillRect = (ctx, rect, color) => {
-  ctx.fillStyle = color;
-  ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
+const { WALL } = CELL_TYPES;
+
+const cellSize = () => gameState.grid.cellSize;
+
+const clearViewport = (ctx) => {
+  ctx.fillStyle = gameState.config.corridorColor;
+  ctx.fillRect(0, 0, gameState.config.canvasWidth, gameState.config.canvasHeight);
 };
 
-const strokeRect = (ctx, rect, color, thickness) => {
-  ctx.strokeStyle = color;
-  ctx.lineWidth = thickness;
-  ctx.strokeRect(rect.x, rect.y, rect.width, rect.height);
-};
-
-const drawCorridors = (ctx) => {
-  listVisibleCorridors().forEach((rect) => fillRect(ctx, rect, gameState.config.floorColor));
-};
-
-const drawFloorGrid = (ctx) => {
-  const spacing = gameState.config.floorGridSpacing;
+const drawGrid = (ctx) => {
+  const size = cellSize();
   const camera = gameState.camera;
-  const startX = Math.floor(camera.x / spacing) * spacing;
-  const endX = camera.x + camera.width + spacing;
-  const startY = Math.floor(camera.y / spacing) * spacing;
-  const endY = camera.y + camera.height + spacing;
-  ctx.save();
-  ctx.strokeStyle = gameState.config.floorGridColor;
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  for (let x = startX; x <= endX; x += spacing) {
-    ctx.moveTo(x, camera.y - spacing);
-    ctx.lineTo(x, camera.y + camera.height + spacing);
+  const startCol = Math.floor(camera.x / size);
+  const endCol = Math.ceil((camera.x + camera.width) / size);
+  const startRow = Math.floor(camera.y / size);
+  const endRow = Math.ceil((camera.y + camera.height) / size);
+
+  for (let row = startRow; row <= endRow; row++) {
+    for (let col = startCol; col <= endCol; col++) {
+      if (col < 0 || row < 0 || col >= gameState.grid.width || row >= gameState.grid.height) continue;
+      const index = row * gameState.grid.width + col;
+      const value = gameState.grid.cells[index];
+      const color = value === WALL ? gameState.config.wallColor : gameState.config.floorColor;
+      ctx.fillStyle = color;
+      ctx.fillRect(col * size, row * size, size, size);
+    }
   }
-  for (let y = startY; y <= endY; y += spacing) {
-    ctx.moveTo(camera.x - spacing, y);
-    ctx.lineTo(camera.x + camera.width + spacing, y);
-  }
-  ctx.stroke();
-  ctx.restore();
 };
 
-const drawShafts = (ctx) => {
-  ctx.globalAlpha = 0.35;
-  listVisibleShafts().forEach((rect) => fillRect(ctx, rect, gameState.config.blueprintGlow));
-  ctx.globalAlpha = 1;
-};
+const doorOpenColor = () => gameState.config.doorOpenColor;
+const doorClosedColor = () => gameState.config.doorClosedColor;
 
-const isItemVisible = (item) => (
-  item.x >= gameState.camera.x - 120 &&
-  item.x <= gameState.camera.x + gameState.camera.width + 120 &&
-  item.y >= gameState.camera.y - 120 &&
-  item.y <= gameState.camera.y + gameState.camera.height + 120
-);
-
-const drawItems = (ctx) => {
-  const panelColor = '#f4f9ff';
-  const textColor = '#071022';
-  ctx.save();
-  ctx.strokeStyle = '#4f7bd9';
-  ctx.lineWidth = 3;
-  ctx.font = '32px "Courier New", monospace';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  const radius = gameState.config.itemRadius;
-  gameState.items.forEach((item) => {
-    if (item.collected || !isItemVisible(item)) return;
-    ctx.save();
-    ctx.beginPath();
-    ctx.fillStyle = panelColor;
-    ctx.arc(item.x, item.y, radius, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-    ctx.fillStyle = textColor;
-    ctx.fillText(item.label, item.x, item.y);
-    ctx.restore();
-  });
-  ctx.restore();
-};
-
-const fillOpenRooms = (ctx, visibleRooms) => {
-  getOpenRoomRects()
-    .filter((room) => visibleRooms.includes(room))
-    .forEach((room) => fillRect(ctx, room, gameState.config.floorColor));
-};
-
-const drawRooms = (ctx) => {
-  const visibleRooms = listVisibleRooms();
-  fillOpenRooms(ctx, visibleRooms);
-  visibleRooms.forEach((room) => {
-    strokeRect(ctx, room, gameState.config.wallColor, gameState.config.wallThickness);
-  });
-};
-
-const doorColor = (door) => (
-  door.state === 'opening' || door.state === 'open'
-    ? gameState.config.doorOpenColor
-    : gameState.config.doorClosedColor
-);
-
-const fillDoorGap = (ctx, rect, orientation, gapStart, gapSize) => {
-  if (gapSize <= 0) return;
-  if (orientation === 'horizontal') {
-    fillRect(ctx, { x: gapStart, y: rect.y, width: gapSize, height: rect.height }, gameState.config.floorColor);
-    return;
-  }
-  fillRect(ctx, { x: rect.x, y: gapStart, width: rect.width, height: gapSize }, gameState.config.floorColor);
-};
+const doorPanelColor = (door) => (door.state === 'opening' || door.state === 'open'
+  ? doorOpenColor()
+  : doorClosedColor());
 
 const drawHorizontalDoor = (ctx, rect, door) => {
   const panelMin = Math.min(rect.width / 6, 12);
@@ -127,11 +51,13 @@ const drawHorizontalDoor = (ctx, rect, door) => {
     width: panelWidth,
     height: rect.height
   };
-  const gapWidth = Math.max(rect.width - panelWidth * 2, 0);
   const gapStart = rect.x + panelWidth;
-  fillRect(ctx, leftRect, doorColor(door));
-  fillRect(ctx, rightRect, doorColor(door));
-  fillDoorGap(ctx, rect, 'horizontal', gapStart, gapWidth);
+  const gapWidth = Math.max(rect.width - panelWidth * 2, 0);
+  ctx.fillStyle = doorPanelColor(door);
+  ctx.fillRect(leftRect.x, leftRect.y, leftRect.width, leftRect.height);
+  ctx.fillRect(rightRect.x, rightRect.y, rightRect.width, rightRect.height);
+  ctx.fillStyle = gameState.config.floorColor;
+  ctx.fillRect(gapStart, rect.y, gapWidth, rect.height);
 };
 
 const drawVerticalDoor = (ctx, rect, door) => {
@@ -146,16 +72,18 @@ const drawVerticalDoor = (ctx, rect, door) => {
     width: rect.width,
     height: panelHeight
   };
-  const gapHeight = Math.max(rect.height - panelHeight * 2, 0);
   const gapStart = rect.y + panelHeight;
-  fillRect(ctx, topRect, doorColor(door));
-  fillRect(ctx, bottomRect, doorColor(door));
-  fillDoorGap(ctx, rect, 'vertical', gapStart, gapHeight);
+  const gapHeight = Math.max(rect.height - panelHeight * 2, 0);
+  ctx.fillStyle = doorPanelColor(door);
+  ctx.fillRect(topRect.x, topRect.y, topRect.width, topRect.height);
+  ctx.fillRect(bottomRect.x, bottomRect.y, bottomRect.width, bottomRect.height);
+  ctx.fillStyle = gameState.config.floorColor;
+  ctx.fillRect(rect.x, gapStart, rect.width, gapHeight);
 };
 
-const drawDoors = (ctx) => {
-  listVisibleDoors().forEach((door) => {
-    const rect = getDoorDefinition(door);
+const drawDoorPanels = (ctx) => {
+  gameState.doors.forEach((door) => {
+    const rect = door.rect;
     if (rect.orientation === 'vertical') {
       drawVerticalDoor(ctx, rect, door);
       return;
@@ -164,31 +92,44 @@ const drawDoors = (ctx) => {
   });
 };
 
-const getDoorLabelPosition = (definition) => {
-  const centerX = definition.x + definition.width / 2;
-  const centerY = definition.y + definition.height / 2;
-  const offset = gameState.config.doorLabelOffset;
-  if (definition.side === 'north') return { x: centerX, y: definition.y - offset, rotation: 0 };
-  if (definition.side === 'south') return { x: centerX, y: definition.y + definition.height + offset, rotation: 0 };
-  if (definition.side === 'west') return { x: definition.x - offset, y: centerY, rotation: -Math.PI / 2 };
-  return { x: definition.x + definition.width + offset, y: centerY, rotation: Math.PI / 2 };
-};
-
 const drawDoorLabels = (ctx) => {
   ctx.save();
   ctx.fillStyle = '#c5d8ff';
-  ctx.font = '36px "Courier New", monospace';
+  ctx.font = '28px "Courier New", monospace';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  listVisibleDoors().forEach((door) => {
-    const definition = getDoorDefinition(door);
-    if (!definition.label) return;
-    const { x, y, rotation } = getDoorLabelPosition(definition);
+  gameState.doors.forEach((door) => {
+    if (!door.label) return;
+    const rect = door.rect;
+    const centerX = rect.x + rect.width / 2;
+    const centerY = rect.y + rect.height / 2;
     ctx.save();
-    ctx.translate(x, y);
-    if (rotation) ctx.rotate(rotation);
-    ctx.fillText(definition.label, 0, 0);
+    ctx.translate(centerX, centerY);
+    if (door.orientation === 'vertical') ctx.rotate(-Math.PI / 2);
+    ctx.fillText(door.label, 0, 0);
     ctx.restore();
+  });
+  ctx.restore();
+};
+
+const drawItems = (ctx) => {
+  const radius = gameState.config.itemRadius;
+  ctx.save();
+  ctx.strokeStyle = '#4f7bd9';
+  ctx.lineWidth = 2;
+  ctx.fillStyle = '#f4f9ff';
+  ctx.font = '24px "Courier New", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  gameState.items.forEach((item) => {
+    if (item.collected) return;
+    ctx.beginPath();
+    ctx.arc(item.x, item.y, radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#071022';
+    ctx.fillText(item.label, item.x, item.y);
+    ctx.fillStyle = '#f4f9ff';
   });
   ctx.restore();
 };
@@ -202,14 +143,11 @@ const drawPlayer = (ctx) => {
 };
 
 export const renderFrame = (ctx) => {
-  fillRect(ctx, { x: 0, y: 0, width: gameState.config.canvasWidth, height: gameState.config.canvasHeight }, gameState.config.corridorColor);
+  clearViewport(ctx);
   ctx.save();
   ctx.translate(-gameState.camera.x, -gameState.camera.y);
-  drawCorridors(ctx);
-  drawFloorGrid(ctx);
-  drawShafts(ctx);
-  drawRooms(ctx);
-  drawDoors(ctx);
+  drawGrid(ctx);
+  drawDoorPanels(ctx);
   drawDoorLabels(ctx);
   drawItems(ctx);
   drawPlayer(ctx);

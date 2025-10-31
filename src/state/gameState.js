@@ -5,22 +5,19 @@ import { doorState } from './doorState.js';
 import { cameraState } from './cameraState.js';
 import { uiState } from './uiState.js';
 import { itemState } from './itemState.js';
+import { gridState } from './gridState.js';
 
 export const gameState = Object.seal({
   config,
-  rooms,
-  corridors,
-  shafts,
-  doors,
-  roomById,
+  grid: gridState,
+  map: Object.freeze({ rooms, corridors, shafts, doors, roomById }),
   player: playerState,
+  doors: doorState.all,
   doorsById: doorState.byId,
-  doorList: doorState.all,
-  pressedKeys: new Set(),
-  lastFrameTime: 0,
-  camera: cameraState,
   ui: uiState,
+  camera: cameraState,
   items: itemState.all,
-  itemsById: itemState.byId,
-  inventory: []
+  inventory: [],
+  pressedKeys: new Set(),
+  lastFrameTime: 0
 });

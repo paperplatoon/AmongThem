@@ -1,12 +1,17 @@
 import { config } from './config.js';
 import { mapState } from './mapState.js';
+import { worldPointToCell } from './gridState.js';
 
 const startX = (mapState.corridorOuter.left + mapState.corridorOuter.right) / 2;
 const startY = mapState.corridorOuter.top + mapState.constants.corridorThickness / 2;
 
+const startCell = worldPointToCell({ x: startX, y: startY });
+
 export const playerState = Object.seal({
   x: startX,
   y: startY,
+  cellX: startCell.x,
+  cellY: startCell.y,
   angle: 0,
   velocityX: 0,
   velocityY: 0,

@@ -1,6 +1,7 @@
 import { gameState } from '../state/gameState.js';
 import { add, scale } from '../utils/geometry.js';
 import { isPointWalkable } from '../collision/collisionMask.js';
+import { worldPointToCell } from '../state/gridState.js';
 
 const boolToNumber = (value) => (value ? 1 : 0);
 
@@ -31,6 +32,9 @@ const attemptMove = (player, delta) => {
   if (!isWalkablePoint(next)) return;
   player.x = next.x;
   player.y = next.y;
+  const cell = worldPointToCell(player);
+  player.cellX = cell.x;
+  player.cellY = cell.y;
 };
 
 const tryMove = (player, delta) => {
