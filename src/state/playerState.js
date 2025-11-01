@@ -16,5 +16,10 @@ export const playerState = Object.seal({
   velocityX: 0,
   velocityY: 0,
   walkSpeed: config.walkSpeed,
-  sprintSpeed: config.sprintSpeed
+  stamina: Object.seal({
+    current: config.stamina.max,
+    max: config.stamina.max,
+    drainTimer: 0,
+    isSprinting: false
+  })
 });

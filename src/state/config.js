@@ -4,7 +4,6 @@ export const config = Object.freeze({
   worldWidth: 8064,
   worldHeight: 5472,
   walkSpeed: 160,
-  sprintSpeed: 240,
   doorOpenRange: 90,
   playerRadius: 10,
   wallThickness: 18,
@@ -28,5 +27,11 @@ export const config = Object.freeze({
   playerColor: '#f4f9ff',
   doorClosedColor: '#4fc3f7',
   doorOpenColor: '#8effd6',
-  blueprintGlow: '#103c80'
+  blueprintGlow: '#103c80',
+  stamina: Object.freeze({
+    max: 100,
+    sprintMultiplier: 3,
+    drainIntervalSeconds: 0.1,
+    drainPerInterval: 0.05
+  })
 });

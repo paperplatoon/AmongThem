@@ -46,3 +46,8 @@
 - Centralize tunable values (walk speed, oxygen drain rates, phase triggers, etc.) in shared state/config so tweaks propagate globally.
 - Keep modules declarative where possible: data tables + lean functions that consume state/config to produce outcomes.
 
+## Implementation Style Notes
+- Maintain a single authoritative `gameState` object (grid, rooms, doors, items, player, UI). Treat the screen as a pure projection of that state every frame.
+- Drive collision, rendering, AI, and future hazards from the same grid mask; cells carry explicit enums (wall, floor, door, item, etc.) so everything mutates the same data.
+- Avoid geometry math scattered across modules: use shared world↔grid helpers, and keep door/room data cached in state to prevent duplication.
+- Keep doors, items, and future hazards state-driven; visuals should reflect state rather than manage gameplay indirectly.

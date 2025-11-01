@@ -2,6 +2,7 @@ import { gameState } from '../state/gameState.js';
 import { CELL_TYPES } from '../state/gridState.js';
 import { renderMinimap } from '../ui/minimap.js';
 import { renderInventory } from '../ui/inventory.js';
+import { renderHud } from './hud.js';
 
 const { WALL } = CELL_TYPES;
 
@@ -154,4 +155,5 @@ export const renderFrame = (ctx) => {
   ctx.restore();
   renderMinimap(ctx);
   renderInventory(ctx);
+  renderHud(ctx);
 };
