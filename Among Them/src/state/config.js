@@ -1,0 +1,41 @@
+export const config = Object.freeze({
+  canvasWidth: 960,
+  canvasHeight: 640,
+  worldWidth: 8064,
+  worldHeight: 5472,
+  walkSpeed: 160,
+  doorOpenRange: 90,
+  playerRadius: 10,
+  wallThickness: 18,
+  doorThickness: 18,
+  wallPadding: 12,
+  roomPadding: 6,
+  doorPadding: 24,
+  doorAnimationSeconds: 0.45,
+  doorAutoCloseDistance: 90,
+  floorGridSpacing: 480,
+  floorGridColor: 'rgba(35, 68, 128, 0.35)',
+  doorLabelOffset: 180,
+  cellSize: 32,
+  gridWidth: Math.ceil(8064 / 32),
+  gridHeight: Math.ceil(5472 / 32),
+  itemPickupRange: 160,
+  itemRadius: 24,
+  corridorColor: '#0f1636',
+  wallColor: '#4f7bd9',
+  floorColor: '#071022',
+  playerColor: '#f4f9ff',
+  doorClosedColor: '#4fc3f7',
+  doorOpenColor: '#8effd6',
+  blueprintGlow: '#103c80',
+  stamina: Object.freeze({
+    max: 100,
+    sprintMultiplier: 3,
+    drainIntervalSeconds: 0.1,
+    drainPerInterval: 0.1
+  }),
+  oxygen: Object.freeze({
+    max: 100,
+    depletionSeconds: 30 * 60
+  })
+});
