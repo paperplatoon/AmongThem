@@ -51,3 +51,15 @@
 - Drive collision, rendering, AI, and future hazards from the same grid mask; cells carry explicit enums (wall, floor, door, item, etc.) so everything mutates the same data.
 - Avoid geometry math scattered across modules: use shared world↔grid helpers, and keep door/room data cached in state to prevent duplication.
 - Keep doors, items, and future hazards state-driven; visuals should reflect state rather than manage gameplay indirectly.
+
+## Role Reference
+- Captain (Bridge) — Methods: Baton (blunt), Sidearm (impact)
+- Medic (Medbay) — Methods: Sedatives (poison), Scalpel (stab)
+- Cook (Kitchen) — Methods: Knife (stab), Rat Poison (poison)
+- Engineer (Engineering) — Methods: Wrench (blunt), Life Support Override (oxygen loss)
+- Farmer (Hydroponics) — Methods: Fertilizer (poison), Shears (stab)
+- Janitor (Maintenance) — Methods: Hammer (blunt), Solvent (poison)
+- AI Core (AI Core) — Methods: Life Support Override (oxygen loss), Internal Defenses (impact)
+- Counselor (Quarters) — Methods: Defense Rifles (impact), Pillow Strangulation (oxygen loss)
+
+Each body scan reveals the broad category first (blunt, impact, poison, stab, oxygen loss). A secondary scan—unlocked after finding corroborating evidence—reveals the exact weapon.

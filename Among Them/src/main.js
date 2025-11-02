@@ -6,9 +6,13 @@ import { renderFrame } from './render/renderer.js';
 import { updateCamera } from './movement/cameraSystem.js';
 import { handleMinimapToggle } from './ui/minimap.js';
 import { handleInventoryToggle, registerInventoryInput } from './ui/inventory.js';
+import { handleJournalToggle } from './ui/journal.js';
 import { updateDoors } from './doors/doorSystem.js';
 import { handleItemPickup } from './items/itemPickup.js';
 import { buildSolidMask } from './collision/solidMask.js';
+import { handleBodyInteraction } from './body/bodyInteraction.js';
+import { updateInteractions } from './interactions/interactionSystem.js';
+import { initializeCase, applyCaseObstacles } from './state/caseState.js';
 
 const createCanvas = () => {
   const canvas = document.createElement('canvas');
@@ -29,16 +33,20 @@ const getDelta = (time) => {
 
 const stepFrame = (ctx, time) => {
   const delta = getDelta(time);
+  handleBodyInteraction();
   handleItemPickup();
   updateMovement(delta);
   updateDoors(delta);
   updateCamera();
+  updateInteractions();
   renderFrame(ctx);
   requestAnimationFrame((next) => stepFrame(ctx, next));
 };
 
 const start = () => {
+  initializeCase();
   buildSolidMask();
+  applyCaseObstacles();
   const canvas = createCanvas();
   const ctx = canvas.getContext('2d');
   mountCanvas(canvas);
@@ -46,6 +54,7 @@ const start = () => {
   const handleKeyDown = (key) => {
     handleMinimapToggle(key);
     handleInventoryToggle(key);
+    handleJournalToggle(key);
   };
   bindKeyboard(gameState.pressedKeys, handleKeyDown);
   requestAnimationFrame((time) => stepFrame(ctx, time));

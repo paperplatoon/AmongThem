@@ -1,15 +1,17 @@
 import { gameState } from '../state/gameState.js';
 import { syncOxygenState } from '../movement/oxygenSystem.js';
+import { tryHandleInteractionClick } from '../interactions/interactionSystem.js';
 
 const slotHitboxes = [];
 
 const applyItemEffect = (entry) => {
+  if (!entry.effect) return false;
   const player = gameState.player;
   if (entry.effect.type === 'stamina') {
     const stamina = player.stamina;
     stamina.current = Math.min(stamina.max, stamina.current + stamina.max * entry.effect.amount);
     stamina.drainTimer = 0;
-    return;
+    return true;
   }
   if (entry.effect.type === 'oxygen') {
     const oxygen = player.oxygen;
@@ -19,31 +21,41 @@ const applyItemEffect = (entry) => {
       oxygen.secondsRemaining + addedSeconds
     );
     syncOxygenState();
+    return true;
   }
+  return false;
 };
 
-const handleInventoryClick = (canvas, event) => {
-  if (!gameState.ui.showInventory) return;
+const handleInventorySelection = (screenX, screenY) => {
+  if (!gameState.ui.showInventory) return false;
+  const hit = slotHitboxes.find((slot) => (
+    screenX >= slot.x &&
+    screenX <= slot.x + slot.width &&
+    screenY >= slot.y &&
+    screenY <= slot.y + slot.height
+  ));
+  if (!hit) return false;
+  const entry = gameState.inventory[hit.index];
+  if (!entry) return false;
+  if (!applyItemEffect(entry)) return false;
+  gameState.inventory.splice(hit.index, 1);
+  return true;
+};
+
+const handleCanvasClick = (canvas, event) => {
   const rect = canvas.getBoundingClientRect();
   const scaleX = canvas.width / rect.width;
   const scaleY = canvas.height / rect.height;
-  const x = (event.clientX - rect.left) * scaleX;
-  const y = (event.clientY - rect.top) * scaleY;
-  const hit = slotHitboxes.find((slot) => (
-    x >= slot.x &&
-    x <= slot.x + slot.width &&
-    y >= slot.y &&
-    y <= slot.y + slot.height
-  ));
-  if (!hit) return;
-  const entry = gameState.inventory[hit.index];
-  if (!entry) return;
-  applyItemEffect(entry);
-  gameState.inventory.splice(hit.index, 1);
+  const screenX = (event.clientX - rect.left) * scaleX;
+  const screenY = (event.clientY - rect.top) * scaleY;
+  const worldX = screenX + gameState.camera.x;
+  const worldY = screenY + gameState.camera.y;
+  if (tryHandleInteractionClick(worldX, worldY)) return;
+  handleInventorySelection(screenX, screenY);
 };
 
 export const registerInventoryInput = (canvas) => {
-  canvas.addEventListener('click', (event) => handleInventoryClick(canvas, event));
+  canvas.addEventListener('click', (event) => handleCanvasClick(canvas, event));
 };
 
 const toggle = () => { gameState.ui.showInventory = !gameState.ui.showInventory; };

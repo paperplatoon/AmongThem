@@ -2,6 +2,7 @@ import { gameState } from '../state/gameState.js';
 import { CELL_TYPES } from '../state/gridState.js';
 import { renderMinimap } from '../ui/minimap.js';
 import { renderInventory } from '../ui/inventory.js';
+import { renderJournal } from '../ui/journal.js';
 import { renderHud } from './hud.js';
 
 const { WALL } = CELL_TYPES;
@@ -113,6 +114,49 @@ const drawDoorLabels = (ctx) => {
   ctx.restore();
 };
 
+const drawBody = (ctx) => {
+  const body = gameState.body;
+  if (body.x == null) return;
+  ctx.save();
+  ctx.fillStyle = '#d66';
+  ctx.beginPath();
+  ctx.arc(body.x, body.y, cellSize() * 0.35, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '18px "Courier New", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('BODY', body.x, body.y);
+  ctx.restore();
+};
+
+const drawScanner = (ctx) => {
+  const scanner = gameState.scanner;
+  if (scanner.x == null) return;
+  const size = cellSize() * 0.8;
+  ctx.save();
+  ctx.fillStyle = '#66bfff';
+  ctx.fillRect(scanner.x - size / 2, scanner.y - size / 2, size, size);
+  ctx.fillStyle = '#0d1b3d';
+  ctx.font = '16px "Courier New", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('SCAN', scanner.x, scanner.y);
+  ctx.restore();
+};
+
+const drawScannerPrompt = (ctx) => {
+  if (!gameState.scanner.promptActive) return;
+  const scanner = gameState.scanner;
+  ctx.save();
+  ctx.fillStyle = '#f4f9ff';
+  ctx.font = '18px "Courier New", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'bottom';
+  ctx.fillText('CLICK TO SCAN', scanner.x, scanner.y - cellSize() * 0.7);
+  ctx.restore();
+};
+
 const drawItems = (ctx) => {
   const radius = gameState.config.itemRadius;
   ctx.save();
@@ -148,12 +192,16 @@ export const renderFrame = (ctx) => {
   ctx.save();
   ctx.translate(-gameState.camera.x, -gameState.camera.y);
   drawGrid(ctx);
+  drawBody(ctx);
+  drawScanner(ctx);
   drawDoorPanels(ctx);
   drawDoorLabels(ctx);
   drawItems(ctx);
   drawPlayer(ctx);
+  drawScannerPrompt(ctx);
   ctx.restore();
   renderMinimap(ctx);
   renderInventory(ctx);
+  renderJournal(ctx);
   renderHud(ctx);
 };

@@ -19,5 +19,31 @@ export const gameState = Object.seal({
   items: itemState.all,
   inventory: [],
   pressedKeys: new Set(),
-  lastFrameTime: 0
+  lastFrameTime: 0,
+  case: {
+    victim: null,
+    victimName: '???',
+    victimOccupation: '???',
+    timeWindow: '???',
+    identified: false,
+    methodCategory: '???',
+    methodExact: null
+  },
+  body: {
+    cellX: null,
+    cellY: null,
+    x: null,
+    y: null,
+    collectedSample: false
+  },
+  scanner: {
+    cellX: null,
+    cellY: null,
+    x: null,
+    y: null,
+    promptActive: false
+  },
+  interactions: {
+    clickZones: []
+  }
 });
