@@ -8,7 +8,6 @@ import { handleMinimapToggle } from './ui/minimap.js';
 import { handleInventoryToggle, registerInventoryInput } from './ui/inventory.js';
 import { handleJournalToggle } from './ui/journal.js';
 import { updateDoors } from './doors/doorSystem.js';
-import { handleItemPickup } from './items/itemPickup.js';
 import { buildSolidMask } from './collision/solidMask.js';
 import { handleBodyInteraction } from './body/bodyInteraction.js';
 import { updateInteractions } from './interactions/interactionSystem.js';
@@ -34,7 +33,6 @@ const getDelta = (time) => {
 const stepFrame = (ctx, time) => {
   const delta = getDelta(time);
   handleBodyInteraction();
-  handleItemPickup();
   updateMovement(delta);
   updateDoors(delta);
   updateCamera();

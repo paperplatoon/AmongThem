@@ -1,27 +1,25 @@
 import { mapState } from './mapState.js';
 import { worldPointToCell, cellToWorldCenter } from './gridState.js';
-
-const randomContents = () => {
-  if (Math.random() < 0.25) {
-    return [{
-      id: `prop_energy_${Math.random().toString(36).slice(2, 7)}`,
-      label: 'Energy Bar',
-      type: 'energy_bar',
-      effect: { type: 'stamina', amount: 0.25 }
-    }];
-  }
-  if (Math.random() < 0.2) {
-    return [{
-      id: `prop_o2_${Math.random().toString(36).slice(2, 7)}`,
-      label: 'Oxygen Canister',
-      type: 'oxygen_canister',
-      effect: { type: 'oxygen', amount: 0.1 }
-    }];
-  }
-  return [];
-};
+import { createItemFromDefinition } from './itemDefinitions.js';
 
 const PROP_TYPES = ['desk', 'bed', 'trash', 'locker'];
+
+const PROP_CONTENT_CHANCE = Object.freeze({
+  locker: 0.25,
+  desk: 0.10,
+  trash: 0.05,
+  bed: 0.01
+});
+
+const shouldPopulate = (propType) => (
+  Math.random() < (PROP_CONTENT_CHANCE[propType] ?? 0)
+);
+
+const buildContents = (room, propType) => {
+  if (!shouldPopulate(propType)) return [];
+  const item = createItemFromDefinition(`${room.id}_${propType}`);
+  return item ? [item] : [];
+};
 
 const createProp = (room, propType, index) => {
   const offsets = [
@@ -44,7 +42,7 @@ const createProp = (room, propType, index) => {
     cellY: cell.y,
     x,
     y,
-    contents: randomContents(),
+    contents: buildContents(room, propType),
     promptActive: false
   });
 };

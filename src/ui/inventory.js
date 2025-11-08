@@ -2,6 +2,7 @@ import { gameState } from '../state/gameState.js';
 import { syncOxygenState } from '../movement/oxygenSystem.js';
 import { tryHandleInteractionClick } from '../interactions/interactionSystem.js';
 import { handleContainerClick } from './containerMenu.js';
+import * as journalUi from './journal.js';
 
 const slotHitboxes = [];
 
@@ -52,6 +53,7 @@ const handleCanvasClick = (canvas, event) => {
   const worldX = screenX + gameState.camera.x;
   const worldY = screenY + gameState.camera.y;
   if (tryHandleInteractionClick(worldX, worldY)) return;
+  if (journalUi.handleJournalClick && journalUi.handleJournalClick(screenX, screenY)) return;
   if (handleContainerClick(screenX, screenY)) return;
   handleInventorySelection(screenX, screenY);
 };

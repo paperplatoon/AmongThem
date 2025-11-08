@@ -177,28 +177,6 @@ const drawProps = (ctx) => {
   });
 };
 
-const drawItems = (ctx) => {
-  const radius = gameState.config.itemRadius;
-  ctx.save();
-  ctx.strokeStyle = '#4f7bd9';
-  ctx.lineWidth = 2;
-  ctx.fillStyle = '#f4f9ff';
-  ctx.font = '24px "Courier New", monospace';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  gameState.items.forEach((item) => {
-    if (item.collected) return;
-    ctx.beginPath();
-    ctx.arc(item.x, item.y, radius, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-    ctx.fillStyle = '#071022';
-    ctx.fillText(item.label, item.x, item.y);
-    ctx.fillStyle = '#f4f9ff';
-  });
-  ctx.restore();
-};
-
 const drawPlayer = (ctx) => {
   const player = gameState.player;
   ctx.beginPath();
@@ -217,7 +195,6 @@ export const renderFrame = (ctx) => {
   drawProps(ctx);
   drawDoorPanels(ctx);
   drawDoorLabels(ctx);
-  drawItems(ctx);
   drawPlayer(ctx);
   drawScannerPrompt(ctx);
   ctx.restore();
