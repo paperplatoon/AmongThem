@@ -12,11 +12,6 @@ const randomMethod = (roleKey) => {
   return methods[Math.floor(Math.random() * methods.length)];
 };
 
-const randomVictimName = (roleKey) => {
-  const names = gameState.config.roles[roleKey].names;
-  return names[Math.floor(Math.random() * names.length)];
-};
-
 const chooseVictimRole = () => randomRoleKey();
 
 const chooseKillerRole = (victimRole) => {
@@ -70,8 +65,9 @@ export const applyCaseObstacles = () => {
 const seedVictim = () => {
   const roleKey = chooseVictimRole();
   const role = gameState.config.roles[roleKey];
+  const entry = gameState.journal.byId[roleKey];
   const method = randomMethod(roleKey);
-  const victimName = randomVictimName(roleKey);
+  const victimName = entry?.personName ?? role.names[0] ?? role.name;
   const timeWindow = randomTimeWindow();
   gameState.case.victim = {
     roleKey,

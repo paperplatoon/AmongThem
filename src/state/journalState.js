@@ -1,5 +1,11 @@
 import { config } from './config.js';
 
+const randomCrewName = (roleId) => {
+  const names = config.roles[roleId].names || [];
+  if (!names.length) return `${config.roles[roleId].name} Crew`; 
+  return names[Math.floor(Math.random() * names.length)];
+};
+
 const buildEntry = (roleId) => {
   const role = config.roles[roleId];
   return Object.seal({
@@ -12,7 +18,8 @@ const buildEntry = (roleId) => {
     isVictim: false,
     victimIdentified: false,
     isKiller: false,
-    killerConfirmed: false
+    killerConfirmed: false,
+    personName: randomCrewName(roleId)
   });
 };
 
@@ -28,11 +35,21 @@ export const journalState = Object.seal({
   byId
 });
 
+const setNameKnown = (entry) => {
+  entry.knownName = true;
+};
+
 export const markKeycardKnown = (roleId) => {
   const entry = byId[roleId];
   if (!entry) return;
   entry.hasKeycard = true;
-  entry.knownName = true;
+  setNameKnown(entry);
+};
+
+export const markDeskDiscovered = (roleId) => {
+  const entry = byId[roleId];
+  if (!entry) return;
+  setNameKnown(entry);
 };
 
 export const markVictimRole = (roleId) => {

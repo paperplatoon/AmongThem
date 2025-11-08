@@ -1,5 +1,5 @@
 import { gameState } from '../state/gameState.js';
-import { markKeycardKnown, markKillerConfirmed } from '../state/journalState.js';
+import { markKeycardKnown, markKillerConfirmed, markDeskDiscovered } from '../state/journalState.js';
 
 const slotHitboxes = [];
 let closeHitbox = null;
@@ -40,6 +40,7 @@ export const handleContainerClick = (screenX, screenY) => {
   }
   const item = prop.contents[hit.index];
   if (!item) return false;
+  if (prop.type === 'desk' && prop.roomId) markDeskDiscovered(prop.roomId);
   if (item.type === 'keycard') {
     collectKeycardItem(item);
   } else if (item.type === 'incriminating_evidence') {

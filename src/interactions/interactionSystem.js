@@ -1,7 +1,7 @@
 import { gameState } from '../state/gameState.js';
 import { distanceBetween } from '../utils/geometry.js';
 import { syncOxygenState } from '../movement/oxygenSystem.js';
-import { markVictimIdentified } from '../state/journalState.js';
+import { markVictimIdentified, markDeskDiscovered } from '../state/journalState.js';
 import { collectBodySample } from '../body/bodyInteraction.js';
 
 const scannerRange = 96;
@@ -83,6 +83,7 @@ const makePropZone = (prop) => ({
       prop.promptText = lockedPrompt;
       return;
     }
+    if (prop.type === 'desk' && prop.roomId) markDeskDiscovered(prop.roomId);
     if (!prop.contents.length) {
       prop.isEmpty = true;
       prop.promptText = 'EMPTY';

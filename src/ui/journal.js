@@ -71,8 +71,10 @@ const drawTabs = (ctx, panel) => {
     const x = panel.x + index * tabWidth;
     const y = baseY;
     const isActive = entry.id === gameState.ui.journal.activeTab;
-    const label = entry.knownName ? entry.roleName : 'Unknown Locker';
-    ctx.fillStyle = isActive ? 'rgba(15, 36, 74, 0.95)' : 'rgba(10, 24, 48, 0.7)';
+    const baseColor = isActive ? 'rgba(15, 36, 74, 0.95)' : 'rgba(10, 24, 48, 0.7)';
+    const keyedColor = isActive ? 'rgba(46, 109, 72, 0.95)' : 'rgba(30, 82, 55, 0.85)';
+    const label = gameState.config.roles[entry.id].name;
+    ctx.fillStyle = entry.hasKeycard ? keyedColor : baseColor;
     ctx.fillRect(x, y, tabWidth, tabHeight);
     ctx.strokeStyle = isActive ? '#8effd6' : '#4f7bd9';
     ctx.lineWidth = 2;
@@ -149,15 +151,15 @@ const drawContent = (ctx, area, activeTab) => {
     ctx.restore();
     return;
   }
-  const identity = entry.knownName ? role.name : 'Unknown Crew Member';
+  const nameLine = entry.knownName ? entry.personName : 'Unknown';
   const status = (() => {
     if (entry.isVictim) return entry.victimIdentified ? 'Victim Confirmed' : 'Victim Unknown';
     if (entry.isKiller) return entry.killerConfirmed ? 'Killer Confirmed' : 'Suspect';
     return 'Unknown';
   })();
   const lines = [
-    `Station: ${role.name}`,
-    `Identity: ${identity}`,
+    `Role: ${role.name}`,
+    `Name: ${nameLine}`,
     `Keycard: ${entry.hasKeycard ? 'Acquired' : 'Missing'}`,
     `Status: ${status}`,
     `Method Access: ${formatMethods(role)}`
