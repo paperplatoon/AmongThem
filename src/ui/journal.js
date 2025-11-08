@@ -150,11 +150,16 @@ const drawContent = (ctx, area, activeTab) => {
     return;
   }
   const identity = entry.knownName ? role.name : 'Unknown Crew Member';
+  const status = (() => {
+    if (entry.isVictim) return entry.victimIdentified ? 'Victim Confirmed' : 'Victim Unknown';
+    if (entry.isKiller) return entry.killerConfirmed ? 'Killer Confirmed' : 'Suspect';
+    return 'Unknown';
+  })();
   const lines = [
     `Station: ${role.name}`,
     `Identity: ${identity}`,
     `Keycard: ${entry.hasKeycard ? 'Acquired' : 'Missing'}`,
-    `Status: ${entry.isVictim ? (entry.victimIdentified ? 'Victim Confirmed' : 'Victim Unknown') : entry.isKiller ? (entry.killerConfirmed ? 'Killer Confirmed' : 'Suspect') : 'Crew'}`,
+    `Status: ${status}`,
     `Method Access: ${formatMethods(role)}`
   ];
   const victim = gameState.case.victim;

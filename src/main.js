@@ -9,7 +9,7 @@ import { handleInventoryToggle, registerInventoryInput } from './ui/inventory.js
 import { handleJournalToggle } from './ui/journal.js';
 import { updateDoors } from './doors/doorSystem.js';
 import { buildSolidMask } from './collision/solidMask.js';
-import { handleBodyInteraction } from './body/bodyInteraction.js';
+//import { handleBodyInteraction } from './body/bodyInteraction.js';
 import { updateInteractions } from './interactions/interactionSystem.js';
 import { initializeCase, applyCaseObstacles } from './state/caseState.js';
 
@@ -32,7 +32,7 @@ const getDelta = (time) => {
 
 const stepFrame = (ctx, time) => {
   const delta = getDelta(time);
-  handleBodyInteraction();
+  //handleBodyInteraction();
   updateMovement(delta);
   updateDoors(delta);
   updateCamera();

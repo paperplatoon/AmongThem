@@ -6,7 +6,7 @@ export const ITEM_TYPES = Object.freeze({
 export const ITEM_DEFINITIONS = Object.freeze({
   [ITEM_TYPES.ENERGY_BAR]: Object.freeze({
     label: 'Energy Bar',
-    effect: { type: 'stamina', amount: 0.25 }
+    effect: { type: 'stamina', amount: 0.1 }
   }),
   [ITEM_TYPES.OXYGEN_CANISTER]: Object.freeze({
     label: 'Oxygen Canister',

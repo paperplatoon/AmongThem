@@ -16,7 +16,7 @@ const PROP_CONTENT_CHANCE = Object.freeze({
 
 const HALL_PROP_CONFIG = Object.freeze([
   { type: 'table', label: 'Table', count: 20, allowsKeycard: true },
-  { type: 'cabinet', label: 'Cabinet', count: 20, allowsKeycard: true },
+  { type: 'cabinet', label: 'Cabinet', count: 50, allowsKeycard: true },
   { type: 'trash', label: 'Trash Can', count: 10, allowsKeycard: false }
 ]);
 
@@ -24,7 +24,14 @@ const shouldPopulate = (propType) => (
   Math.random() < (PROP_CONTENT_CHANCE[propType] ?? 0)
 );
 
+const hallwayLoot = (idPrefix) => {
+  if (Math.random() < 0.05) return [createItemFromDefinition(`${idPrefix}_energy`, 'energy_bar')];
+  if (Math.random() < 0.05) return [createItemFromDefinition(`${idPrefix}_oxygen`, 'oxygen_canister')];
+  return [];
+};
+
 const buildContents = (prop, idPrefix) => {
+  if (prop.source === 'hallway') return hallwayLoot(idPrefix);
   if (!shouldPopulate(prop.type)) return [];
   const item = createItemFromDefinition(`${idPrefix}_${prop.type}`);
   return item ? [item] : [];
@@ -72,27 +79,35 @@ const randomCorridor = () => mapState.corridors[Math.floor(Math.random() * mapSt
 
 const randomBetween = (min, max) => min + Math.random() * (max - min);
 
-const pointOnWall = (rect) => {
-  const side = Math.floor(Math.random() * 4);
+const wallPoint = (rect, side) => {
   const inset = config.cellSize * 0.75;
-  if (side === 0) {
-    return { x: randomBetween(rect.x + inset, rect.x + rect.width - inset), y: rect.y + inset };
-  }
-  if (side === 1) {
-    return { x: randomBetween(rect.x + inset, rect.x + rect.width - inset), y: rect.y + rect.height - inset };
-  }
-  if (side === 2) {
-    return { x: rect.x + inset, y: randomBetween(rect.y + inset, rect.y + rect.height - inset) };
-  }
+  if (side === 0) return { x: randomBetween(rect.x + inset, rect.x + rect.width - inset), y: rect.y + inset };
+  if (side === 1) return { x: randomBetween(rect.x + inset, rect.x + rect.width - inset), y: rect.y + rect.height - inset };
+  if (side === 2) return { x: rect.x + inset, y: randomBetween(rect.y + inset, rect.y + rect.height - inset) };
   return { x: rect.x + rect.width - inset, y: randomBetween(rect.y + inset, rect.y + rect.height - inset) };
 };
 
-const createHallProp = (configEntry, index) => {
-  const rect = randomCorridor();
-  const point = pointOnWall(rect);
-  const cell = worldPointToCell(point);
+const tooClose = (cell, taken) => taken.some((occupied) => (
+  Math.abs(cell.x - occupied.x) < 2 && Math.abs(cell.y - occupied.y) < 2
+));
+
+const pickHallCell = (taken) => {
+  for (let attempts = 0; attempts < 30; attempts++) {
+    const corridor = randomCorridor();
+    const point = wallPoint(corridor, Math.floor(Math.random() * 4));
+    const cell = worldPointToCell(point);
+    if (tooClose(cell, taken)) continue;
+    taken.push(cell);
+    return cell;
+  }
+  return null;
+};
+
+const createHallProp = (configEntry, index, taken) => {
+  const cell = pickHallCell(taken);
+  if (!cell) return null;
   const { x, y } = cellToWorldCenter(cell.x, cell.y);
-  const contents = buildContents({ type: configEntry.type }, `${configEntry.type}_${index}`);
+  const contents = buildContents({ type: configEntry.type, source: 'hallway' }, `${configEntry.type}_${index}`);
   return Object.seal({
     id: `hall_${configEntry.type}_${index}`,
     roomId: 'corridor',
@@ -118,9 +133,12 @@ const createHallProp = (configEntry, index) => {
 };
 
 const createHallProps = () => (
-  HALL_PROP_CONFIG.flatMap((entry) => (
-    Array.from({ length: entry.count }, (_, index) => createHallProp(entry, index))
-  ))
+  (() => {
+    const taken = [];
+    return HALL_PROP_CONFIG.flatMap((entry) => (
+      Array.from({ length: entry.count }, (_, index) => createHallProp(entry, index, taken)).filter(Boolean)
+    ));
+  })()
 );
 
 const createRoomProps = () => (

@@ -2,6 +2,7 @@ import { gameState } from '../state/gameState.js';
 import { distanceBetween } from '../utils/geometry.js';
 import { syncOxygenState } from '../movement/oxygenSystem.js';
 import { markVictimIdentified } from '../state/journalState.js';
+import { collectBodySample } from '../body/bodyInteraction.js';
 
 const scannerRange = 96;
 const propRange = 88;
@@ -37,6 +38,23 @@ const makeScannerZone = () => {
     width: size,
     height: size,
     action: handleScannerClick
+  };
+};
+
+const makeBodyZone = () => {
+  const size = gameState.grid.cellSize;
+  return {
+    id: 'body',
+    x: gameState.body.x - size / 2,
+    y: gameState.body.y - size / 2,
+    width: size,
+    height: size,
+    action: () => {
+      if (gameState.body.collectedSample) return;
+      const distance = distanceBetween(gameState.player, gameState.body);
+      if (distance > propRange) return;
+      collectBodySample();
+    }
   };
 };
 
@@ -87,6 +105,10 @@ export const updateInteractions = () => {
       gameState.scanner.promptActive = true;
       zones.push(makeScannerZone());
     }
+  }
+  if (!gameState.body.collectedSample && gameState.body.x != null) {
+    const distance = distanceBetween(gameState.player, gameState.body);
+    if (distance <= propRange) zones.push(makeBodyZone());
   }
   gameState.props.forEach((prop) => {
     prop.promptActive = false;
