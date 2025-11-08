@@ -33,6 +33,7 @@ const createProp = (room, propType, index) => {
   const worldY = room.y + room.height * base.y;
   const cell = worldPointToCell({ x: worldX, y: worldY });
   const { x, y } = cellToWorldCenter(cell.x, cell.y);
+  const isLocker = propType === 'locker';
   return Object.seal({
     id: `${room.id}_${propType}_${index}`,
     roomId: room.id,
@@ -42,8 +43,11 @@ const createProp = (room, propType, index) => {
     cellY: cell.y,
     x,
     y,
+    lockId: isLocker ? `${room.id}_locker` : null,
+    requiresKey: isLocker,
     contents: buildContents(room, propType),
-    promptActive: false
+    promptActive: false,
+    promptText: 'CLICK TO SEARCH'
   });
 };
 

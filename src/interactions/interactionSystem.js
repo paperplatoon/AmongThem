@@ -4,6 +4,7 @@ import { syncOxygenState } from '../movement/oxygenSystem.js';
 
 const scannerRange = 96;
 const propRange = 88;
+const lockedPrompt = 'LOCKED - KEYCARD REQUIRED';
 
 const hasMedicalSample = () => (
   gameState.inventory.some((item) => item.type === 'medical_sample')
@@ -45,6 +46,21 @@ const handleScannerClick = () => {
   gameState.scanner.promptActive = false;
 };
 
+const hasKeycard = (lockId) => (
+  lockId ? gameState.player.keycards.has(lockId) : true
+);
+
+const canAccessProp = (prop) => (!prop.requiresKey || hasKeycard(prop.lockId));
+
+const makePropZone = (prop) => ({
+  id: prop.id,
+  x: prop.x - gameState.grid.cellSize / 2,
+  y: prop.y - gameState.grid.cellSize / 2,
+  width: gameState.grid.cellSize,
+  height: gameState.grid.cellSize,
+  action: () => { gameState.ui.openContainerId = prop.id; }
+});
+
 export const updateInteractions = () => {
   const zones = gameState.interactions.clickZones;
   zones.length = 0;
@@ -58,17 +74,15 @@ export const updateInteractions = () => {
   }
   gameState.props.forEach((prop) => {
     prop.promptActive = false;
+    prop.promptText = 'CLICK TO SEARCH';
     const distance = distanceBetween(gameState.player, prop);
     if (distance > propRange) return;
     prop.promptActive = true;
-    zones.push({
-      id: prop.id,
-      x: prop.x - gameState.grid.cellSize / 2,
-      y: prop.y - gameState.grid.cellSize / 2,
-      width: gameState.grid.cellSize,
-      height: gameState.grid.cellSize,
-      action: () => { gameState.ui.openContainerId = prop.id; }
-    });
+    if (!canAccessProp(prop)) {
+      prop.promptText = lockedPrompt;
+      return;
+    }
+    zones.push(makePropZone(prop));
   });
 };
 

@@ -10,6 +10,7 @@ import { handleJournalToggle } from './ui/journal.js';
 import { updateDoors } from './doors/doorSystem.js';
 import { buildSolidMask } from './collision/solidMask.js';
 import { handleBodyInteraction } from './body/bodyInteraction.js';
+import { handleKeycardPickup } from './keycards/keycardPickup.js';
 import { updateInteractions } from './interactions/interactionSystem.js';
 import { initializeCase, applyCaseObstacles } from './state/caseState.js';
 
@@ -33,6 +34,7 @@ const getDelta = (time) => {
 const stepFrame = (ctx, time) => {
   const delta = getDelta(time);
   handleBodyInteraction();
+  handleKeycardPickup();
   updateMovement(delta);
   updateDoors(delta);
   updateCamera();

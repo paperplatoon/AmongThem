@@ -6,6 +6,7 @@ import { cameraState } from './cameraState.js';
 import { uiState } from './uiState.js';
 import { gridState } from './gridState.js';
 import { generateRoomProps } from './roomProps.js';
+import { keycardState } from './keycardState.js';
 
 export const gameState = Object.seal({
   config,
@@ -16,6 +17,7 @@ export const gameState = Object.seal({
   doorsById: doorState.byId,
   ui: uiState,
   camera: cameraState,
+  keycards: keycardState.all,
   inventory: [],
   pressedKeys: new Set(),
   lastFrameTime: 0,

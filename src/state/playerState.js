@@ -27,5 +27,6 @@ export const playerState = Object.seal({
     max: config.oxygen.max,
     secondsRemaining: config.oxygen.depletionSeconds,
     depleted: false
-  })
+  }),
+  keycards: new Set()
 });

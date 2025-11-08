@@ -171,10 +171,21 @@ const drawProps = (ctx) => {
     ctx.fillText(prop.label.toUpperCase(), prop.x, prop.y + size / 2 + 4);
     if (prop.promptActive) {
       ctx.fillStyle = '#ffffff';
-      ctx.fillText('CLICK TO SEARCH', prop.x, prop.y - size / 2 - 18);
+      ctx.fillText(prop.promptText || 'CLICK TO SEARCH', prop.x, prop.y - size / 2 - 18);
     }
     ctx.restore();
   });
+};
+
+const drawKeycards = (ctx) => {
+  const size = cellSize() * 0.35;
+  ctx.save();
+  ctx.fillStyle = '#3dd17a';
+  gameState.keycards.forEach((keycard) => {
+    if (keycard.collected) return;
+    ctx.fillRect(keycard.x - size / 2, keycard.y - size / 2, size, size);
+  });
+  ctx.restore();
 };
 
 const drawPlayer = (ctx) => {
@@ -192,6 +203,7 @@ export const renderFrame = (ctx) => {
   drawGrid(ctx);
   drawBody(ctx);
   drawScanner(ctx);
+  drawKeycards(ctx);
   drawProps(ctx);
   drawDoorPanels(ctx);
   drawDoorLabels(ctx);
