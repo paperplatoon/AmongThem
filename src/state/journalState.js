@@ -8,7 +8,11 @@ const buildEntry = (roleId) => {
     roomId: roleId,
     knownName: false,
     hasKeycard: false,
-    evidence: []
+    evidence: [],
+    isVictim: false,
+    victimIdentified: false,
+    isKiller: false,
+    killerConfirmed: false
   });
 };
 
@@ -29,6 +33,30 @@ export const markKeycardKnown = (roleId) => {
   if (!entry) return;
   entry.hasKeycard = true;
   entry.knownName = true;
+};
+
+export const markVictimRole = (roleId) => {
+  const entry = byId[roleId];
+  if (!entry) return;
+  entry.isVictim = true;
+};
+
+export const markKillerRole = (roleId) => {
+  const entry = byId[roleId];
+  if (!entry) return;
+  entry.isKiller = true;
+};
+
+export const markVictimIdentified = (roleId) => {
+  const entry = byId[roleId];
+  if (!entry) return;
+  entry.victimIdentified = true;
+};
+
+export const markKillerConfirmed = (roleId) => {
+  const entry = byId[roleId];
+  if (!entry) return;
+  entry.killerConfirmed = true;
 };
 
 export const addEvidenceToJournal = (roleId, evidence) => {

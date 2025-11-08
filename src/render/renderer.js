@@ -162,31 +162,24 @@ const drawProps = (ctx) => {
   const size = cellSize() * 0.8;
   gameState.props.forEach((prop) => {
     ctx.save();
-    ctx.strokeStyle = '#fef3b7';
+    const highlight = prop.highlightKeycard ? '#ff4f4f' : null;
+    const outline = highlight || (prop.isEmpty ? '#2d3a55' : '#fef3b7');
+    const labelColor = highlight ? '#ffdfdf' : prop.isEmpty ? '#7b84a2' : '#fef3b7';
+    ctx.strokeStyle = outline;
     ctx.strokeRect(prop.x - size / 2, prop.y - size / 2, size, size);
-    ctx.fillStyle = '#fef3b7';
-    ctx.font = '14px "Courier New", monospace';
+    ctx.fillStyle = labelColor;
+    ctx.font = '16px "Courier New", monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     ctx.fillText(prop.label.toUpperCase(), prop.x, prop.y + size / 2 + 4);
     if (prop.promptActive) {
-      ctx.fillStyle = '#ffffff';
+      ctx.fillStyle = prop.promptText === 'EMPTY' ? '#c06f6f' : '#ffffff';
       ctx.fillText(prop.promptText || 'CLICK TO SEARCH', prop.x, prop.y - size / 2 - 18);
     }
     ctx.restore();
   });
 };
 
-const drawKeycards = (ctx) => {
-  const size = cellSize() * 0.35;
-  ctx.save();
-  ctx.fillStyle = '#3dd17a';
-  gameState.keycards.forEach((keycard) => {
-    if (keycard.collected) return;
-    ctx.fillRect(keycard.x - size / 2, keycard.y - size / 2, size, size);
-  });
-  ctx.restore();
-};
 
 const drawPlayer = (ctx) => {
   const player = gameState.player;
@@ -203,7 +196,6 @@ export const renderFrame = (ctx) => {
   drawGrid(ctx);
   drawBody(ctx);
   drawScanner(ctx);
-  drawKeycards(ctx);
   drawProps(ctx);
   drawDoorPanels(ctx);
   drawDoorLabels(ctx);

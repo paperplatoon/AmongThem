@@ -1,9 +1,27 @@
 import { gameState } from '../state/gameState.js';
+import { markKeycardKnown, markKillerConfirmed } from '../state/journalState.js';
 
 const slotHitboxes = [];
 let closeHitbox = null;
 
 const closeContainer = () => { gameState.ui.openContainerId = null; };
+
+const markPropEmpty = (prop) => {
+  prop.isEmpty = true;
+  prop.promptText = 'EMPTY';
+  prop.searched = true;
+};
+
+const collectKeycardItem = (item) => {
+  if (!item) return;
+  gameState.player.keycards.add(item.lockerId);
+  if (item.roleId) markKeycardKnown(item.roleId);
+};
+
+const collectEvidenceItem = (item) => {
+  if (!item) return;
+  markKillerConfirmed(item.roleId);
+};
 
 export const handleContainerClick = (screenX, screenY) => {
   if (!gameState.ui.openContainerId) return false;
@@ -15,10 +33,25 @@ export const handleContainerClick = (screenX, screenY) => {
   if (!hit) return false;
   const prop = gameState.props.find((p) => p.id === gameState.ui.openContainerId);
   if (!prop) return false;
+  if (!prop.contents.length) {
+    markPropEmpty(prop);
+    closeContainer();
+    return false;
+  }
   const item = prop.contents[hit.index];
   if (!item) return false;
-  gameState.inventory.push(item);
+  if (item.type === 'keycard') {
+    collectKeycardItem(item);
+  } else if (item.type === 'incriminating_evidence') {
+    collectEvidenceItem(item);
+  } else {
+    gameState.inventory.push(item);
+  }
   prop.contents.splice(hit.index, 1);
+  if (!prop.contents.length) {
+    markPropEmpty(prop);
+    closeContainer();
+  }
   return true;
 };
 
@@ -79,11 +112,6 @@ const drawContents = (ctx, panel, contents) => {
   ctx.textAlign = 'left';
   ctx.textBaseline = 'top';
   slotHitboxes.length = 0;
-  if (!contents.length) {
-    ctx.fillText('Empty.', panel.x + 20, panel.y + 64);
-    ctx.restore();
-    return;
-  }
   contents.forEach((item, index) => {
     const y = panel.y + 64 + index * 32;
     ctx.fillText(`• ${item.label}`, panel.x + 20, y);
@@ -97,6 +125,11 @@ export const renderContainerMenu = (ctx) => {
   const prop = gameState.props.find((p) => p.id === gameState.ui.openContainerId);
   if (!prop) {
     gameState.ui.openContainerId = null;
+    return;
+  }
+  if (!prop.contents.length) {
+    markPropEmpty(prop);
+    closeContainer();
     return;
   }
   drawBackground(ctx);

@@ -35,8 +35,8 @@ const drawBackdrop = (ctx) => {
 };
 
 const drawPanel = (ctx) => {
-  const width = gameState.config.canvasWidth * 0.6;
-  const height = gameState.config.canvasHeight * 0.55;
+  const width = gameState.config.canvasWidth * 0.85;
+  const height = gameState.config.canvasHeight * 0.8;
   const x = (gameState.config.canvasWidth - width) / 2;
   const y = (gameState.config.canvasHeight - height) / 2;
   ctx.save();
@@ -52,7 +52,7 @@ const drawPanel = (ctx) => {
 const drawTitle = (ctx, panel) => {
   ctx.save();
   ctx.fillStyle = '#c5d8ff';
-  ctx.font = '30px "Courier New", monospace';
+  ctx.font = '42px "Courier New", monospace';
   ctx.textAlign = 'left';
   ctx.textBaseline = 'top';
   ctx.fillText('Crew Journal', panel.x + 24, panel.y + 16);
@@ -63,7 +63,7 @@ const drawTabs = (ctx, panel) => {
   const tabs = gameState.journal.entries;
   tabHitboxes.length = 0;
   if (!tabs.length) return { x: panel.x + 24, y: panel.y + 96, width: panel.width - 48, height: panel.height - 120 };
-  const tabHeight = 48;
+  const tabHeight = 64;
   const tabWidth = panel.width / tabs.length;
   const baseY = panel.y + 72;
   ctx.save();
@@ -78,13 +78,21 @@ const drawTabs = (ctx, panel) => {
     ctx.lineWidth = 2;
     ctx.strokeRect(x, y, tabWidth, tabHeight);
     ctx.fillStyle = isActive ? '#8effd6' : '#c5d8ff';
-    ctx.font = '18px "Courier New", monospace';
+    ctx.font = '22px "Courier New", monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(label, x + tabWidth / 2, y + tabHeight / 2);
     if (entry.hasKeycard) {
       ctx.fillStyle = '#3dd17a';
-      ctx.fillRect(x + tabWidth - 18, y + 8, 10, 10);
+      ctx.fillRect(x + tabWidth - 30, y + 8, 14, 14);
+    }
+    if (entry.isVictim) {
+      ctx.fillStyle = entry.victimIdentified ? '#ff7575' : '#c5d8ff';
+      ctx.fillText('V', x + 16, y + tabHeight / 2);
+    }
+    if (entry.isKiller && entry.killerConfirmed) {
+      ctx.fillStyle = '#ffdf5b';
+      ctx.fillText('K', x + tabWidth - 52, y + tabHeight / 2);
     }
     tabHitboxes.push({ id: entry.id, x, y, width: tabWidth, height: tabHeight });
   });
@@ -105,25 +113,25 @@ const formatMethods = (role) => (
 
 const drawEvidenceList = (ctx, area, entry) => {
   const evidence = entry.evidence;
-  const startY = area.y + 120;
+  const startY = area.y + 160;
   ctx.save();
   ctx.fillStyle = '#c5d8ff';
-  ctx.font = '18px "Courier New", monospace';
+  ctx.font = '22px "Courier New", monospace';
   ctx.fillText('Evidence:', area.x, startY);
   ctx.restore();
   if (!evidence.length) {
     ctx.save();
     ctx.fillStyle = '#8effd6';
-    ctx.font = '18px "Courier New", monospace';
-    ctx.fillText('No evidence logged.', area.x, startY + 28);
+    ctx.font = '20px "Courier New", monospace';
+    ctx.fillText('No evidence logged.', area.x, startY + 32);
     ctx.restore();
     return;
   }
   evidence.forEach((entryItem, index) => {
     ctx.save();
     ctx.fillStyle = '#8effd6';
-    ctx.font = '18px "Courier New", monospace';
-    ctx.fillText(`• ${entryItem.label}`, area.x, startY + 28 + index * 24);
+    ctx.font = '20px "Courier New", monospace';
+    ctx.fillText(`• ${entryItem.label}`, area.x, startY + 32 + index * 26);
     ctx.restore();
   });
 };
@@ -133,7 +141,7 @@ const drawContent = (ctx, area, activeTab) => {
   const role = entry ? gameState.config.roles[entry.id] : null;
   ctx.save();
   ctx.fillStyle = '#8effd6';
-  ctx.font = '22px "Courier New", monospace';
+  ctx.font = '26px "Courier New", monospace';
   ctx.textAlign = 'left';
   ctx.textBaseline = 'top';
   if (!entry || !role) {
@@ -146,6 +154,7 @@ const drawContent = (ctx, area, activeTab) => {
     `Station: ${role.name}`,
     `Identity: ${identity}`,
     `Keycard: ${entry.hasKeycard ? 'Acquired' : 'Missing'}`,
+    `Status: ${entry.isVictim ? (entry.victimIdentified ? 'Victim Confirmed' : 'Victim Unknown') : entry.isKiller ? (entry.killerConfirmed ? 'Killer Confirmed' : 'Suspect') : 'Crew'}`,
     `Method Access: ${formatMethods(role)}`
   ];
   const victim = gameState.case.victim;

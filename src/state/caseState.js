@@ -1,5 +1,7 @@
 import { gameState } from './gameState.js';
 import { cellToWorldCenter, worldPointToCell, markCell, WORLD_SOLID } from './gridState.js';
+import { markVictimRole, markKillerRole, markVictimIdentified } from './journalState.js';
+import { addIncriminatingEvidence } from './roomProps.js';
 
 const roleKeys = Object.keys(gameState.config.roles);
 
@@ -13,6 +15,13 @@ const randomMethod = (roleKey) => {
 const randomVictimName = (roleKey) => {
   const names = gameState.config.roles[roleKey].names;
   return names[Math.floor(Math.random() * names.length)];
+};
+
+const chooseVictimRole = () => randomRoleKey();
+
+const chooseKillerRole = (victimRole) => {
+  const pool = roleKeys.filter((role) => role !== victimRole);
+  return pool[Math.floor(Math.random() * pool.length)];
 };
 
 const randomTimeWindow = () => {
@@ -32,8 +41,8 @@ const randomCellInsideRoom = (room) => {
   return { cellX, cellY };
 };
 
-const spawnBody = () => {
-  const room = randomRoom();
+const spawnBody = (victimRole) => {
+  const room = gameState.map.rooms.find((r) => r.id === victimRole) || randomRoom();
   const { cellX, cellY } = randomCellInsideRoom(room);
   const { x, y } = cellToWorldCenter(cellX, cellY);
   Object.assign(gameState.body, { cellX, cellY, x, y, collectedSample: false });
@@ -58,8 +67,8 @@ export const applyCaseObstacles = () => {
   });
 };
 
-export const initializeCase = () => {
-  const roleKey = randomRoleKey();
+const seedVictim = () => {
+  const roleKey = chooseVictimRole();
   const role = gameState.config.roles[roleKey];
   const method = randomMethod(roleKey);
   const victimName = randomVictimName(roleKey);
@@ -70,6 +79,7 @@ export const initializeCase = () => {
     methodCategory: method.category,
     methodName: method.name
   };
+  markVictimRole(roleKey);
   gameState.case.methodCategory = '???';
   gameState.case.victimName = '???';
   gameState.case.victimOccupation = '???';
@@ -80,6 +90,23 @@ export const initializeCase = () => {
     methodCategory: method.category,
     timeWindow
   });
-  spawnBody();
+  return roleKey;
+};
+
+const seedKiller = (victimRole) => {
+  const killerRole = chooseKillerRole(victimRole);
+  markKillerRole(killerRole);
+  gameState.case.killer = Object.seal({
+    roleKey: killerRole
+  });
+  addIncriminatingEvidence(gameState.props, killerRole);
+  const keyProp = gameState.props.find((prop) => prop.keycardRoleId === killerRole);
+  if (keyProp) keyProp.highlightKeycard = true;
+};
+
+export const initializeCase = () => {
+  const victimRole = seedVictim();
+  seedKiller(victimRole);
+  spawnBody(victimRole);
   spawnScanner();
 };

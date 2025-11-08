@@ -1,6 +1,7 @@
 import { gameState } from '../state/gameState.js';
 import { distanceBetween } from '../utils/geometry.js';
 import { syncOxygenState } from '../movement/oxygenSystem.js';
+import { markVictimIdentified } from '../state/journalState.js';
 
 const scannerRange = 96;
 const propRange = 88;
@@ -24,6 +25,7 @@ const applyScannerResults = () => {
   gameState.case.methodCategory = pending.methodCategory;
   gameState.case.timeWindow = pending.timeWindow;
   gameState.case.pending = null;
+  markVictimIdentified(gameState.case.victim?.roleKey);
 };
 
 const makeScannerZone = () => {
@@ -58,7 +60,21 @@ const makePropZone = (prop) => ({
   y: prop.y - gameState.grid.cellSize / 2,
   width: gameState.grid.cellSize,
   height: gameState.grid.cellSize,
-  action: () => { gameState.ui.openContainerId = prop.id; }
+  action: () => {
+    if (!canAccessProp(prop)) {
+      prop.promptText = lockedPrompt;
+      return;
+    }
+    if (!prop.contents.length) {
+      prop.isEmpty = true;
+      prop.promptText = 'EMPTY';
+      prop.searched = true;
+      return;
+    }
+    prop.searched = true;
+    prop.isEmpty = false;
+    gameState.ui.openContainerId = prop.id;
+  }
 });
 
 export const updateInteractions = () => {
@@ -74,7 +90,7 @@ export const updateInteractions = () => {
   }
   gameState.props.forEach((prop) => {
     prop.promptActive = false;
-    prop.promptText = 'CLICK TO SEARCH';
+    prop.promptText = prop.isEmpty ? 'EMPTY' : 'CLICK TO SEARCH';
     const distance = distanceBetween(gameState.player, prop);
     if (distance > propRange) return;
     prop.promptActive = true;
