@@ -1,13 +1,6 @@
 import { config } from './config.js';
 
-const buildJournalTabs = () => (
-  Object.keys(config.roles).map((key) => ({
-    id: key,
-    label: config.roles[key].name
-  }))
-);
-
-const journalTabs = buildJournalTabs();
+const roleOrder = Object.keys(config.roles);
 
 export const uiState = Object.seal({
   showMinimap: false,
@@ -15,7 +8,6 @@ export const uiState = Object.seal({
   showJournal: false,
   openContainerId: null,
   journal: Object.seal({
-    tabs: journalTabs,
-    activeTab: journalTabs[0]?.id ?? null
+    activeTab: roleOrder[0] ?? null
   })
 });

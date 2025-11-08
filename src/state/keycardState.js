@@ -15,6 +15,7 @@ const randomCellInsideRoom = (room) => {
 
 const lockerDefinitions = mapState.rooms.map((room) => ({
   lockerId: `${room.id}_locker`,
+  roleId: room.id,
   label: `${room.name} Locker Keycard`
 }));
 
@@ -25,6 +26,7 @@ const createKeycard = (definition, index) => {
   return Object.seal({
     id: `${definition.lockerId}_key_${index}`,
     lockerId: definition.lockerId,
+    roleId: definition.roleId,
     label: definition.label,
     cellX: cell.cellX,
     cellY: cell.cellY,

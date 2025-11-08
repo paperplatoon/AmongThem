@@ -1,5 +1,6 @@
 import { gameState } from '../state/gameState.js';
 import { distanceBetween } from '../utils/geometry.js';
+import { markKeycardKnown } from '../state/journalState.js';
 
 const pickupRange = () => gameState.config.itemPickupRange;
 
@@ -24,6 +25,7 @@ const findCandidate = () => {
 const collectKeycard = (keycard) => {
   keycard.collected = true;
   gameState.player.keycards.add(keycard.lockerId);
+  if (keycard.roleId) markKeycardKnown(keycard.roleId);
   gameState.pressedKeys.delete('e');
 };
 
