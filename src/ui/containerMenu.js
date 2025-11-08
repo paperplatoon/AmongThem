@@ -1,0 +1,107 @@
+import { gameState } from '../state/gameState.js';
+
+const slotHitboxes = [];
+let closeHitbox = null;
+
+const closeContainer = () => { gameState.ui.openContainerId = null; };
+
+export const handleContainerClick = (screenX, screenY) => {
+  if (!gameState.ui.openContainerId) return false;
+  if (closeHitbox && screenX >= closeHitbox.x && screenX <= closeHitbox.x2 && screenY >= closeHitbox.y && screenY <= closeHitbox.y2) {
+    closeContainer();
+    return true;
+  }
+  const hit = slotHitboxes.find((slot) => screenX >= slot.x && screenX <= slot.x2 && screenY >= slot.y && screenY <= slot.y2);
+  if (!hit) return false;
+  const prop = gameState.props.find((p) => p.id === gameState.ui.openContainerId);
+  if (!prop) return false;
+  const item = prop.contents[hit.index];
+  if (!item) return false;
+  gameState.inventory.push(item);
+  prop.contents.splice(hit.index, 1);
+  return true;
+};
+
+const drawBackground = (ctx) => {
+  ctx.save();
+  ctx.fillStyle = 'rgba(7, 10, 20, 0.85)';
+  ctx.fillRect(0, 0, gameState.config.canvasWidth, gameState.config.canvasHeight);
+  ctx.restore();
+};
+
+const drawPanel = (ctx) => {
+  const width = gameState.config.canvasWidth * 0.4;
+  const height = gameState.config.canvasHeight * 0.5;
+  const x = (gameState.config.canvasWidth - width) / 2;
+  const y = (gameState.config.canvasHeight - height) / 2;
+  ctx.save();
+  ctx.fillStyle = 'rgba(18, 28, 54, 0.95)';
+  ctx.strokeStyle = '#8effd6';
+  ctx.lineWidth = 2;
+  ctx.fillRect(x, y, width, height);
+  ctx.strokeRect(x, y, width, height);
+  ctx.restore();
+  return { x, y, width, height };
+};
+
+const drawCloseButton = (ctx, panel) => {
+  const size = 24;
+  const x = panel.x + panel.width - size - 8;
+  const y = panel.y + 8;
+  ctx.save();
+  ctx.fillStyle = '#2f3e69';
+  ctx.fillRect(x, y, size, size);
+  ctx.strokeStyle = '#8effd6';
+  ctx.strokeRect(x, y, size, size);
+  ctx.fillStyle = '#8effd6';
+  ctx.font = '20px "Courier New", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('X', x + size / 2, y + size / 2);
+  ctx.restore();
+  closeHitbox = { x, y, x2: x + size, y2: y + size };
+};
+
+const drawTitle = (ctx, panel, label) => {
+  ctx.save();
+  ctx.fillStyle = '#c5d8ff';
+  ctx.font = '28px "Courier New", monospace';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  ctx.fillText(label, panel.x + 20, panel.y + 16);
+  ctx.restore();
+};
+
+const drawContents = (ctx, panel, contents) => {
+  ctx.save();
+  ctx.fillStyle = '#8effd6';
+  ctx.font = '22px "Courier New", monospace';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  slotHitboxes.length = 0;
+  if (!contents.length) {
+    ctx.fillText('Empty.', panel.x + 20, panel.y + 64);
+    ctx.restore();
+    return;
+  }
+  contents.forEach((item, index) => {
+    const y = panel.y + 64 + index * 32;
+    ctx.fillText(`• ${item.label}`, panel.x + 20, y);
+    slotHitboxes.push({ x: panel.x + 20, y, x2: panel.x + panel.width - 20, y2: y + 28, index });
+  });
+  ctx.restore();
+};
+
+export const renderContainerMenu = (ctx) => {
+  if (!gameState.ui.openContainerId) return;
+  const prop = gameState.props.find((p) => p.id === gameState.ui.openContainerId);
+  if (!prop) {
+    gameState.ui.openContainerId = null;
+    return;
+  }
+  drawBackground(ctx);
+  const panel = drawPanel(ctx);
+  drawCloseButton(ctx, panel);
+  drawTitle(ctx, panel, `${prop.label}`);
+  drawContents(ctx, panel, prop.contents);
+};

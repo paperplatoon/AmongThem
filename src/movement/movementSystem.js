@@ -3,6 +3,7 @@ import { add, scale } from '../utils/geometry.js';
 import { isPointWalkable } from '../collision/collisionMask.js';
 import { worldPointToCell } from '../state/gridState.js';
 import { updateStamina, getCurrentSpeed } from './staminaSystem.js';
+import { updateOxygen } from './oxygenSystem.js';
 
 const boolToNumber = (value) => (value ? 1 : 0);
 
@@ -43,6 +44,7 @@ const tryMove = (player, delta) => {
 
 export const updateMovement = (deltaSeconds) => {
   updateStamina(deltaSeconds);
+  updateOxygen(deltaSeconds);
   const direction = normalize(getDirection(gameState.pressedKeys));
   const speed = getCurrentSpeed();
   const velocity = scale(direction, speed * deltaSeconds);

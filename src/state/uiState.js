@@ -1,4 +1,6 @@
 export const uiState = Object.seal({
   showMinimap: false,
-  showInventory: false
+  showInventory: false,
+  showJournal: false,
+  openContainerId: null
 });

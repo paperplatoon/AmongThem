@@ -24,7 +24,12 @@ const alreadyOwned = (id) => gameState.inventory.some((entry) => entry.id === id
 
 const addToInventory = (item) => {
   if (alreadyOwned(item.id)) return;
-  gameState.inventory.push({ id: item.id, label: item.label });
+  gameState.inventory.push({
+    id: item.id,
+    label: item.label,
+    type: item.type,
+    effect: item.effect
+  });
 };
 
 const collectItem = (item) => {

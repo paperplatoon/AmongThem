@@ -32,6 +32,76 @@ export const config = Object.freeze({
     max: 100,
     sprintMultiplier: 3,
     drainIntervalSeconds: 0.1,
-    drainPerInterval: 0.05
+    drainPerInterval: 0.1
+  }),
+  oxygen: Object.freeze({
+    max: 100,
+    depletionSeconds: 30 * 60
+  }),
+  roles: Object.freeze({
+    bridge: {
+      name: 'Captain',
+      names: ['Amelia Ortiz', 'Jonas Pike', 'Rani Malik'],
+      methods: [
+        { name: 'Baton', category: 'blunt' },
+        { name: 'Sidearm', category: 'impact' }
+      ]
+    },
+    medbay: {
+      name: 'Medic',
+      names: ['Dr. Lila Han', 'Dr. Miles Grant', 'Dr. Wei Song'],
+      methods: [
+        { name: 'Sedatives', category: 'poison' },
+        { name: 'Scalpel', category: 'stab' }
+      ]
+    },
+    kitchen: {
+      name: 'Cook',
+      names: ['Sera Quinn', 'Elliot Vance', 'Marta Cole'],
+      methods: [
+        { name: 'Knife', category: 'stab' },
+        { name: 'Rat Poison', category: 'poison' }
+      ]
+    },
+    engineering: {
+      name: 'Engineer',
+      names: ['Rex Nadir', 'Isabel Cho', 'Mateo Blake'],
+      methods: [
+        { name: 'Wrench', category: 'blunt' },
+        { name: 'Life Support Override', category: 'oxygen_loss' }
+      ]
+    },
+    hydroponics: {
+      name: 'Farmer',
+      names: ['Pilar Stone', 'Nadia Bloom', 'Harlan Tse'],
+      methods: [
+        { name: 'Fertilizer', category: 'poison' },
+        { name: 'Shears', category: 'stab' }
+      ]
+    },
+    maintenance: {
+      name: 'Janitor',
+      names: ['Omar Reed', 'Tess Morita', 'Alma Ridge'],
+      methods: [
+        { name: 'Hammer', category: 'blunt' },
+        { name: 'Solvent', category: 'poison' }
+      ]
+    },
+    ai_core: {
+      name: 'AI Core',
+      names: ['RA-3 Sentience', 'SARA Core', 'Sentinel Node'],
+      methods: [
+        { name: 'Life Support Override', category: 'oxygen_loss' },
+        { name: 'Internal Defenses', category: 'impact' }
+      ]
+    },
+    quarters: {
+      name: 'Counselor',
+      names: ['Mina Clarke', 'Gabriel Holt', 'Soren Ives'],
+      methods: [
+        { name: 'Defense Rifles', category: 'impact' },
+        { name: 'Pillow Strangulation', category: 'oxygen_loss' }
+      ]
+    }
   })
 });

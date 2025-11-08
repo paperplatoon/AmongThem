@@ -1,4 +1,64 @@
 import { gameState } from '../state/gameState.js';
+import { syncOxygenState } from '../movement/oxygenSystem.js';
+import { tryHandleInteractionClick } from '../interactions/interactionSystem.js';
+import { handleContainerClick } from './containerMenu.js';
+
+const slotHitboxes = [];
+
+const applyItemEffect = (entry) => {
+  if (!entry.effect) return false;
+  const player = gameState.player;
+  if (entry.effect.type === 'stamina') {
+    const stamina = player.stamina;
+    stamina.current = Math.min(stamina.max, stamina.current + stamina.max * entry.effect.amount);
+    stamina.drainTimer = 0;
+    return true;
+  }
+  if (entry.effect.type === 'oxygen') {
+    const oxygen = player.oxygen;
+    const addedSeconds = gameState.config.oxygen.depletionSeconds * entry.effect.amount;
+    oxygen.secondsRemaining = Math.min(
+      gameState.config.oxygen.depletionSeconds,
+      oxygen.secondsRemaining + addedSeconds
+    );
+    syncOxygenState();
+    return true;
+  }
+  return false;
+};
+
+const handleInventorySelection = (screenX, screenY) => {
+  if (!gameState.ui.showInventory) return false;
+  const hit = slotHitboxes.find((slot) => (
+    screenX >= slot.x &&
+    screenX <= slot.x + slot.width &&
+    screenY >= slot.y &&
+    screenY <= slot.y + slot.height
+  ));
+  if (!hit) return false;
+  const entry = gameState.inventory[hit.index];
+  if (!entry) return false;
+  if (!applyItemEffect(entry)) return false;
+  gameState.inventory.splice(hit.index, 1);
+  return true;
+};
+
+const handleCanvasClick = (canvas, event) => {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const screenX = (event.clientX - rect.left) * scaleX;
+  const screenY = (event.clientY - rect.top) * scaleY;
+  const worldX = screenX + gameState.camera.x;
+  const worldY = screenY + gameState.camera.y;
+  if (tryHandleInteractionClick(worldX, worldY)) return;
+  if (handleContainerClick(screenX, screenY)) return;
+  handleInventorySelection(screenX, screenY);
+};
+
+export const registerInventoryInput = (canvas) => {
+  canvas.addEventListener('click', (event) => handleCanvasClick(canvas, event));
+};
 
 const toggle = () => { gameState.ui.showInventory = !gameState.ui.showInventory; };
 
@@ -40,6 +100,7 @@ const drawHeader = (ctx, panel) => {
 
 const drawItems = (ctx, panel) => {
   const entries = gameState.inventory;
+  slotHitboxes.length = 0;
   ctx.save();
   ctx.fillStyle = '#8effd6';
   ctx.font = '28px "Courier New", monospace';
@@ -52,7 +113,14 @@ const drawItems = (ctx, panel) => {
   }
   entries.forEach((entry, index) => {
     const lineY = panel.y + 80 + index * 36;
-    ctx.fillText(`Item ${entry.label}`, panel.x + 32, lineY);
+    ctx.fillText(`${index + 1}. ${entry.label}`, panel.x + 32, lineY);
+    slotHitboxes.push({
+      index,
+      x: panel.x + 32,
+      y: lineY,
+      width: panel.width - 64,
+      height: 32
+    });
   });
   ctx.restore();
 };

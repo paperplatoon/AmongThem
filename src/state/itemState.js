@@ -1,57 +1,70 @@
 import { rooms } from './mapState.js';
-import { worldPointToCell, cellToWorldCenter, worldPointToIndex } from './gridState.js';
+import { worldPointToCell, cellToWorldCenter } from './gridState.js';
 
-const clampCellWithinRoom = (room, cell) => {
-  const minX = worldPointToCell({ x: room.x, y: room.y }).x + 1;
-  const maxX = worldPointToCell({ x: room.x + room.width, y: room.y }).x - 1;
-  const minY = worldPointToCell({ x: room.x, y: room.y }).y + 1;
-  const maxY = worldPointToCell({ x: room.x, y: room.y + room.height }).y - 1;
-  return {
-    x: Math.max(minX, Math.min(maxX, cell.x)),
-    y: Math.max(minY, Math.min(maxY, cell.y))
-  };
+export const ITEM_TYPES = Object.freeze({
+  ENERGY_BAR: 'energy_bar',
+  OXYGEN_CANISTER: 'oxygen_canister'
+});
+
+export const ITEM_DEFINITIONS = Object.freeze({
+  [ITEM_TYPES.ENERGY_BAR]: {
+    label: 'Energy Bar',
+    effect: { type: 'stamina', amount: 0.25 }
+  },
+  [ITEM_TYPES.OXYGEN_CANISTER]: {
+    label: 'Oxygen Canister',
+    effect: { type: 'oxygen', amount: 0.10 }
+  }
+});
+
+const randomType = () => (
+  Math.random() < 0.5 ? ITEM_TYPES.ENERGY_BAR : ITEM_TYPES.OXYGEN_CANISTER
+);
+
+const randomRoom = () => rooms[Math.floor(Math.random() * rooms.length)];
+
+const randomCellInsideRoom = (room) => {
+  const minCell = worldPointToCell({ x: room.x, y: room.y });
+  const maxCell = worldPointToCell({ x: room.x + room.width, y: room.y + room.height });
+  const interiorWidth = Math.max(1, maxCell.x - minCell.x - 1);
+  const interiorHeight = Math.max(1, maxCell.y - minCell.y - 1);
+  const cellX = Math.floor(Math.random() * interiorWidth) + minCell.x + Math.min(1, interiorWidth);
+  const cellY = Math.floor(Math.random() * interiorHeight) + minCell.y + Math.min(1, interiorHeight);
+  return { cellX, cellY };
 };
 
-const createItem = (room, index) => {
-  const id = `item_${room.id}`;
-  const label = String(index + 1);
-  const centerPoint = {
-    x: room.x + room.width / 2,
-    y: room.y + room.height / 2
-  };
-  const baseCell = worldPointToCell(centerPoint);
-  const offset = {
-    x: (index % 2 === 0 ? -1 : 1),
-    y: (index % 3 === 0 ? 1 : -1)
-  };
-  const candidate = {
-    x: baseCell.x + offset.x,
-    y: baseCell.y + offset.y
-  };
-  const cell = clampCellWithinRoom(room, candidate);
-  const position = cellToWorldCenter(cell.x, cell.y);
-  const gridIndex = worldPointToIndex(position);
+const createItem = (index) => {
+  const room = randomRoom();
+  const type = randomType();
+  const { cellX, cellY } = randomCellInsideRoom(room);
+  const { x, y } = cellToWorldCenter(cellX, cellY);
+  const definition = ITEM_DEFINITIONS[type];
   return Object.seal({
-    id,
-    roomId: room.id,
-    label,
-    cellX: cell.x,
-    cellY: cell.y,
-    gridIndex,
-    x: position.x,
-    y: position.y,
+    id: `item_${index}`,
+    type,
+    label: definition.label,
+    effect: definition.effect,
+    cellX,
+    cellY,
+    x,
+    y,
     collected: false
   });
 };
 
-const items = rooms.map((room, index) => createItem(room, index));
+const generateItems = () => {
+  const count = Math.floor(Math.random() * 3) + 2; // 2-4 items
+  return Array.from({ length: count }, (_, index) => createItem(index));
+};
 
-const buildIndex = (list) => list.reduce((acc, item) => {
-  acc[item.id] = item;
-  return acc;
-}, {});
+const items = generateItems();
 
 export const itemState = Object.seal({
   all: items,
-  byId: buildIndex(items)
+  byId: items.reduce((acc, item) => {
+    acc[item.id] = item;
+    return acc;
+  }, {}),
+  types: ITEM_TYPES,
+  definitions: ITEM_DEFINITIONS
 });

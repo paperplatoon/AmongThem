@@ -6,6 +6,7 @@ import { cameraState } from './cameraState.js';
 import { uiState } from './uiState.js';
 import { itemState } from './itemState.js';
 import { gridState } from './gridState.js';
+import { generateRoomProps } from './roomProps.js';
 
 export const gameState = Object.seal({
   config,
@@ -19,5 +20,32 @@ export const gameState = Object.seal({
   items: itemState.all,
   inventory: [],
   pressedKeys: new Set(),
-  lastFrameTime: 0
+  lastFrameTime: 0,
+  case: {
+    victim: null,
+    victimName: '???',
+    victimOccupation: '???',
+    timeWindow: '???',
+    identified: false,
+    methodCategory: '???',
+    methodExact: null
+  },
+  body: {
+    cellX: null,
+    cellY: null,
+    x: null,
+    y: null,
+    collectedSample: false
+  },
+  scanner: {
+    cellX: null,
+    cellY: null,
+    x: null,
+    y: null,
+    promptActive: false
+  },
+  props: generateRoomProps(),
+  interactions: {
+    clickZones: []
+  }
 });

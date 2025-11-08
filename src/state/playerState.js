@@ -21,5 +21,11 @@ export const playerState = Object.seal({
     max: config.stamina.max,
     drainTimer: 0,
     isSprinting: false
+  }),
+  oxygen: Object.seal({
+    current: config.oxygen.max,
+    max: config.oxygen.max,
+    secondsRemaining: config.oxygen.depletionSeconds,
+    depleted: false
   })
 });
