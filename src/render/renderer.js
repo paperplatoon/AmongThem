@@ -119,15 +119,15 @@ const drawBody = (ctx) => {
   const body = gameState.body;
   if (body.x == null) return;
   ctx.save();
-  ctx.fillStyle = '#d66';
+  ctx.fillStyle = body.collectedSample ? '#555c6b' : '#d66';
   ctx.beginPath();
   ctx.arc(body.x, body.y, cellSize() * 0.35, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = '#ffffff';
+  ctx.fillStyle = body.collectedSample ? '#b3b7c4' : '#ffffff';
   ctx.font = '18px "Courier New", monospace';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText('BODY', body.x, body.y);
+  ctx.fillText(body.collectedSample ? 'SEARCHED' : 'BODY', body.x, body.y);
   ctx.restore();
 };
 

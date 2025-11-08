@@ -81,22 +81,57 @@ const randomBetween = (min, max) => min + Math.random() * (max - min);
 
 const wallPoint = (rect, side) => {
   const inset = config.cellSize * 0.75;
-  if (side === 0) return { x: randomBetween(rect.x + inset, rect.x + rect.width - inset), y: rect.y + inset };
-  if (side === 1) return { x: randomBetween(rect.x + inset, rect.x + rect.width - inset), y: rect.y + rect.height - inset };
-  if (side === 2) return { x: rect.x + inset, y: randomBetween(rect.y + inset, rect.y + rect.height - inset) };
-  return { x: rect.x + rect.width - inset, y: randomBetween(rect.y + inset, rect.y + rect.height - inset) };
+  const clearance = config.cellSize * 2.5;
+  if (side === 0) return { x: randomBetween(rect.x + clearance, rect.x + rect.width - clearance), y: rect.y + inset };
+  if (side === 1) return { x: randomBetween(rect.x + clearance, rect.x + rect.width - clearance), y: rect.y + rect.height - inset };
+  if (side === 2) return { x: rect.x + inset, y: randomBetween(rect.y + clearance, rect.y + rect.height - clearance) };
+  return { x: rect.x + rect.width - inset, y: randomBetween(rect.y + clearance, rect.y + rect.height - clearance) };
 };
 
 const tooClose = (cell, taken) => taken.some((occupied) => (
   Math.abs(cell.x - occupied.x) < 2 && Math.abs(cell.y - occupied.y) < 2
 ));
 
+const pointInsideRect = (point, rect) => (
+  point.x >= rect.x && point.x <= rect.x + rect.width &&
+  point.y >= rect.y && point.y <= rect.y + rect.height
+);
+
+const touchesWall = (point, side) => {
+  const offset = config.cellSize * 0.8;
+  const normal = [
+    { x: 0, y: -offset },
+    { x: 0, y: offset },
+    { x: -offset, y: 0 },
+    { x: offset, y: 0 }
+  ][side];
+  const probe = { x: point.x + normal.x, y: point.y + normal.y };
+  return !mapState.corridors.some((rect) => pointInsideRect(probe, rect));
+};
+
+const doorCells = mapState.doors.flatMap((door) => {
+  const cells = [];
+  const min = worldPointToCell({ x: door.x, y: door.y });
+  const max = worldPointToCell({ x: door.x + door.width, y: door.y + door.height });
+  for (let x = min.x - 1; x <= max.x + 1; x++) {
+    for (let y = min.y - 1; y <= max.y + 1; y++) cells.push({ x, y });
+  }
+  return cells;
+});
+
+const nearDoor = (cell) => doorCells.some((doorCell) => (
+  Math.abs(cell.x - doorCell.x) <= 1 && Math.abs(cell.y - doorCell.y) <= 1
+));
+
 const pickHallCell = (taken) => {
-  for (let attempts = 0; attempts < 30; attempts++) {
+  for (let attempts = 0; attempts < 40; attempts++) {
     const corridor = randomCorridor();
-    const point = wallPoint(corridor, Math.floor(Math.random() * 4));
+    const side = Math.floor(Math.random() * 4);
+    const point = wallPoint(corridor, side);
     const cell = worldPointToCell(point);
     if (tooClose(cell, taken)) continue;
+    if (!touchesWall(point, side)) continue;
+     if (nearDoor(cell)) continue;
     taken.push(cell);
     return cell;
   }
