@@ -52,6 +52,12 @@
 - Avoid geometry math scattered across modules: use shared world↔grid helpers, and keep door/room data cached in state to prevent duplication.
 - Keep doors, items, and future hazards state-driven; visuals should reflect state rather than manage gameplay indirectly.
 
+## Temporary Implementations
+*(These are stopgap solutions to facilitate testing; they should be revisited when the full systems arrive.)*
+- **Crew Identity Discovery:** Keycards and desk searches currently flip a flag that reveals an NPC’s name and highlights their journal tab. This is a provisional shortcut until the broader clue/evidence loop is built out.
+- **Killer Proof Item:** The murderer’s locker always spawns a generic “Incriminating Evidence” item that marks them as the killer when collected. It’s a temporary win-condition proxy ahead of nuanced motive/method deduction.
+- **Keycard Prop Highlighting:** The hallway prop that contains the killer’s keycard renders bright red for debugging. This will be removed or replaced with diegetic hinting once flow is fully validated.
+
 ## Role Reference
 - Captain (Bridge) — Methods: Baton (blunt), Sidearm (impact)
 - Medic (Medbay) — Methods: Sedatives (poison), Scalpel (stab)

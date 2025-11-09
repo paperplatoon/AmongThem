@@ -3,7 +3,7 @@ import { mapState } from './mapState.js';
 import { worldPointToCell } from './gridState.js';
 
 const startX = (mapState.corridorOuter.left + mapState.corridorOuter.right) / 2;
-const startY = mapState.corridorOuter.top + mapState.constants.corridorThickness / 2;
+const startY = mapState.corridorOuter.top + mapState.corridorThickness / 2;
 
 const startCell = worldPointToCell({ x: startX, y: startY });
 
