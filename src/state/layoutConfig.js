@@ -10,17 +10,17 @@ const layout = Object.freeze({
   gridHeight,
   perimeter: Object.freeze({
     marginCells: 12,
-    corridorThicknessCells: 4
+    corridorThicknessCells: 7
   }),
   rooms: Object.freeze({
     northSouth: Object.freeze({
-      widthCells: 18,
-      depthCells: 8,
+      widthCells: 24,
+      depthCells: 11,
       fractions: [0.3, 0.7]
     }),
     eastWest: Object.freeze({
-      heightCells: 18,
-      depthCells: 8,
+      heightCells: 24,
+      depthCells: 11,
       fractions: [0.3, 0.7]
     })
   })
