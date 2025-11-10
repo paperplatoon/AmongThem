@@ -60,6 +60,7 @@ const layoutVent = layout.vents;
 const ventThickness = layoutVent.thicknessCells;
 const ventHalf = Math.floor(ventThickness / 2);
 const ventOffset = layoutVent.offsetCells;
+const ventIncludeConnectors = Boolean(layoutVent.connectors);
 
 const perimeterCorridors = [
   { id: 'corridor_north', rect: { x: square.left, y: square.top, width: square.right - square.left, height: corridorThickness } },
@@ -408,12 +409,13 @@ const buildVents = () => {
     height: Math.round(verticalSpan + ventThickness)
   }, 'vent_ring');
 
-  const connectorForRoom = (room) => {
-    const center = roomCenter(room);
-    if (room.side === 'north') {
-      const yStart = Math.min(center.y, ventRingCenters.north);
-      const yEnd = Math.max(center.y, ventRingCenters.north);
-      return {
+  if (ventIncludeConnectors) {
+    const connectorForRoom = (room) => {
+      const center = roomCenter(room);
+      if (room.side === 'north') {
+        const yStart = Math.min(center.y, ventRingCenters.north);
+        const yEnd = Math.max(center.y, ventRingCenters.north);
+        return {
         x: Math.round(center.x - ventHalf),
         y: Math.round(yStart),
         width: ventThickness,
@@ -442,18 +444,19 @@ const buildVents = () => {
     }
     const xStart = Math.min(ventRingCenters.east, center.x);
     const xEnd = Math.max(ventRingCenters.east, center.x);
-    return {
-      x: Math.round(xStart),
-      y: Math.round(center.y - ventHalf),
-      width: Math.max(1, Math.round(xEnd - xStart)),
-      height: ventThickness
+      return {
+        x: Math.round(xStart),
+        y: Math.round(center.y - ventHalf),
+        width: Math.max(1, Math.round(xEnd - xStart)),
+        height: ventThickness
+      };
     };
-  };
 
-  roomRecords.forEach((room) => {
-    const rect = connectorForRoom(room);
-    addVent(`${room.id}_vent`, rect, 'vent_connector');
-  });
+    roomRecords.forEach((room) => {
+      const rect = connectorForRoom(room);
+      addVent(`${room.id}_vent`, rect, 'vent_connector');
+    });
+  }
 
   let ventCellsMarked = 0;
   for (let i = 0; i < ventCellMask.length; i += 1) {

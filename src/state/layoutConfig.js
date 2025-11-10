@@ -31,7 +31,8 @@ const layout = Object.freeze({
   }),
   vents: Object.freeze({
     offsetCells: 6,
-    thicknessCells: 3
+    thicknessCells: 3,
+    connectors: false
   })
 });
 
