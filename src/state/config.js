@@ -24,6 +24,7 @@ export const config = Object.freeze({
   corridorColor: '#0f1636',
   wallColor: '#4f7bd9',
   floorColor: '#071022',
+  ventFloorColor: '#2c1038',
   playerColor: '#f4f9ff',
   doorClosedColor: '#4fc3f7',
   doorOpenColor: '#8effd6',

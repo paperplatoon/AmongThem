@@ -73,12 +73,23 @@ perimeterCorridors.forEach((corridor) => tagRect(corridor.rect, CellType.CORRIDO
 
 const roomRecords = [];
 const doorRecords = [];
+const ventCellMask = new Uint8Array(layout.gridWidth * layout.gridHeight);
 
 const cloneRectCells = (rect) => ({ x: rect.x, y: rect.y, width: rect.width, height: rect.height });
 const roomCenter = (room) => ({
   x: room.rectCells.x + Math.floor(room.rectCells.width / 2),
   y: room.rectCells.y + Math.floor(room.rectCells.height / 2)
 });
+
+const markVentCells = (rect) => {
+  for (let row = rect.y; row < rect.y + rect.height; row += 1) {
+    if (row < 0 || row >= layout.gridHeight) continue;
+    for (let col = rect.x; col < rect.x + rect.width; col += 1) {
+      if (col < 0 || col >= layout.gridWidth) continue;
+      ventCellMask[row * layout.gridWidth + col] = 1;
+    }
+  }
+};
 
 const addRoom = (room, doorSide) => {
   tagRect(room.rectCells, CellType.ROOM);
@@ -362,6 +373,7 @@ const buildVents = () => {
   const vents = [];
   const addVent = (id, rect, type) => {
     if (rect.width <= 0 || rect.height <= 0) return;
+    markVentCells(rect);
     vents.push({ id, rect, type });
   };
 
@@ -443,6 +455,12 @@ const buildVents = () => {
     addVent(`${room.id}_vent`, rect, 'vent_connector');
   });
 
+  let ventCellsMarked = 0;
+  for (let i = 0; i < ventCellMask.length; i += 1) {
+    if (ventCellMask[i]) ventCellsMarked += 1;
+  }
+  console.log('[mapState] vents:', vents.length, 'cells marked:', ventCellsMarked);
+
   return vents;
 };
 
@@ -461,6 +479,8 @@ export const corridors = Object.freeze([
 export const vents = Object.freeze(
   ventSegments.map((segment) => ({ id: segment.id, ...rectFromCells(segment.rect), type: segment.type }))
 );
+
+export const ventCells = ventCellMask;
 
 export const shafts = Object.freeze([
   { id: 'shaft_nw', x: corridorInner.left - doorDepth, y: corridorInner.top - doorDepth, width: doorDepth * 2, height: doorDepth * 2 },

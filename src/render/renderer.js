@@ -15,6 +15,8 @@ const clearViewport = (ctx) => {
   ctx.fillRect(0, 0, gameState.config.canvasWidth, gameState.config.canvasHeight);
 };
 
+let hasLoggedVentCell = false;
+
 const drawGrid = (ctx) => {
   const size = cellSize();
   const camera = gameState.camera;
@@ -28,8 +30,13 @@ const drawGrid = (ctx) => {
       if (col < 0 || row < 0 || col >= gameState.grid.width || row >= gameState.grid.height) continue;
       const index = row * gameState.grid.width + col;
       const value = gameState.grid.cells[index];
-      const color = value === WALL ? gameState.config.wallColor : gameState.config.floorColor;
-      ctx.fillStyle = color;
+      const isVentCell = gameState.map.ventCells && gameState.map.ventCells[index];
+      if (!hasLoggedVentCell && isVentCell) {
+        console.log('[renderer] First vent cell seen at col', col, 'row', row, 'mask value', isVentCell);
+        hasLoggedVentCell = true;
+      }
+      if (value === WALL) ctx.fillStyle = gameState.config.wallColor;
+      else ctx.fillStyle = isVentCell ? gameState.config.ventFloorColor : gameState.config.floorColor;
       ctx.fillRect(col * size, row * size, size, size);
     }
   }
