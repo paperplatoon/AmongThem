@@ -23,6 +23,15 @@ const layout = Object.freeze({
       depthCells: 11,
       fractions: [0.3, 0.7]
     })
+  }),
+  centerGrid: Object.freeze({
+    insetCells: 18,
+    laneThicknessCells: 5,
+    lanes: Object.freeze({ horizontal: [0.4, 0.6], vertical: [0.4, 0.6] })
+  }),
+  vents: Object.freeze({
+    offsetCells: 6,
+    thicknessCells: 3
   })
 });
 

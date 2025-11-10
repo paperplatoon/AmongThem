@@ -51,6 +51,7 @@
 - Drive collision, rendering, AI, and future hazards from the same grid mask; cells carry explicit enums (wall, floor, door, item, etc.) so everything mutates the same data.
 - Avoid geometry math scattered across modules: use shared world↔grid helpers, and keep door/room data cached in state to prevent duplication.
 - Keep doors, items, and future hazards state-driven; visuals should reflect state rather than manage gameplay indirectly.
+- **Grid-Driven Layout:** Every corridor, room, connector, and future feature is described by tagging cells in a shared layout grid. Rendering, collision, AI, and prop placement must derive from those tags so nothing drifts out of sync.
 
 ## Temporary Implementations
 *(These are stopgap solutions to facilitate testing; they should be revisited when the full systems arrive.)*

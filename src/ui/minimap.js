@@ -42,7 +42,8 @@ const strokeRect = (ctx, rect, color, lineWidth) => {
 
 const drawMap = (ctx) => {
   const { corridors, shafts, rooms, doors } = gameState.map;
-  corridors.forEach((rect) => fillRect(ctx, rect, '#0d1b3d'));
+  corridors.forEach((rect) => fillRect(ctx, rect, '#53b2b0'));
+  corridors.forEach((room) => strokeRect(ctx, room, '#4f7bd9', 24));
   shafts.forEach((rect) => fillRect(ctx, rect, '#103c80'));
   rooms.forEach((room) => strokeRect(ctx, room, '#4f7bd9', 24));
   doors.forEach((door) => {

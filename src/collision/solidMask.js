@@ -12,6 +12,8 @@ const carveWalkable = (rect) => carveRect(rect);
 
 const carveCorridors = () => gameState.map.corridors.forEach(carveWalkable);
 
+const carveVents = () => gameState.map.vents.forEach(carveWalkable);
+
 const carveRooms = () => {
   gameState.map.rooms.forEach((room) => {
     const minCellX = worldToCell(room.x);
@@ -33,6 +35,7 @@ const carveDoors = () => gameState.map.doors.forEach(carveWalkable);
 export const buildSolidMask = () => {
   resetGrid(WORLD_SOLID);
   carveCorridors();
+  carveVents();
   carveRooms();
   carveDoors();
 };

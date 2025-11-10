@@ -75,7 +75,8 @@ const createRoomProp = (room, propType, index) => {
   });
 };
 
-const randomCorridor = () => mapState.corridors[Math.floor(Math.random() * mapState.corridors.length)];
+const perimeterCorridors = mapState.corridors.filter((corridor) => corridor.type !== 'center' && corridor.type !== 'connector');
+const randomCorridor = () => perimeterCorridors[Math.floor(Math.random() * perimeterCorridors.length)];
 
 const randomBetween = (min, max) => min + Math.random() * (max - min);
 
