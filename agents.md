@@ -52,6 +52,11 @@
 - Avoid geometry math scattered across modules: use shared world↔grid helpers, and keep door/room data cached in state to prevent duplication.
 - Keep doors, items, and future hazards state-driven; visuals should reflect state rather than manage gameplay indirectly.
 - **Grid-Driven Layout:** Every corridor, room, connector, and future feature is described by tagging cells in a shared layout grid. Rendering, collision, AI, and prop placement must derive from those tags so nothing drifts out of sync.
+- **Terminology:**
+  - **Outer Hallway** – the green square of corridors the rooms connect to (corridor entries tagged as `type: 'perimeter'`).
+  - **Central Inner Maintenance Corridors** – the dangerous fast lanes that form the inner grid across the central square (corridor entries tagged as `type: 'fast_lane'`).
+  - **Vents** – the purple ring running behind the rooms (exported as `mapState.vents` and tagged via `CellType.VENT`).
+  - These corridor/vent categories are available both as world rectangles (`mapState.corridors`/`mapState.vents`) and as carved cell masks (`gridState.cells`, `mapState.ventCells`) so movement, rendering, and spawning stay in sync.
 
 ## Temporary Implementations
 *(These are stopgap solutions to facilitate testing; they should be revisited when the full systems arrive.)*
