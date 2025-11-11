@@ -316,10 +316,10 @@ const buildConnectors = () => {
   const clampEntryX = (value) => clamp(Math.round(value - laneHalf), innerCorridorBounds.left, innerCorridorBounds.right - laneThickness);
   const clampEntryY = (value) => clamp(Math.round(value - laneHalf), innerCorridorBounds.top, innerCorridorBounds.bottom - laneThickness);
 
-  const addConnector = (room, rect) => {
-    if (rect.width <= 0 || rect.height <= 0) return;
-    connectors.push({ id: `${room.id}_connector`, rect, type: 'connector' });
-  };
+const addConnector = (room, rect) => {
+  if (rect.width <= 0 || rect.height <= 0) return;
+  connectors.push({ id: `${room.id}_connector`, rect, type: 'connector', side: room.side });
+};
 
   roomRecords.forEach((room) => {
     const centerX = room.rectCells.x + room.rectCells.width / 2;
@@ -373,9 +373,70 @@ const buildConnectors = () => {
 };
 
 const connectorCorridors = buildConnectors();
+const connectorDoors = [];
+
+const createConnectorDoor = (connector) => {
+  const rectWorld = rectFromCells(connector.rect);
+  if (connector.side === 'north') {
+    return {
+      id: `${connector.id}_door`,
+      from: 'outer_hallway',
+      to: connector.id,
+      x: rectWorld.x,
+      y: rectWorld.y - doorDepth / 2,
+      width: rectWorld.width,
+      height: doorDepth,
+      side: 'north',
+      orientation: 'horizontal',
+      label: 'Maintenance Access'
+    };
+  }
+  if (connector.side === 'south') {
+    return {
+      id: `${connector.id}_door`,
+      from: 'outer_hallway',
+      to: connector.id,
+      x: rectWorld.x,
+      y: rectWorld.y + rectWorld.height - doorDepth / 2,
+      width: rectWorld.width,
+      height: doorDepth,
+      side: 'south',
+      orientation: 'horizontal',
+      label: 'Maintenance Access'
+    };
+  }
+  if (connector.side === 'west') {
+    return {
+      id: `${connector.id}_door`,
+      from: 'outer_hallway',
+      to: connector.id,
+      x: rectWorld.x - doorDepth / 2,
+      y: rectWorld.y,
+      width: doorDepth,
+      height: rectWorld.height,
+      side: 'west',
+      orientation: 'vertical',
+      label: 'Maintenance Access'
+    };
+  }
+  return {
+    id: `${connector.id}_door`,
+    from: 'outer_hallway',
+    to: connector.id,
+    x: rectWorld.x + rectWorld.width - doorDepth / 2,
+    y: rectWorld.y,
+    width: doorDepth,
+    height: rectWorld.height,
+    side: 'east',
+    orientation: 'vertical',
+    label: 'Maintenance Access'
+  };
+};
+
 connectorCorridors.forEach((connector) => {
   tagRect(connector.rect, CellType.CORRIDOR);
   markFastLaneCells(connector.rect);
+  connectorDoors.push(createConnectorDoor(connector));
 });
 
 const buildVents = () => {
@@ -471,6 +532,8 @@ const buildVents = () => {
 
 const ventSegments = buildVents();
 ventSegments.forEach((segment) => tagRect(segment.rect, CellType.VENT));
+
+connectorDoors.forEach((door) => doorRecords.push(door));
 
 const reportMaskedCells = (label, mask) => {
   let count = 0;
