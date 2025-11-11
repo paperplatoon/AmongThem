@@ -62,6 +62,35 @@ const ventHalf = Math.floor(ventThickness / 2);
 const ventOffset = layoutVent.offsetCells;
 const ventIncludeConnectors = Boolean(layoutVent.connectors);
 
+export const CELL_TRAITS = Object.freeze({
+  VENT: 1 << 0,
+  FAST_LANE: 1 << 1,
+  OUTER_HALL: 1 << 2
+});
+
+const cellTraits = new Uint8Array(layout.gridWidth * layout.gridHeight);
+
+const cloneRectCells = (rect) => ({ x: rect.x, y: rect.y, width: rect.width, height: rect.height });
+const roomCenter = (room) => ({
+  x: room.rectCells.x + Math.floor(room.rectCells.width / 2),
+  y: room.rectCells.y + Math.floor(room.rectCells.height / 2)
+});
+
+const markCells = (rect, flag) => {
+  for (let row = rect.y; row < rect.y + rect.height; row += 1) {
+    if (row < 0 || row >= layout.gridHeight) continue;
+    for (let col = rect.x; col < rect.x + rect.width; col += 1) {
+      if (col < 0 || col >= layout.gridWidth) continue;
+      const index = row * layout.gridWidth + col;
+      cellTraits[index] |= flag;
+    }
+  }
+};
+
+const markVentCells = (rect) => markCells(rect, CELL_TRAITS.VENT);
+const markFastLaneCells = (rect) => markCells(rect, CELL_TRAITS.FAST_LANE);
+const markOuterHallCells = (rect) => markCells(rect, CELL_TRAITS.OUTER_HALL);
+
 const perimeterCorridors = [
   { id: 'corridor_north', rect: { x: square.left, y: square.top, width: square.right - square.left, height: corridorThickness } },
   { id: 'corridor_south', rect: { x: square.left, y: square.bottom - corridorThickness, width: square.right - square.left, height: corridorThickness } },
@@ -71,30 +100,10 @@ const perimeterCorridors = [
 
 layoutGrid.reset();
 perimeterCorridors.forEach((corridor) => tagRect(corridor.rect, CellType.CORRIDOR));
+perimeterCorridors.forEach((corridor) => markOuterHallCells(corridor.rect));
 
 const roomRecords = [];
 const doorRecords = [];
-const ventCellMask = new Uint8Array(layout.gridWidth * layout.gridHeight);
-const fastLaneCellMask = new Uint8Array(layout.gridWidth * layout.gridHeight);
-
-const cloneRectCells = (rect) => ({ x: rect.x, y: rect.y, width: rect.width, height: rect.height });
-const roomCenter = (room) => ({
-  x: room.rectCells.x + Math.floor(room.rectCells.width / 2),
-  y: room.rectCells.y + Math.floor(room.rectCells.height / 2)
-});
-
-const markCells = (rect, mask) => {
-  for (let row = rect.y; row < rect.y + rect.height; row += 1) {
-    if (row < 0 || row >= layout.gridHeight) continue;
-    for (let col = rect.x; col < rect.x + rect.width; col += 1) {
-      if (col < 0 || col >= layout.gridWidth) continue;
-      mask[row * layout.gridWidth + col] = 1;
-    }
-  }
-};
-
-const markVentCells = (rect) => markCells(rect, ventCellMask);
-const markFastLaneCells = (rect) => markCells(rect, fastLaneCellMask);
 
 const addRoom = (room, doorSide) => {
   tagRect(room.rectCells, CellType.ROOM);
@@ -535,16 +544,16 @@ ventSegments.forEach((segment) => tagRect(segment.rect, CellType.VENT));
 
 connectorDoors.forEach((door) => doorRecords.push(door));
 
-const reportMaskedCells = (label, mask) => {
+const reportTrait = (label, flag) => {
   let count = 0;
-  for (let i = 0; i < mask.length; i += 1) {
-    if (mask[i]) count += 1;
+  for (let i = 0; i < cellTraits.length; i += 1) {
+    if (cellTraits[i] & flag) count += 1;
   }
   console.log(`[mapState] ${label} cells marked:`, count);
 };
 
-reportMaskedCells('vent', ventCellMask);
-reportMaskedCells('fast-lane', fastLaneCellMask);
+reportTrait('vent', CELL_TRAITS.VENT);
+reportTrait('fast-lane', CELL_TRAITS.FAST_LANE);
 
 export const rooms = Object.freeze(roomRecords);
 export const doors = Object.freeze(doorRecords);
@@ -559,8 +568,7 @@ export const vents = Object.freeze(
   ventSegments.map((segment) => ({ id: segment.id, ...rectFromCells(segment.rect), type: segment.type }))
 );
 
-export const ventCells = ventCellMask;
-export const fastLaneCells = fastLaneCellMask;
+export const cellTraitMask = cellTraits;
 
 export const shafts = Object.freeze([
   { id: 'shaft_nw', x: corridorInner.left - doorDepth, y: corridorInner.top - doorDepth, width: doorDepth * 2, height: doorDepth * 2 },

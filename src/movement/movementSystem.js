@@ -1,7 +1,7 @@
 import { gameState } from '../state/gameState.js';
 import { add, scale } from '../utils/geometry.js';
 import { isPointWalkable } from '../collision/collisionMask.js';
-import { worldPointToCell } from '../state/gridState.js';
+import { worldPointToCell, toIndex } from '../state/gridState.js';
 import { updateStamina, getCurrentSpeed } from './staminaSystem.js';
 import { updateOxygen } from './oxygenSystem.js';
 
@@ -37,6 +37,13 @@ const attemptMove = (player, delta) => {
   player.cellY = cell.y;
 };
 
+const getCellTraits = (cell) => {
+  const mask = gameState.map.cellTraits;
+  if (!mask) return 0;
+  if (cell.x < 0 || cell.y < 0 || cell.x >= gameState.grid.width || cell.y >= gameState.grid.height) return 0;
+  return mask[toIndex(cell.x, cell.y)];
+};
+
 const tryMove = (player, delta) => {
   attemptMove(player, { x: delta.x, y: 0 });
   attemptMove(player, { x: 0, y: delta.y });
@@ -45,8 +52,15 @@ const tryMove = (player, delta) => {
 export const updateMovement = (deltaSeconds) => {
   updateStamina(deltaSeconds);
   updateOxygen(deltaSeconds);
+  const currentCell = worldPointToCell({ x: gameState.player.x, y: gameState.player.y });
+  gameState.player.cellX = currentCell.x;
+  gameState.player.cellY = currentCell.y;
   const direction = normalize(getDirection(gameState.pressedKeys));
-  const speed = getCurrentSpeed();
-  const velocity = scale(direction, speed * deltaSeconds);
+  const baseSpeed = getCurrentSpeed();
+  const traits = getCellTraits(currentCell);
+  let modifier = 1;
+  if (traits & gameState.map.cellTraitFlags.VENT) modifier *= gameState.config.ventSpeedModifier;
+  const effectiveSpeed = baseSpeed * modifier;
+  const velocity = scale(direction, effectiveSpeed * deltaSeconds);
   tryMove(gameState.player, velocity);
 };

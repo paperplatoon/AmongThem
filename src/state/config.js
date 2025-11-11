@@ -4,6 +4,7 @@ export const config = Object.freeze({
   worldWidth: 8064,
   worldHeight: 5472,
   walkSpeed: 160,
+  ventSpeedModifier: 0.5,
   doorOpenRange: 90,
   playerRadius: 10,
   wallThickness: 18,

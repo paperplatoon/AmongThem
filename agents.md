@@ -57,6 +57,7 @@
   - **Central Inner Maintenance Corridors** – the dangerous fast lanes that form the inner grid across the central square (corridor entries tagged as `type: 'fast_lane'`).
   - **Vents** – the purple ring running behind the rooms (exported as `mapState.vents` and tagged via `CellType.VENT`).
   - These corridor/vent categories are available both as world rectangles (`mapState.corridors`/`mapState.vents`) and as carved cell masks (`gridState.cells`, `mapState.ventCells`) so movement, rendering, and spawning stay in sync.
+- **Module initialization order:** keep helper declarations (functions/constants) above any top-level code that uses them so we avoid temporal-dead-zone errors when the module is evaluated.
 
 ## Temporary Implementations
 *(These are stopgap solutions to facilitate testing; they should be revisited when the full systems arrive.)*

@@ -31,8 +31,11 @@ const drawGrid = (ctx) => {
       if (col < 0 || row < 0 || col >= gameState.grid.width || row >= gameState.grid.height) continue;
       const index = row * gameState.grid.width + col;
       const value = gameState.grid.cells[index];
-      const isVentCell = gameState.map.ventCells && gameState.map.ventCells[index];
-      const isFastLaneCell = gameState.map.fastLaneCells && gameState.map.fastLaneCells[index];
+      const traitMask = gameState.map.cellTraits;
+      const traitFlags = gameState.map.cellTraitFlags;
+      const traits = traitMask ? traitMask[index] : 0;
+      const isVentCell = Boolean(traits & traitFlags.VENT);
+      const isFastLaneCell = Boolean(traits & traitFlags.FAST_LANE);
       if (!hasLoggedVentCell && isVentCell) {
         console.log('[renderer] First vent cell seen at col', col, 'row', row);
         hasLoggedVentCell = true;
