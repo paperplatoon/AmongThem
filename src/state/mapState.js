@@ -75,6 +75,7 @@ perimeterCorridors.forEach((corridor) => tagRect(corridor.rect, CellType.CORRIDO
 const roomRecords = [];
 const doorRecords = [];
 const ventCellMask = new Uint8Array(layout.gridWidth * layout.gridHeight);
+const fastLaneCellMask = new Uint8Array(layout.gridWidth * layout.gridHeight);
 
 const cloneRectCells = (rect) => ({ x: rect.x, y: rect.y, width: rect.width, height: rect.height });
 const roomCenter = (room) => ({
@@ -82,15 +83,18 @@ const roomCenter = (room) => ({
   y: room.rectCells.y + Math.floor(room.rectCells.height / 2)
 });
 
-const markVentCells = (rect) => {
+const markCells = (rect, mask) => {
   for (let row = rect.y; row < rect.y + rect.height; row += 1) {
     if (row < 0 || row >= layout.gridHeight) continue;
     for (let col = rect.x; col < rect.x + rect.width; col += 1) {
       if (col < 0 || col >= layout.gridWidth) continue;
-      ventCellMask[row * layout.gridWidth + col] = 1;
+      mask[row * layout.gridWidth + col] = 1;
     }
   }
 };
+
+const markVentCells = (rect) => markCells(rect, ventCellMask);
+const markFastLaneCells = (rect) => markCells(rect, fastLaneCellMask);
 
 const addRoom = (room, doorSide) => {
   tagRect(room.rectCells, CellType.ROOM);
@@ -291,6 +295,7 @@ const addCenterLane = (axis, center, index) => {
         height: laneThickness
       };
   tagRect(rect, CellType.CORRIDOR);
+  markFastLaneCells(rect);
   const record = { id: `center_${axis}_${index}`, rect, type: 'fast_lane', axis, laneCenter };
   centerLanes.push(record);
   if (axis === 'vertical') verticalLaneData.push(record);
@@ -368,7 +373,10 @@ const buildConnectors = () => {
 };
 
 const connectorCorridors = buildConnectors();
-connectorCorridors.forEach((connector) => tagRect(connector.rect, CellType.CORRIDOR));
+connectorCorridors.forEach((connector) => {
+  tagRect(connector.rect, CellType.CORRIDOR);
+  markFastLaneCells(connector.rect);
+});
 
 const buildVents = () => {
   const vents = [];
@@ -458,17 +466,22 @@ const buildVents = () => {
     });
   }
 
-  let ventCellsMarked = 0;
-  for (let i = 0; i < ventCellMask.length; i += 1) {
-    if (ventCellMask[i]) ventCellsMarked += 1;
-  }
-  console.log('[mapState] vents:', vents.length, 'cells marked:', ventCellsMarked);
-
   return vents;
 };
 
 const ventSegments = buildVents();
 ventSegments.forEach((segment) => tagRect(segment.rect, CellType.VENT));
+
+const reportMaskedCells = (label, mask) => {
+  let count = 0;
+  for (let i = 0; i < mask.length; i += 1) {
+    if (mask[i]) count += 1;
+  }
+  console.log(`[mapState] ${label} cells marked:`, count);
+};
+
+reportMaskedCells('vent', ventCellMask);
+reportMaskedCells('fast-lane', fastLaneCellMask);
 
 export const rooms = Object.freeze(roomRecords);
 export const doors = Object.freeze(doorRecords);
@@ -484,6 +497,7 @@ export const vents = Object.freeze(
 );
 
 export const ventCells = ventCellMask;
+export const fastLaneCells = fastLaneCellMask;
 
 export const shafts = Object.freeze([
   { id: 'shaft_nw', x: corridorInner.left - doorDepth, y: corridorInner.top - doorDepth, width: doorDepth * 2, height: doorDepth * 2 },

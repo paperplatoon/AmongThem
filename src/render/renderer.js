@@ -16,6 +16,7 @@ const clearViewport = (ctx) => {
 };
 
 let hasLoggedVentCell = false;
+let hasLoggedFastLaneCell = false;
 
 const drawGrid = (ctx) => {
   const size = cellSize();
@@ -31,12 +32,19 @@ const drawGrid = (ctx) => {
       const index = row * gameState.grid.width + col;
       const value = gameState.grid.cells[index];
       const isVentCell = gameState.map.ventCells && gameState.map.ventCells[index];
+      const isFastLaneCell = gameState.map.fastLaneCells && gameState.map.fastLaneCells[index];
       if (!hasLoggedVentCell && isVentCell) {
-        console.log('[renderer] First vent cell seen at col', col, 'row', row, 'mask value', isVentCell);
+        console.log('[renderer] First vent cell seen at col', col, 'row', row);
         hasLoggedVentCell = true;
       }
+      if (!hasLoggedFastLaneCell && isFastLaneCell) {
+        console.log('[renderer] First fast-lane cell seen at col', col, 'row', row);
+        hasLoggedFastLaneCell = true;
+      }
       if (value === WALL) ctx.fillStyle = gameState.config.wallColor;
-      else ctx.fillStyle = isVentCell ? gameState.config.ventFloorColor : gameState.config.floorColor;
+      else if (isVentCell) ctx.fillStyle = gameState.config.ventFloorColor;
+      else if (isFastLaneCell) ctx.fillStyle = gameState.config.fastLaneFloorColor;
+      else ctx.fillStyle = gameState.config.floorColor;
       ctx.fillRect(col * size, row * size, size, size);
     }
   }

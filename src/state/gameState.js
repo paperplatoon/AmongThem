@@ -1,5 +1,5 @@
 import { config } from './config.js';
-import { rooms, corridors, vents, shafts, doors, roomById, ventCells } from './mapState.js';
+import { rooms, corridors, vents, shafts, doors, roomById, ventCells, fastLaneCells } from './mapState.js';
 import { playerState } from './playerState.js';
 import { doorState } from './doorState.js';
 import { cameraState } from './cameraState.js';
@@ -11,7 +11,7 @@ import { journalState } from './journalState.js';
 export const gameState = Object.seal({
   config,
   grid: gridState,
-  map: Object.freeze({ rooms, corridors, vents, shafts, doors, roomById, ventCells }),
+  map: Object.freeze({ rooms, corridors, vents, shafts, doors, roomById, ventCells, fastLaneCells }),
   player: playerState,
   doors: doorState.all,
   doorsById: doorState.byId,
