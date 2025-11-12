@@ -1,7 +1,5 @@
 import { gameState } from '../state/gameState.js';
 
-const tabHitboxes = [];
-
 const toggleJournal = () => { gameState.ui.showJournal = !gameState.ui.showJournal; };
 
 const setActiveTab = (tabId) => {
@@ -16,7 +14,8 @@ export const handleJournalToggle = (key) => {
 
 export const handleJournalClick = (screenX, screenY) => {
   if (!gameState.ui.showJournal) return false;
-  const hit = tabHitboxes.find((tab) => (
+  const tabs = gameState.ui.hitboxes.journalTabs;
+  const hit = tabs.find((tab) => (
     screenX >= tab.x &&
     screenX <= tab.x + tab.width &&
     screenY >= tab.y &&
@@ -61,7 +60,8 @@ const drawTitle = (ctx, panel) => {
 
 const drawTabs = (ctx, panel) => {
   const tabs = gameState.journal.entries;
-  tabHitboxes.length = 0;
+  const hitboxes = gameState.ui.hitboxes.journalTabs;
+  hitboxes.length = 0;
   if (!tabs.length) return { x: panel.x + 24, y: panel.y + 96, width: panel.width - 48, height: panel.height - 120 };
   const tabHeight = 64;
   const tabWidth = panel.width / tabs.length;
@@ -96,7 +96,7 @@ const drawTabs = (ctx, panel) => {
       ctx.fillStyle = '#ffdf5b';
       ctx.fillText('K', x + tabWidth - 52, y + tabHeight / 2);
     }
-    tabHitboxes.push({ id: entry.id, x, y, width: tabWidth, height: tabHeight });
+    hitboxes.push({ id: entry.id, x, y, width: tabWidth, height: tabHeight });
   });
   ctx.restore();
   return {
@@ -179,7 +179,10 @@ const drawContent = (ctx, area, activeTab) => {
 };
 
 export const renderJournal = (ctx) => {
-  if (!gameState.ui.showJournal) return;
+  if (!gameState.ui.showJournal) {
+    gameState.ui.hitboxes.journalTabs.length = 0;
+    return;
+  }
   drawBackdrop(ctx);
   const panel = drawPanel(ctx);
   drawTitle(ctx, panel);

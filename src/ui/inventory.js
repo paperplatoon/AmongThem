@@ -4,8 +4,6 @@ import { tryHandleInteractionClick } from '../interactions/interactionSystem.js'
 import { handleContainerClick } from './containerMenu.js';
 import * as journalUi from './journal.js';
 
-const slotHitboxes = [];
-
 const applyItemEffect = (entry) => {
   if (!entry.effect) return false;
   const player = gameState.player;
@@ -30,7 +28,8 @@ const applyItemEffect = (entry) => {
 
 const handleInventorySelection = (screenX, screenY) => {
   if (!gameState.ui.showInventory) return false;
-  const hit = slotHitboxes.find((slot) => (
+  const slots = gameState.ui.hitboxes.inventorySlots;
+  const hit = slots.find((slot) => (
     screenX >= slot.x &&
     screenX <= slot.x + slot.width &&
     screenY >= slot.y &&
@@ -102,7 +101,8 @@ const drawHeader = (ctx, panel) => {
 
 const drawItems = (ctx, panel) => {
   const entries = gameState.inventory;
-  slotHitboxes.length = 0;
+  const slots = gameState.ui.hitboxes.inventorySlots;
+  slots.length = 0;
   ctx.save();
   ctx.fillStyle = '#8effd6';
   ctx.font = '28px "Courier New", monospace';
@@ -116,7 +116,7 @@ const drawItems = (ctx, panel) => {
   entries.forEach((entry, index) => {
     const lineY = panel.y + 80 + index * 36;
     ctx.fillText(`${index + 1}. ${entry.label}`, panel.x + 32, lineY);
-    slotHitboxes.push({
+    slots.push({
       index,
       x: panel.x + 32,
       y: lineY,
@@ -128,7 +128,10 @@ const drawItems = (ctx, panel) => {
 };
 
 export const renderInventory = (ctx) => {
-  if (!gameState.ui.showInventory) return;
+  if (!gameState.ui.showInventory) {
+    gameState.ui.hitboxes.inventorySlots.length = 0;
+    return;
+  }
   drawBackground(ctx);
   const panel = drawPanel(ctx);
   drawHeader(ctx, panel);

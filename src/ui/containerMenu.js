@@ -1,10 +1,17 @@
 import { gameState } from '../state/gameState.js';
 import { markKeycardKnown, markKillerConfirmed, markDeskDiscovered } from '../state/journalState.js';
 
-const slotHitboxes = [];
-let closeHitbox = null;
+const hitboxes = () => gameState.ui.hitboxes;
 
-const closeContainer = () => { gameState.ui.openContainerId = null; };
+const clearContainerHitboxes = () => {
+  hitboxes().containerSlots.length = 0;
+  hitboxes().containerCloseButton = null;
+};
+
+const closeContainer = () => {
+  gameState.ui.openContainerId = null;
+  clearContainerHitboxes();
+};
 
 const markPropEmpty = (prop) => {
   prop.isEmpty = true;
@@ -25,11 +32,12 @@ const collectEvidenceItem = (item) => {
 
 export const handleContainerClick = (screenX, screenY) => {
   if (!gameState.ui.openContainerId) return false;
+  const closeHitbox = hitboxes().containerCloseButton;
   if (closeHitbox && screenX >= closeHitbox.x && screenX <= closeHitbox.x2 && screenY >= closeHitbox.y && screenY <= closeHitbox.y2) {
     closeContainer();
     return true;
   }
-  const hit = slotHitboxes.find((slot) => screenX >= slot.x && screenX <= slot.x2 && screenY >= slot.y && screenY <= slot.y2);
+  const hit = hitboxes().containerSlots.find((slot) => screenX >= slot.x && screenX <= slot.x2 && screenY >= slot.y && screenY <= slot.y2);
   if (!hit) return false;
   const prop = gameState.props.find((p) => p.id === gameState.ui.openContainerId);
   if (!prop) return false;
@@ -93,7 +101,7 @@ const drawCloseButton = (ctx, panel) => {
   ctx.textBaseline = 'middle';
   ctx.fillText('X', x + size / 2, y + size / 2);
   ctx.restore();
-  closeHitbox = { x, y, x2: x + size, y2: y + size };
+  hitboxes().containerCloseButton = { x, y, x2: x + size, y2: y + size };
 };
 
 const drawTitle = (ctx, panel, label) => {
@@ -112,20 +120,25 @@ const drawContents = (ctx, panel, contents) => {
   ctx.font = '22px "Courier New", monospace';
   ctx.textAlign = 'left';
   ctx.textBaseline = 'top';
-  slotHitboxes.length = 0;
+  const slots = hitboxes().containerSlots;
+  slots.length = 0;
   contents.forEach((item, index) => {
     const y = panel.y + 64 + index * 32;
     ctx.fillText(`• ${item.label}`, panel.x + 20, y);
-    slotHitboxes.push({ x: panel.x + 20, y, x2: panel.x + panel.width - 20, y2: y + 28, index });
+    slots.push({ x: panel.x + 20, y, x2: panel.x + panel.width - 20, y2: y + 28, index });
   });
   ctx.restore();
 };
 
 export const renderContainerMenu = (ctx) => {
-  if (!gameState.ui.openContainerId) return;
+  if (!gameState.ui.openContainerId) {
+    clearContainerHitboxes();
+    return;
+  }
   const prop = gameState.props.find((p) => p.id === gameState.ui.openContainerId);
   if (!prop) {
     gameState.ui.openContainerId = null;
+    clearContainerHitboxes();
     return;
   }
   if (!prop.contents.length) {

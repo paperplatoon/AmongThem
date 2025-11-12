@@ -9,5 +9,11 @@ export const uiState = Object.seal({
   openContainerId: null,
   journal: Object.seal({
     activeTab: roleOrder[0] ?? null
+  }),
+  hitboxes: Object.seal({
+    inventorySlots: [],
+    journalTabs: [],
+    containerSlots: [],
+    containerCloseButton: null
   })
 });
