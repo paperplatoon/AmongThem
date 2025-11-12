@@ -43,8 +43,8 @@ const strokeRect = (ctx, rect, color, lineWidth) => {
 const drawMap = (ctx) => {
   const { corridors, shafts, rooms, doors, cellTraits, cellTraitFlags } = gameState.map;
   corridors.forEach((rect) => {
-    const isFastLane = rect.type === 'fast_lane';
-    fillRect(ctx, rect, isFastLane ? '#8b1f2b' : '#53b2b0');
+    const isPerimeter = rect.type === 'perimeter';
+    fillRect(ctx, rect, isPerimeter ? '#53b2b0' : '#8b1f2b');
   });
   corridors.forEach((room) => strokeRect(ctx, room, '#4f7bd9', 24));
   shafts.forEach((rect) => fillRect(ctx, rect, '#103c80'));
