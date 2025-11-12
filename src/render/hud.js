@@ -9,6 +9,11 @@ const getStaminaFraction = () => {
   return max > 0 ? current / max : 0;
 };
 
+const getHealthFraction = () => {
+  const { current, max } = gameState.player.health;
+  return max > 0 ? current / max : 0;
+};
+
 const getOxygenFraction = () => {
   const { current, max } = gameState.player.oxygen;
   return max > 0 ? current / max : 0;
@@ -32,7 +37,23 @@ const drawBackground = (ctx, x, y) => {
   ctx.fillRect(x - 4, y - 4, barWidth + 8, barHeight + 8);
 };
 
+const drawHealthBar = (ctx) => {
+  const fraction = Math.max(0, Math.min(1, getHealthFraction()));
+  const x = padding;
+  const y = padding;
+  drawBackground(ctx, x, y);
+  ctx.fillStyle = '#ff6b6b';
+  ctx.fillRect(x, y, barWidth * fraction, barHeight);
+  drawOutline(ctx, x, y);
+  ctx.fillStyle = '#f4f9ff';
+  ctx.font = '16px "Courier New", monospace';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('HP', x + barWidth + 8, y + barHeight / 2);
+};
+
 export const renderHud = (ctx) => {
+  drawHealthBar(ctx);
   const x = padding;
   const y = gameState.config.canvasHeight - padding - barHeight;
   drawBackground(ctx, x, y);

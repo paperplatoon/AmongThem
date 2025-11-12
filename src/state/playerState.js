@@ -28,5 +28,9 @@ export const playerState = Object.seal({
     secondsRemaining: config.oxygen.depletionSeconds,
     depleted: false
   }),
+  health: Object.seal({
+    current: config.player.healthMax,
+    max: config.player.healthMax
+  }),
   keycards: new Set()
 });

@@ -41,6 +41,20 @@ export const config = Object.freeze({
     max: 100,
     depletionSeconds: 30 * 60
   }),
+  player: Object.freeze({
+    healthMax: 100
+  }),
+  villain: Object.freeze({
+    wanderSpeed: 150,
+    chaseSpeed: 440,
+    lostSpeed: 220,
+    sightRangeCells: 6,
+    sightAngleDeg: 60,
+    impactDamage: 50,
+    postImpactPauseSeconds: 1,
+    loseSightSeconds: 5,
+    searchDurationSeconds: 5
+  }),
   roles: Object.freeze({
     bridge: {
       name: 'Captain',

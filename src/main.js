@@ -12,6 +12,7 @@ import { buildSolidMask } from './collision/solidMask.js';
 //import { handleBodyInteraction } from './body/bodyInteraction.js';
 import { updateInteractions } from './interactions/interactionSystem.js';
 import { initializeCase, applyCaseObstacles } from './state/caseState.js';
+import { updateVillain } from './villain/villainSystem.js';
 
 const createCanvas = () => {
   const canvas = document.createElement('canvas');
@@ -34,6 +35,7 @@ const stepFrame = (ctx, time) => {
   const delta = getDelta(time);
   //handleBodyInteraction();
   updateMovement(delta);
+  updateVillain(delta);
   updateDoors(delta);
   updateCamera();
   updateInteractions();

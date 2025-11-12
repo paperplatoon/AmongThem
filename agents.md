@@ -41,6 +41,11 @@
 7. Critical-phase escape/hunt state after wrong accusation.
 8. Procedural case generator to randomize each loop.
 
+### Upcoming Engineering Tasks
+- Route all pointer/click events through a buffered `gameState.input` queue so interactions resolve during the main update tick instead of DOM timing.
+- Derive prop/keycard generation from a stored case seed (including RNG state) so runs are deterministic and replayable.
+- Keep collision masks in sync with live prop state—either dynamically flip grid cells when props change or query prop occupancy alongside `gridState`.
+
 ## Engineering Preferences
 - Favor many tiny, single-purpose functions (≈5 lines or fewer) over monolithic routines for readability.
 - Centralize tunable values (walk speed, oxygen drain rates, phase triggers, etc.) in shared state/config so tweaks propagate globally.

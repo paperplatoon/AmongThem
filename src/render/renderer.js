@@ -5,6 +5,7 @@ import { renderInventory } from '../ui/inventory.js';
 import { renderJournal } from '../ui/journal.js';
 import { renderHud } from './hud.js';
 import { renderContainerMenu } from '../ui/containerMenu.js';
+import { renderVillain } from './villainRenderer.js';
 
 const { WALL } = CELL_TYPES;
 
@@ -212,6 +213,7 @@ export const renderFrame = (ctx) => {
   ctx.save();
   ctx.translate(-gameState.camera.x, -gameState.camera.y);
   drawGrid(ctx);
+  renderVillain(ctx);
   drawBody(ctx);
   drawScanner(ctx);
   drawProps(ctx);

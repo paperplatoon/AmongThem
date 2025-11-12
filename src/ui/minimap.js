@@ -41,8 +41,11 @@ const strokeRect = (ctx, rect, color, lineWidth) => {
 };
 
 const drawMap = (ctx) => {
-  const { corridors, shafts, rooms, doors } = gameState.map;
-  corridors.forEach((rect) => fillRect(ctx, rect, '#53b2b0'));
+  const { corridors, shafts, rooms, doors, cellTraits, cellTraitFlags } = gameState.map;
+  corridors.forEach((rect) => {
+    const isFastLane = rect.type === 'fast_lane';
+    fillRect(ctx, rect, isFastLane ? '#8b1f2b' : '#53b2b0');
+  });
   corridors.forEach((room) => strokeRect(ctx, room, '#4f7bd9', 24));
   shafts.forEach((rect) => fillRect(ctx, rect, '#103c80'));
   rooms.forEach((room) => strokeRect(ctx, room, '#4f7bd9', 24));
@@ -60,6 +63,20 @@ const drawPlayer = (ctx) => {
   ctx.fill();
 };
 
+const drawVillain = (ctx) => {
+  const villain = gameState.villain;
+  if (!villain || villain.x == null || villain.y == null) return;
+  const color = villain.state === 'chasePlayer'
+    ? '#ff9f43'
+    : villain.state === 'lostPlayer'
+      ? '#ffce54'
+      : '#ff6b6b';
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(villain.x, villain.y, 30, 0, Math.PI * 2);
+  ctx.fill();
+};
+
 export const renderMinimap = (ctx) => {
   if (!gameState.ui.showMinimap) return;
   const scale = getScale();
@@ -67,5 +84,6 @@ export const renderMinimap = (ctx) => {
   withCanvas(ctx, scale, offset, () => {
     drawMap(ctx);
     drawPlayer(ctx);
+    drawVillain(ctx);
   });
 };

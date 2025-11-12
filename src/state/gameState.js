@@ -7,6 +7,7 @@ import { uiState } from './uiState.js';
 import { gridState } from './gridState.js';
 import { generateRoomProps } from './roomProps.js';
 import { journalState } from './journalState.js';
+import { villainState } from './villainState.js';
 
 export const gameState = Object.seal({
   config,
@@ -47,5 +48,6 @@ export const gameState = Object.seal({
   props: generateRoomProps(),
   interactions: {
     clickZones: []
-  }
+  },
+  villain: villainState
 });
