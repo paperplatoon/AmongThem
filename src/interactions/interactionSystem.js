@@ -4,6 +4,7 @@ import { syncOxygenState } from '../movement/oxygenSystem.js';
 import { markVictimIdentified, markDeskDiscovered } from '../state/journalState.js';
 import { collectBodySample } from '../body/bodyInteraction.js';
 import { resetVillainLockdown } from '../villain/villainSystem.js';
+import { cellToWorldCenter } from '../state/gridState.js';
 
 const scannerRange = 96;
 const propRange = 88;

@@ -7,6 +7,7 @@ import { renderHud } from './hud.js';
 import { renderContainerMenu } from '../ui/containerMenu.js';
 import { renderVillain } from './villainRenderer.js';
 import { renderGameOver } from '../ui/gameOver.js';
+import { cellToWorldCenter } from '../state/gridState.js';
 const { WALL } = CELL_TYPES;
 
 const cellSize = () => gameState.grid.cellSize;
@@ -18,6 +19,7 @@ const clearViewport = (ctx) => {
 
 let hasLoggedVentCell = false;
 let hasLoggedFastLaneCell = false;
+let hasLoggedLockdown = false;
 
 const drawGrid = (ctx) => {
   const size = cellSize();
@@ -177,6 +179,34 @@ const drawScannerPrompt = (ctx) => {
   ctx.restore();
 };
 
+const drawLockdownStation = (ctx) => {
+  const aiCore = gameState.map.roomById?.ai_core;
+  if (!aiCore) return;
+  const { x, y } = cellToWorldCenter(
+    Math.floor((aiCore.rectCells.x + aiCore.rectCells.x + aiCore.rectCells.width) / 2),
+    Math.floor((aiCore.rectCells.y + aiCore.rectCells.y + aiCore.rectCells.height) / 2)
+  );
+  const size = cellSize() * 0.9;
+  const half = size / 2;
+  const isActive = gameState.villain.isEscaped;
+  if (!hasLoggedLockdown) {
+    console.log('[renderer] Lockdown station', { x, y, isActive, aiCore });
+    hasLoggedLockdown = true;
+  }
+  ctx.save();
+  ctx.fillStyle = isActive ? '#c0392b' : '#4b5563';
+  ctx.strokeStyle = isActive ? '#ff6b6b' : '#9ca3af';
+  ctx.lineWidth = 3;
+  ctx.fillRect(x - half, y - half, size, size);
+  ctx.strokeRect(x - half, y - half, size, size);
+  ctx.fillStyle = '#f4f9ff';
+  ctx.font = '12px "Courier New", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('LOCK', x, y);
+  ctx.restore();
+};
+
 const drawProps = (ctx) => {
   const size = cellSize() * 0.8;
   gameState.props.forEach((prop) => {
@@ -219,6 +249,7 @@ export const renderFrame = (ctx) => {
   drawProps(ctx);
   drawDoorPanels(ctx);
   drawDoorLabels(ctx);
+  drawLockdownStation(ctx);
   drawPlayer(ctx);
   drawScannerPrompt(ctx);
   ctx.restore();
