@@ -3,6 +3,7 @@ import { distanceBetween } from '../utils/geometry.js';
 import { syncOxygenState } from '../movement/oxygenSystem.js';
 import { markVictimIdentified, markDeskDiscovered } from '../state/journalState.js';
 import { collectBodySample } from '../body/bodyInteraction.js';
+import { resetVillainLockdown } from '../villain/villainSystem.js';
 
 const scannerRange = 96;
 const propRange = 88;
@@ -38,6 +39,24 @@ const makeScannerZone = () => {
     width: size,
     height: size,
     action: handleScannerClick
+  };
+};
+
+const makeLockdownZone = () => {
+  const aiCore = gameState.map.rooms.find((room) => room.id === 'ai_core');
+  if (!aiCore) return null;
+  const center = { x: aiCore.x + aiCore.width / 2, y: aiCore.y + aiCore.height / 2 };
+  const size = gameState.grid.cellSize * 1.2;
+  return {
+    id: 'lockdown',
+    x: center.x - size / 2,
+    y: center.y - size / 2,
+    width: size,
+    height: size,
+    action: () => {
+      if (!gameState.villain.isEscaped) return;
+      resetVillainLockdown();
+    }
   };
 };
 
@@ -106,6 +125,12 @@ export const updateInteractions = () => {
       gameState.scanner.promptActive = true;
       zones.push(makeScannerZone());
     }
+  }
+  const lockdownZone = makeLockdownZone();
+  if (lockdownZone) {
+    const center = { x: lockdownZone.x + lockdownZone.width / 2, y: lockdownZone.y + lockdownZone.height / 2 };
+    const distance = distanceBetween(gameState.player, center);
+    if (distance <= propRange) zones.push(lockdownZone);
   }
   if (!gameState.body.collectedSample && gameState.body.x != null) {
     const distance = distanceBetween(gameState.player, gameState.body);

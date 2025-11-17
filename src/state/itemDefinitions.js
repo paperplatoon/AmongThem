@@ -2,7 +2,9 @@ export const ITEM_TYPES = Object.freeze({
   ENERGY_BAR: 'energy_bar',
   OXYGEN_CANISTER: 'oxygen_canister',
   BANDAGE: 'bandage',
-  CREDITS: 'credits'
+  CREDITS: 'credits',
+  DISABLE_POWER: 'disable_power',
+  REMOTE_LOCKDOWN: 'remote_lockdown'
 });
 
 export const ITEM_DEFINITIONS = Object.freeze({
@@ -21,6 +23,14 @@ export const ITEM_DEFINITIONS = Object.freeze({
   [ITEM_TYPES.CREDITS]: Object.freeze({
     label: 'Credits',
     effect: null
+  }),
+  [ITEM_TYPES.DISABLE_POWER]: Object.freeze({
+    label: 'Disable Power',
+    effect: { type: 'force_escape' }
+  }),
+  [ITEM_TYPES.REMOTE_LOCKDOWN]: Object.freeze({
+    label: 'Remote Lockdown',
+    effect: { type: 'lockdown' }
   })
 });
 

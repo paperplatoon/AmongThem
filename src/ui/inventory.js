@@ -4,6 +4,7 @@ import { tryHandleInteractionClick } from '../interactions/interactionSystem.js'
 import { handleContainerClick } from './containerMenu.js';
 import * as journalUi from './journal.js';
 import { handleGameOverClick } from './gameOver.js';
+import { forceVillainEscape, resetVillainLockdown } from '../villain/villainSystem.js';
 
 const applyItemEffect = (entry) => {
   if (!entry.effect) return false;
@@ -27,6 +28,14 @@ const applyItemEffect = (entry) => {
       oxygen.secondsRemaining + addedSeconds
     );
     syncOxygenState();
+    return true;
+  }
+  if (entry.effect.type === 'force_escape') {
+    forceVillainEscape();
+    return true;
+  }
+  if (entry.effect.type === 'lockdown') {
+    resetVillainLockdown();
     return true;
   }
   return false;

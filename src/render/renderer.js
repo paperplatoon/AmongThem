@@ -7,7 +7,6 @@ import { renderHud } from './hud.js';
 import { renderContainerMenu } from '../ui/containerMenu.js';
 import { renderVillain } from './villainRenderer.js';
 import { renderGameOver } from '../ui/gameOver.js';
-
 const { WALL } = CELL_TYPES;
 
 const cellSize = () => gameState.grid.cellSize;
@@ -229,4 +228,13 @@ export const renderFrame = (ctx) => {
   renderContainerMenu(ctx);
   renderHud(ctx);
   renderGameOver(ctx);
+  if (gameState.testing) {
+    ctx.save();
+    ctx.fillStyle = '#ffaa33';
+    ctx.font = '14px "Courier New", monospace';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText('TESTING MODE', gameState.config.canvasWidth - 12, gameState.config.canvasHeight - 12);
+    ctx.restore();
+  }
 };

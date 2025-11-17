@@ -10,6 +10,7 @@ import { journalState } from './journalState.js';
 import { villainState } from './villainState.js';
 
 export const gameState = Object.seal({
+  testing: true,
   config,
   grid: gridState,
   map: Object.freeze({ rooms, corridors, vents, shafts, doors, roomById, cellTraits: cellTraitMask, cellTraitFlags: CELL_TRAITS }),

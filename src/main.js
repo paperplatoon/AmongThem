@@ -44,9 +44,14 @@ const stepFrame = (ctx, time) => {
 };
 
 const start = () => {
+  gameState.testing = true;
   initializeCase();
   buildSolidMask();
   applyCaseObstacles();
+  if (gameState.testing) {
+    gameState.inventory.push({ id: 'test_disable_power', type: 'disable_power', label: 'Disable Power', effect: { type: 'force_escape' } });
+    gameState.inventory.push({ id: 'test_remote_lockdown', type: 'remote_lockdown', label: 'Remote Lockdown', effect: { type: 'lockdown' } });
+  }
   const canvas = createCanvas();
   const ctx = canvas.getContext('2d');
   mountCanvas(canvas);

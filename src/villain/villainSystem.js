@@ -4,6 +4,7 @@ import { hasLineOfSight } from '../utils/lineOfSight.js';
 import { distanceBetween } from '../utils/geometry.js';
 
 let fastLaneCells = null;
+let perimeterCells = null;
 
 const getTraitMask = () => gameState.map.cellTraits;
 const getTraitFlags = () => gameState.map.cellTraitFlags;
@@ -16,6 +17,15 @@ const isFastLaneCell = (x, y) => {
   if (!mask || !flags) return false;
   const index = y * gameState.grid.width + x;
   return Boolean(mask[index] & flags.FAST_LANE);
+};
+
+const isPerimeterCell = (x, y) => {
+  if (!withinBounds(x, y)) return false;
+  const mask = getTraitMask();
+  const flags = getTraitFlags();
+  if (!mask || !flags) return false;
+  const index = y * gameState.grid.width + x;
+  return Boolean(mask[index] & flags.OUTER_HALL);
 };
 
 const gatherFastLaneCells = () => {
@@ -38,10 +48,58 @@ const gatherFastLaneCells = () => {
   return fastLaneCells;
 };
 
-const randomFastLaneCell = () => {
-  const cells = gatherFastLaneCells();
+const gatherPerimeterCells = () => {
+  if (perimeterCells) return perimeterCells;
+  const mask = getTraitMask();
+  const flags = getTraitFlags();
+  if (!mask || !flags) {
+    perimeterCells = [];
+    return perimeterCells;
+  }
+  const cells = [];
+  const width = gameState.grid.width;
+  for (let index = 0; index < mask.length; index += 1) {
+    if (!(mask[index] & flags.OUTER_HALL)) continue;
+    const cellX = index % width;
+    const cellY = Math.floor(index / width);
+    cells.push({ x: cellX, y: cellY });
+  }
+  perimeterCells = cells;
+  return perimeterCells;
+};
+
+const randomFromCells = (cells) => {
   if (!cells.length) return null;
   return cells[Math.floor(Math.random() * cells.length)];
+};
+
+const randomFastLaneCell = () => randomFromCells(gatherFastLaneCells());
+
+const randomPerimeterCell = () => randomFromCells(gatherPerimeterCells());
+
+const nearestPerimeterCell = (fromCell) => {
+  const cells = gatherPerimeterCells();
+  if (!cells.length) return null;
+  let best = cells[0];
+  let bestDist = Infinity;
+  cells.forEach((cell) => {
+    const dx = cell.x - fromCell.x;
+    const dy = cell.y - fromCell.y;
+    const dist = dx * dx + dy * dy;
+    if (dist < bestDist) {
+      bestDist = dist;
+      best = cell;
+    }
+  });
+  return best;
+};
+
+const assignPerimeterTarget = (villain) => {
+  const origin = villain.cellX != null && villain.cellY != null ? { x: villain.cellX, y: villain.cellY } : null;
+  const next = origin ? nearestPerimeterCell(origin) : randomPerimeterCell();
+  if (!next) return;
+  villain.targetCellX = next.x;
+  villain.targetCellY = next.y;
 };
 
 const pickFastLaneNear = (targetCell, radius = 4) => {
@@ -110,7 +168,7 @@ const normalize = (dx, dy) => {
   return { x: dx / length, y: dy / length };
 };
 
-const moveTowardsTarget = (villain, targetWorld, deltaSeconds, speed) => {
+const moveTowardsTarget = (villain, targetWorld, deltaSeconds, speed, allowPerimeter = false) => {
   const dx = targetWorld.x - villain.x;
   const dy = targetWorld.y - villain.y;
   const distance = Math.hypot(dx, dy);
@@ -122,7 +180,8 @@ const moveTowardsTarget = (villain, targetWorld, deltaSeconds, speed) => {
   const nextX = villain.x + direction.x * step;
   const nextY = villain.y + direction.y * step;
   const cell = worldPointToCell({ x: nextX, y: nextY });
-  if (!isFastLaneCell(cell.x, cell.y)) {
+  const allowed = allowPerimeter ? (isFastLaneCell(cell.x, cell.y) || isPerimeterCell(cell.x, cell.y)) : isFastLaneCell(cell.x, cell.y);
+  if (!allowed) {
     assignWanderTarget(villain);
     return true;
   }
@@ -134,13 +193,14 @@ const moveTowardsTarget = (villain, targetWorld, deltaSeconds, speed) => {
   return reached;
 };
 
-const updateRoam = (villain, deltaSeconds, speed) => {
+const updateRoam = (villain, deltaSeconds, speed, allowPerimeter = false) => {
   if (villain.targetCellX == null || villain.targetCellY == null) assignWanderTarget(villain);
   if (villain.targetCellX == null || villain.targetCellY == null) return;
   const targetWorld = cellToWorldCenter(villain.targetCellX, villain.targetCellY);
-  const reached = moveTowardsTarget(villain, targetWorld, deltaSeconds, speed);
+  const reached = moveTowardsTarget(villain, targetWorld, deltaSeconds, speed, allowPerimeter);
   if (reached || distanceToTarget(villain, targetWorld) < 4) {
-    assignWanderTarget(villain);
+    if (allowPerimeter) assignPerimeterTarget(villain);
+    else assignWanderTarget(villain);
   }
 };
 
@@ -149,7 +209,28 @@ const updateWander = (villain, deltaSeconds) => {
 };
 
 const updateLostRoam = (villain, deltaSeconds) => {
-  updateRoam(villain, deltaSeconds, gameState.config.villain.lostSpeed);
+  updateRoam(villain, deltaSeconds, gameState.config.villain.lostSpeed, villain.isEscaped);
+};
+
+const updateEscapedTravel = (villain, deltaSeconds) => {
+  if (villain.targetCellX == null || villain.targetCellY == null) assignPerimeterTarget(villain);
+  if (villain.targetCellX == null || villain.targetCellY == null) return;
+  const targetWorld = cellToWorldCenter(villain.targetCellX, villain.targetCellY);
+  const reached = moveTowardsTarget(
+    villain,
+    targetWorld,
+    deltaSeconds,
+    gameState.config.villain.escapedTravelSpeed,
+    true
+  );
+  if (reached || distanceToTarget(villain, targetWorld) < 4) {
+    villain.state = 'escaped_roam';
+    assignPerimeterTarget(villain);
+  }
+};
+
+const updateEscapedRoam = (villain, deltaSeconds) => {
+  updateRoam(villain, deltaSeconds, gameState.config.villain.escapedRoamSpeed, true);
 };
 
 const updateChase = (villain, deltaSeconds) => {
@@ -162,7 +243,7 @@ const updateChase = (villain, deltaSeconds) => {
   const chaseSpeed = distanceCells > slowDistance
     ? gameState.config.villain.chaseSpeedFar
     : gameState.config.villain.chaseSpeed;
-  moveTowardsTarget(villain, targetWorld, deltaSeconds, chaseSpeed);
+  moveTowardsTarget(villain, targetWorld, deltaSeconds, chaseSpeed, villain.isEscaped);
 };
 
 const updateLostPlayer = (villain, deltaSeconds) => {
@@ -177,7 +258,7 @@ const updateLostPlayer = (villain, deltaSeconds) => {
   if (!villain.searchOrigin) return;
   const targetWorld = villain.searchOrigin;
   const lostSpeed = gameState.config.villain.lostSpeed;
-  const reached = moveTowardsTarget(villain, targetWorld, deltaSeconds, lostSpeed);
+  const reached = moveTowardsTarget(villain, targetWorld, deltaSeconds, lostSpeed, villain.isEscaped);
   if (reached) assignSearchOrigin(villain);
 };
 
@@ -271,6 +352,7 @@ export const updateVillain = (deltaSeconds = 0) => {
   ensureSpawned(villain);
   if (!villain.spawnInitialized) return;
   decayTimers(villain, deltaSeconds);
+  maybeEscape(villain, deltaSeconds);
   const seesPlayer = villainCanSeePlayer(villain);
   if (seesPlayer) {
     recordPlayerSight(villain);
@@ -289,6 +371,16 @@ export const updateVillain = (deltaSeconds = 0) => {
     tryImpactPlayer(villain);
     return;
   }
+  if (villain.isEscaped) {
+    if (villain.state === 'escaped_travel') {
+      updateEscapedTravel(villain, deltaSeconds);
+      return;
+    }
+    if (villain.state === 'escaped_roam') {
+      updateEscapedRoam(villain, deltaSeconds);
+      return;
+    }
+  }
   if (villain.lostPlayerState) {
     if (villain.isSearching) {
       updateLostPlayer(villain, deltaSeconds);
@@ -299,4 +391,56 @@ export const updateVillain = (deltaSeconds = 0) => {
     return;
   }
   updateWander(villain, deltaSeconds);
+};
+
+export const forceVillainEscape = () => {
+  const villain = gameState.villain;
+  if (!villain) return;
+  ensureSpawned(villain);
+  villain.isEscaped = true;
+  villain.state = 'escaped_travel';
+  villain.targetCellX = null;
+  villain.targetCellY = null;
+  villain.canEscapeAt = nowSeconds();
+};
+
+export const resetVillainLockdown = () => {
+  const villain = gameState.villain;
+  if (!villain) return;
+  ensureSpawned(villain);
+  const start = randomFastLaneCell();
+  if (start) setVillainPosition(villain, start);
+  villain.isEscaped = false;
+  villain.state = 'wander';
+  villain.targetCellX = null;
+  villain.targetCellY = null;
+  villain.canEscapeAt = nowSeconds() + gameState.config.villain.escapeLockoutSeconds;
+};
+const nowSeconds = () => gameState.lastFrameTime / 1000;
+
+const currentOxygenPercent = () => {
+  const { current, max } = gameState.player.oxygen;
+  return max > 0 ? (current / max) * 100 : 0;
+};
+
+const calculateEscapeChancePerSecond = (oxygenPercent) => {
+  const below = Math.max(0, 90 - oxygenPercent);
+  return below * gameState.config.villain.escapeChancePerPctBelow90;
+};
+
+const maybeEscape = (villain, deltaSeconds) => {
+  if (villain.isEscaped) return;
+  const now = nowSeconds();
+  if (now < villain.canEscapeAt) return;
+  villain.escapeAccumulated += deltaSeconds;
+  const interval = gameState.config.villain.escapeCheckIntervalSeconds;
+  if (villain.escapeAccumulated < interval) return;
+  villain.escapeAccumulated -= interval;
+  const chance = calculateEscapeChancePerSecond(currentOxygenPercent());
+  if (Math.random() < chance) {
+    villain.isEscaped = true;
+    villain.state = 'escaped_travel';
+    villain.targetCellX = null;
+    villain.targetCellY = null;
+  }
 };

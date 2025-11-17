@@ -26,5 +26,8 @@ export const villainState = Object.seal({
   lostPlayerState: false,
   spawnInitialized: false,
   targetCellX: null,
-  targetCellY: null
+  targetCellY: null,
+  isEscaped: false,
+  escapeAccumulated: 0,
+  canEscapeAt: 0
 });
