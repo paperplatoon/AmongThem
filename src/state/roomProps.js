@@ -1,5 +1,5 @@
-import { mapState } from './mapState.js';
-import { worldPointToCell, cellToWorldCenter } from './gridState.js';
+import { mapState, cellTraitMask, CELL_TRAITS } from './mapState.js';
+import { worldPointToCell, cellToWorldCenter, withinBounds as gridWithinBounds, isCellSolid } from './gridState.js';
 import { createItemFromDefinition } from './itemDefinitions.js';
 import { config } from './config.js';
 
@@ -19,6 +19,8 @@ const HALL_PROP_CONFIG = Object.freeze([
   { type: 'cabinet', label: 'Cabinet', count: 10, allowsKeycard: true },
   { type: 'trash', label: 'Trash Can', count: 10, allowsKeycard: false }
 ]);
+
+const distanceChebyshev = (a, b) => Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
 
 const shouldPopulate = (propType) => (
   Math.random() < (PROP_CONTENT_CHANCE[propType] ?? 0)
@@ -69,6 +71,145 @@ const buildContents = (prop, idPrefix) => {
   const item = createItemFromDefinition(`${idPrefix}_${prop.type}`, itemId);
   if (item) contents.push(item);
   return contents;
+};
+
+const fastLaneCells = () => {
+  const mask = cellTraitMask;
+  const flags = CELL_TRAITS;
+  if (!mask || !flags) return [];
+  const cells = [];
+  const width = config.gridWidth;
+  for (let index = 0; index < mask.length; index += 1) {
+    if (!(mask[index] & flags.FAST_LANE)) continue;
+    if (mask[index] & flags.OUTER_HALL) continue;
+    const x = index % width;
+    const y = Math.floor(index / width);
+    cells.push({ x, y });
+  }
+  return cells;
+};
+
+const pickSpacedCells = (candidates, count, minDistance = 2) => {
+  const picked = [];
+  const grid = candidates.reduce((acc, cell) => {
+    if (!acc[cell.x]) acc[cell.x] = {};
+    acc[cell.x][cell.y] = true;
+    return acc;
+  }, {});
+  const step = Math.max(1, minDistance);
+  for (let x = 0; x < config.gridWidth && picked.length < count; x += step) {
+    for (let y = 0; y < config.gridHeight && picked.length < count; y += step) {
+      if (!grid[x] || !grid[x][y]) continue;
+      const cell = { x, y };
+      if (picked.some((p) => distanceChebyshev(p, cell) < minDistance)) continue;
+      picked.push(cell);
+    }
+  }
+  if (picked.length < count) {
+    const remaining = [...candidates];
+    for (let i = 0; i < remaining.length && picked.length < count; i += 1) {
+      const cell = remaining[i];
+      if (picked.some((p) => distanceChebyshev(p, cell) < minDistance)) continue;
+      picked.push(cell);
+    }
+  }
+  return picked;
+};
+
+const buildSegments = () => {
+  const candidates = fastLaneCells();
+  const width = config.gridWidth;
+  const set = new Set(candidates.map((c) => `${c.x},${c.y}`));
+  const segments = [];
+  const has = (x, y) => set.has(`${x},${y}`);
+
+  // Simple sampling: divide area into a grid and pick one candidate per cell if available.
+  const sampleCols = 5;
+  const sampleRows = 4;
+  const stepX = Math.floor(config.gridWidth / sampleCols);
+  const stepY = Math.floor(config.gridHeight / sampleRows);
+  const chosen = [];
+  for (let cx = 0; cx < config.gridWidth && chosen.length < 20; cx += stepX) {
+    for (let cy = 0; cy < config.gridHeight && chosen.length < 20; cy += stepY) {
+      const startX = cx;
+      const endX = Math.min(config.gridWidth - 1, cx + stepX);
+      const startY = cy;
+      const endY = Math.min(config.gridHeight - 1, cy + stepY);
+      for (let y = startY; y <= endY && chosen.length < 20; y += 1) {
+        for (let x = startX; x <= endX && chosen.length < 20; x += 1) {
+          if (!has(x, y)) continue;
+          chosen.push({ x, y });
+          y = endY + 1;
+          break;
+        }
+      }
+    }
+  }
+  return chosen.map((cell) => [cell]);
+};
+
+const assureWallNudge = (cell) => {
+  const offsets = [
+    { dx: -1, dy: 0 },
+    { dx: 1, dy: 0 },
+    { dx: 0, dy: -1 },
+    { dx: 0, dy: 1 }
+  ];
+  for (const o of offsets) {
+    const nx = cell.x + o.dx;
+    const ny = cell.y + o.dy;
+    if (!gridWithinBounds(nx, ny)) continue;
+    if (isCellSolid(nx, ny)) return { x: cell.x + o.dx * 0.25, y: cell.y + o.dy * 0.25 };
+  }
+  return cell;
+};
+
+const createInnerCorridorLoot = () => {
+  const points = buildSegments();
+  const caches = [];
+  points.sort((a, b) => (a[0].y * config.gridWidth + a[0].x) - (b[0].y * config.gridWidth + b[0].x));
+  points.forEach((segment, idx) => {
+    const cell = assureWallNudge(segment[0]);
+    const { x, y } = cellToWorldCenter(Math.round(cell.x), Math.round(cell.y));
+    const contents = [];
+    const creditsAmount = 20 + Math.floor(Math.random() * 11);
+    const creditItem = createItemFromDefinition(`inner_cache_${idx}_credits`, 'credits');
+    if (creditItem) {
+      creditItem.amount = creditsAmount;
+      contents.push(creditItem);
+    }
+    if (Math.random() < 0.2) {
+      const energy = createItemFromDefinition(`inner_cache_${idx}_energy`, 'energy_bar');
+      if (energy) contents.push(energy);
+    }
+    if (Math.random() < 0.1) {
+      const oxygen = createItemFromDefinition(`inner_cache_${idx}_oxygen`, 'oxygen_canister');
+      if (oxygen) contents.push(oxygen);
+    }
+    caches.push(Object.seal({
+      id: `inner_cache_${idx}`,
+      roomId: 'fast_lane',
+      type: 'cache',
+      label: 'Cache',
+      cellX: Math.round(cell.x),
+      cellY: Math.round(cell.y),
+      x,
+      y,
+      lockId: null,
+      requiresKey: false,
+      contents,
+      promptActive: false,
+      promptText: 'CLICK TO SEARCH',
+      isEmpty: false,
+      searched: false,
+      source: 'inner_corridor',
+      allowsKeycard: false,
+      containsKeycard: false,
+      keycardRoleId: null,
+      highlightKeycard: false
+    }));
+  });
+  return caches.slice(0, 20);
 };
 
 const createRoomProp = (room, propType, index) => {
@@ -257,7 +398,7 @@ export const addIncriminatingEvidence = (props, killerRoleId) => {
 };
 
 export const generateRoomProps = () => {
-  const props = [...createRoomProps(), ...createHallProps()];
+  const props = [...createRoomProps(), ...createHallProps(), ...createInnerCorridorLoot()];
   assignKeycardsToProps(props);
   return props;
 };
