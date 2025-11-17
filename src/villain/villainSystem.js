@@ -1,5 +1,5 @@
 import { gameState } from '../state/gameState.js';
-import { cellToWorldCenter, worldPointToCell } from '../state/gridState.js';
+import { cellToWorldCenter, worldPointToCell, isCellSolid, withinBounds as gridWithinBounds, toIndex } from '../state/gridState.js';
 import { hasLineOfSight } from '../utils/lineOfSight.js';
 import { distanceBetween } from '../utils/geometry.js';
 
@@ -26,6 +26,49 @@ const isPerimeterCell = (x, y) => {
   if (!mask || !flags) return false;
   const index = y * gameState.grid.width + x;
   return Boolean(mask[index] & flags.OUTER_HALL);
+};
+
+const canWalkEscaped = (x, y) => (
+  gridWithinBounds(x, y) && !isCellSolid(x, y)
+);
+
+const findNextStep = (start, goal) => {
+  if (!start || !goal) return null;
+  const width = gameState.grid.width;
+  const height = gameState.grid.height;
+  const visited = new Uint8Array(width * height);
+  const queue = [{ x: start.x, y: start.y, prev: null }];
+  visited[toIndex(start.x, start.y)] = 1;
+  let found = null;
+  let queueIndex = 0;
+  while (queueIndex < queue.length) {
+    const current = queue[queueIndex++];
+    if (current.x === goal.x && current.y === goal.y) {
+      found = current;
+      break;
+    }
+    const neighbors = [
+      { x: current.x + 1, y: current.y, prev: current },
+      { x: current.x - 1, y: current.y, prev: current },
+      { x: current.x, y: current.y + 1, prev: current },
+      { x: current.x, y: current.y - 1, prev: current }
+    ];
+    for (const n of neighbors) {
+      if (!canWalkEscaped(n.x, n.y)) continue;
+      const idx = toIndex(n.x, n.y);
+      if (visited[idx]) continue;
+      visited[idx] = 1;
+      queue.push(n);
+    }
+  }
+  if (!found) return null;
+  let step = found;
+  let prev = step.prev;
+  while (prev && prev.prev) {
+    step = prev;
+    prev = prev.prev;
+  }
+  return step;
 };
 
 const gatherFastLaneCells = () => {
@@ -94,9 +137,22 @@ const nearestPerimeterCell = (fromCell) => {
   return best;
 };
 
-const assignPerimeterTarget = (villain) => {
+const assignPerimeterTargetNearest = (villain) => {
   const origin = villain.cellX != null && villain.cellY != null ? { x: villain.cellX, y: villain.cellY } : null;
   const next = origin ? nearestPerimeterCell(origin) : randomPerimeterCell();
+  if (!next) return;
+  villain.targetCellX = next.x;
+  villain.targetCellY = next.y;
+};
+
+const assignPerimeterTargetRandom = (villain) => {
+  const current = { x: villain.cellX, y: villain.cellY };
+  let next = randomPerimeterCell();
+  let guard = 0;
+  while (next && current && next.x === current.x && next.y === current.y && guard < 5) {
+    next = randomPerimeterCell();
+    guard += 1;
+  }
   if (!next) return;
   villain.targetCellX = next.x;
   villain.targetCellY = next.y;
@@ -180,11 +236,10 @@ const moveTowardsTarget = (villain, targetWorld, deltaSeconds, speed, allowPerim
   const nextX = villain.x + direction.x * step;
   const nextY = villain.y + direction.y * step;
   const cell = worldPointToCell({ x: nextX, y: nextY });
-  const allowed = allowPerimeter ? (isFastLaneCell(cell.x, cell.y) || isPerimeterCell(cell.x, cell.y)) : isFastLaneCell(cell.x, cell.y);
-  if (!allowed) {
-    assignWanderTarget(villain);
-    return true;
-  }
+  const allowed = allowPerimeter
+    ? !isCellSolid(cell.x, cell.y)
+    : isFastLaneCell(cell.x, cell.y);
+  if (!allowed) return true;
   villain.x = nextX;
   villain.y = nextY;
   villain.heading = Math.atan2(direction.y, direction.x);
@@ -199,7 +254,7 @@ const updateRoam = (villain, deltaSeconds, speed, allowPerimeter = false) => {
   const targetWorld = cellToWorldCenter(villain.targetCellX, villain.targetCellY);
   const reached = moveTowardsTarget(villain, targetWorld, deltaSeconds, speed, allowPerimeter);
   if (reached || distanceToTarget(villain, targetWorld) < 4) {
-    if (allowPerimeter) assignPerimeterTarget(villain);
+    if (allowPerimeter) assignPerimeterTargetRandom(villain);
     else assignWanderTarget(villain);
   }
 };
@@ -213,9 +268,10 @@ const updateLostRoam = (villain, deltaSeconds) => {
 };
 
 const updateEscapedTravel = (villain, deltaSeconds) => {
-  if (villain.targetCellX == null || villain.targetCellY == null) assignPerimeterTarget(villain);
+  if (villain.targetCellX == null || villain.targetCellY == null) assignPerimeterTargetNearest(villain);
   if (villain.targetCellX == null || villain.targetCellY == null) return;
-  const targetWorld = cellToWorldCenter(villain.targetCellX, villain.targetCellY);
+  const pathStep = findNextStep({ x: villain.cellX, y: villain.cellY }, { x: villain.targetCellX, y: villain.targetCellY });
+  const targetWorld = pathStep ? cellToWorldCenter(pathStep.x, pathStep.y) : cellToWorldCenter(villain.targetCellX, villain.targetCellY);
   const reached = moveTowardsTarget(
     villain,
     targetWorld,
@@ -225,12 +281,23 @@ const updateEscapedTravel = (villain, deltaSeconds) => {
   );
   if (reached || distanceToTarget(villain, targetWorld) < 4) {
     villain.state = 'escaped_roam';
-    assignPerimeterTarget(villain);
+    assignPerimeterTargetRandom(villain);
   }
 };
 
 const updateEscapedRoam = (villain, deltaSeconds) => {
-  updateRoam(villain, deltaSeconds, gameState.config.villain.escapedRoamSpeed, true);
+  if (villain.targetCellX == null || villain.targetCellY == null) assignPerimeterTargetRandom(villain);
+  if (villain.targetCellX == null || villain.targetCellY == null) return;
+  const pathStep = findNextStep({ x: villain.cellX, y: villain.cellY }, { x: villain.targetCellX, y: villain.targetCellY });
+  const targetWorld = pathStep ? cellToWorldCenter(pathStep.x, pathStep.y) : cellToWorldCenter(villain.targetCellX, villain.targetCellY);
+  const reached = moveTowardsTarget(
+    villain,
+    targetWorld,
+    deltaSeconds,
+    gameState.config.villain.escapedRoamSpeed,
+    true
+  );
+  if (reached || distanceToTarget(villain, targetWorld) < 4) assignPerimeterTargetRandom(villain);
 };
 
 const updateChase = (villain, deltaSeconds) => {

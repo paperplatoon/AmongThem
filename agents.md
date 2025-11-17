@@ -30,6 +30,7 @@
 - Represent runs with a case-seed object containing roles, victim, killer, murder room, weapon, true motive, false motives, clue packs, and phase timings.
 - Maintain clear mappings: each crew role ties to a primary room, typical weapon access, and log types to feed clue generation.
 - Store clue definitions (room, type, description) so placement logic can mix guaranteed leads with flavor misdirection.
+- Villain flow: chance to escape inner corridors scales with O2 dropping below 90%; when escaped, villain roams perimeter; AI Core lockdown resets villain to inner ring and applies an escape lockout timer.
 
 ## Implementation Priorities (MVP)
 1. Movement across rooms with safe vs. unsafe paths.
@@ -45,6 +46,9 @@
 - Route all pointer/click events through a buffered `gameState.input` queue so interactions resolve during the main update tick instead of DOM timing.
 - Derive prop/keycard generation from a stored case seed (including RNG state) so runs are deterministic and replayable.
 - Keep collision masks in sync with live prop state—either dynamically flip grid cells when props change or query prop occupancy alongside `gridState`.
+- Tune villain escape + lockdown loop: escaped state roams perimeter corridors after an O2-driven escape chance; AI Core lockdown resets villain to inner ring and applies a lockout timer.
+- Add seeded RNG wrapper for villain escape rolls and perimeter targeting so runs replay identically.
+- Make LoS aware of dynamic doors/props during chase/escape.
 
 ## Engineering Preferences
 - Favor many tiny, single-purpose functions (≈5 lines or fewer) over monolithic routines for readability.
