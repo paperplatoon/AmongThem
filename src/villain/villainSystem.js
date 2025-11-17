@@ -28,11 +28,12 @@ const isPerimeterCell = (x, y) => {
   return Boolean(mask[index] & flags.OUTER_HALL);
 };
 
-const canWalkEscaped = (x, y) => (
-  gridWithinBounds(x, y) && !isCellSolid(x, y)
-);
+const canWalkAny = (x, y) => gridWithinBounds(x, y) && !isCellSolid(x, y);
+const canWalkFastLane = (x, y) => isFastLaneCell(x, y);
+const canWalkPerimeter = (x, y) => isPerimeterCell(x, y);
+const canWalkFastOrPerimeter = (x, y) => canWalkFastLane(x, y) || canWalkPerimeter(x, y);
 
-const findNextStep = (start, goal) => {
+const findNextStep = (start, goal, canWalk) => {
   if (!start || !goal) return null;
   const width = gameState.grid.width;
   const height = gameState.grid.height;
@@ -54,7 +55,7 @@ const findNextStep = (start, goal) => {
       { x: current.x, y: current.y - 1, prev: current }
     ];
     for (const n of neighbors) {
-      if (!canWalkEscaped(n.x, n.y)) continue;
+      if (!canWalk(n.x, n.y)) continue;
       const idx = toIndex(n.x, n.y);
       if (visited[idx]) continue;
       visited[idx] = 1;
@@ -224,7 +225,7 @@ const normalize = (dx, dy) => {
   return { x: dx / length, y: dy / length };
 };
 
-const moveTowardsTarget = (villain, targetWorld, deltaSeconds, speed, allowPerimeter = false) => {
+const moveTowardsTarget = (villain, targetWorld, deltaSeconds, speed, canWalk) => {
   const dx = targetWorld.x - villain.x;
   const dy = targetWorld.y - villain.y;
   const distance = Math.hypot(dx, dy);
@@ -236,10 +237,7 @@ const moveTowardsTarget = (villain, targetWorld, deltaSeconds, speed, allowPerim
   const nextX = villain.x + direction.x * step;
   const nextY = villain.y + direction.y * step;
   const cell = worldPointToCell({ x: nextX, y: nextY });
-  const allowed = allowPerimeter
-    ? !isCellSolid(cell.x, cell.y)
-    : isFastLaneCell(cell.x, cell.y);
-  if (!allowed) return true;
+  if (!canWalk(cell.x, cell.y)) return true;
   villain.x = nextX;
   villain.y = nextY;
   villain.heading = Math.atan2(direction.y, direction.x);
@@ -248,36 +246,36 @@ const moveTowardsTarget = (villain, targetWorld, deltaSeconds, speed, allowPerim
   return reached;
 };
 
-const updateRoam = (villain, deltaSeconds, speed, allowPerimeter = false) => {
+const updateRoam = (villain, deltaSeconds, speed, canWalk) => {
   if (villain.targetCellX == null || villain.targetCellY == null) assignWanderTarget(villain);
   if (villain.targetCellX == null || villain.targetCellY == null) return;
   const targetWorld = cellToWorldCenter(villain.targetCellX, villain.targetCellY);
-  const reached = moveTowardsTarget(villain, targetWorld, deltaSeconds, speed, allowPerimeter);
+  const reached = moveTowardsTarget(villain, targetWorld, deltaSeconds, speed, canWalk);
   if (reached || distanceToTarget(villain, targetWorld) < 4) {
-    if (allowPerimeter) assignPerimeterTargetRandom(villain);
+    if (canWalk === canWalkPerimeter) assignPerimeterTargetRandom(villain);
     else assignWanderTarget(villain);
   }
 };
 
 const updateWander = (villain, deltaSeconds) => {
-  updateRoam(villain, deltaSeconds, gameState.config.villain.wanderSpeed);
+  updateRoam(villain, deltaSeconds, gameState.config.villain.wanderSpeed, canWalkFastLane);
 };
 
 const updateLostRoam = (villain, deltaSeconds) => {
-  updateRoam(villain, deltaSeconds, gameState.config.villain.lostSpeed, villain.isEscaped);
+  updateRoam(villain, deltaSeconds, gameState.config.villain.lostSpeed, villain.isEscaped ? canWalkPerimeter : canWalkFastLane);
 };
 
 const updateEscapedTravel = (villain, deltaSeconds) => {
   if (villain.targetCellX == null || villain.targetCellY == null) assignPerimeterTargetNearest(villain);
   if (villain.targetCellX == null || villain.targetCellY == null) return;
-  const pathStep = findNextStep({ x: villain.cellX, y: villain.cellY }, { x: villain.targetCellX, y: villain.targetCellY });
+  const pathStep = findNextStep({ x: villain.cellX, y: villain.cellY }, { x: villain.targetCellX, y: villain.targetCellY }, canWalkFastOrPerimeter);
   const targetWorld = pathStep ? cellToWorldCenter(pathStep.x, pathStep.y) : cellToWorldCenter(villain.targetCellX, villain.targetCellY);
   const reached = moveTowardsTarget(
     villain,
     targetWorld,
     deltaSeconds,
     gameState.config.villain.escapedTravelSpeed,
-    true
+    canWalkFastOrPerimeter
   );
   if (reached || distanceToTarget(villain, targetWorld) < 4) {
     villain.state = 'escaped_roam';
@@ -288,14 +286,14 @@ const updateEscapedTravel = (villain, deltaSeconds) => {
 const updateEscapedRoam = (villain, deltaSeconds) => {
   if (villain.targetCellX == null || villain.targetCellY == null) assignPerimeterTargetRandom(villain);
   if (villain.targetCellX == null || villain.targetCellY == null) return;
-  const pathStep = findNextStep({ x: villain.cellX, y: villain.cellY }, { x: villain.targetCellX, y: villain.targetCellY });
+  const pathStep = findNextStep({ x: villain.cellX, y: villain.cellY }, { x: villain.targetCellX, y: villain.targetCellY }, canWalkPerimeter);
   const targetWorld = pathStep ? cellToWorldCenter(pathStep.x, pathStep.y) : cellToWorldCenter(villain.targetCellX, villain.targetCellY);
   const reached = moveTowardsTarget(
     villain,
     targetWorld,
     deltaSeconds,
     gameState.config.villain.escapedRoamSpeed,
-    true
+    canWalkPerimeter
   );
   if (reached || distanceToTarget(villain, targetWorld) < 4) assignPerimeterTargetRandom(villain);
 };
@@ -310,7 +308,8 @@ const updateChase = (villain, deltaSeconds) => {
   const chaseSpeed = distanceCells > slowDistance
     ? gameState.config.villain.chaseSpeedFar
     : gameState.config.villain.chaseSpeed;
-  moveTowardsTarget(villain, targetWorld, deltaSeconds, chaseSpeed, villain.isEscaped);
+  const canWalk = villain.isEscaped ? canWalkFastOrPerimeter : canWalkAny;
+  moveTowardsTarget(villain, targetWorld, deltaSeconds, chaseSpeed, canWalk);
 };
 
 const updateLostPlayer = (villain, deltaSeconds) => {
@@ -325,7 +324,8 @@ const updateLostPlayer = (villain, deltaSeconds) => {
   if (!villain.searchOrigin) return;
   const targetWorld = villain.searchOrigin;
   const lostSpeed = gameState.config.villain.lostSpeed;
-  const reached = moveTowardsTarget(villain, targetWorld, deltaSeconds, lostSpeed, villain.isEscaped);
+  const canWalk = villain.isEscaped ? canWalkPerimeter : canWalkFastLane;
+  const reached = moveTowardsTarget(villain, targetWorld, deltaSeconds, lostSpeed, canWalk);
   if (reached) assignSearchOrigin(villain);
 };
 
