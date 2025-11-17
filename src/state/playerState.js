@@ -28,6 +28,7 @@ export const playerState = Object.seal({
     secondsRemaining: config.oxygen.depletionSeconds,
     depleted: false
   }),
+  money: 0,
   health: Object.seal({
     current: config.player.healthMax,
     max: config.player.healthMax

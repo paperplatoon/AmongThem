@@ -155,7 +155,13 @@ const updateLostRoam = (villain, deltaSeconds) => {
 const updateChase = (villain, deltaSeconds) => {
   const playerCell = worldPointToCell({ x: gameState.player.x, y: gameState.player.y });
   const targetWorld = cellToWorldCenter(playerCell.x, playerCell.y);
-  const chaseSpeed = gameState.config.villain.chaseSpeed;
+  const dx = gameState.player.x - villain.x;
+  const dy = gameState.player.y - villain.y;
+  const distanceCells = Math.hypot(dx, dy) / gameState.grid.cellSize;
+  const slowDistance = gameState.config.villain.chaseSlowDistanceCells;
+  const chaseSpeed = distanceCells > slowDistance
+    ? gameState.config.villain.chaseSpeedFar
+    : gameState.config.villain.chaseSpeed;
   moveTowardsTarget(villain, targetWorld, deltaSeconds, chaseSpeed);
 };
 
@@ -241,7 +247,9 @@ const enterLostPlayerState = (villain) => {
 
 const applyPlayerDamage = (amount) => {
   const health = gameState.player.health;
+  if (gameState.ui.showGameOver) return;
   health.current = Math.max(0, Math.min(health.max, health.current - amount));
+  if (health.current <= 0) gameState.ui.showGameOver = true;
 };
 
 const tryImpactPlayer = (villain) => {
@@ -259,6 +267,7 @@ const tryImpactPlayer = (villain) => {
 export const updateVillain = (deltaSeconds = 0) => {
   const villain = gameState.villain;
   if (!villain) return;
+  if (gameState.ui.showGameOver) return;
   ensureSpawned(villain);
   if (!villain.spawnInitialized) return;
   decayTimers(villain, deltaSeconds);

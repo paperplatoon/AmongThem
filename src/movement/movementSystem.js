@@ -50,6 +50,7 @@ const tryMove = (player, delta) => {
 };
 
 export const updateMovement = (deltaSeconds) => {
+  if (gameState.ui.showGameOver) return;
   updateStamina(deltaSeconds);
   updateOxygen(deltaSeconds);
   const currentCell = worldPointToCell({ x: gameState.player.x, y: gameState.player.y });

@@ -1,6 +1,8 @@
 export const ITEM_TYPES = Object.freeze({
   ENERGY_BAR: 'energy_bar',
-  OXYGEN_CANISTER: 'oxygen_canister'
+  OXYGEN_CANISTER: 'oxygen_canister',
+  BANDAGE: 'bandage',
+  CREDITS: 'credits'
 });
 
 export const ITEM_DEFINITIONS = Object.freeze({
@@ -8,9 +10,17 @@ export const ITEM_DEFINITIONS = Object.freeze({
     label: 'Energy Bar',
     effect: { type: 'stamina', amount: 0.1 }
   }),
+  [ITEM_TYPES.BANDAGE]: Object.freeze({
+    label: 'Bandage',
+    effect: { type: 'health', amount: 25 }
+  }),
   [ITEM_TYPES.OXYGEN_CANISTER]: Object.freeze({
     label: 'Oxygen Canister',
     effect: { type: 'oxygen', amount: 0.1 }
+  }),
+  [ITEM_TYPES.CREDITS]: Object.freeze({
+    label: 'Credits',
+    effect: null
   })
 });
 
@@ -27,6 +37,6 @@ export const createItemFromDefinition = (idPrefix, type = randomType()) => {
     id: `${idPrefix}_${Math.random().toString(36).slice(2, 7)}`,
     type,
     label: definition.label,
-    effect: { ...definition.effect }
+    effect: definition.effect ? { ...definition.effect } : null
   };
 };

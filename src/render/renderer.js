@@ -6,6 +6,7 @@ import { renderJournal } from '../ui/journal.js';
 import { renderHud } from './hud.js';
 import { renderContainerMenu } from '../ui/containerMenu.js';
 import { renderVillain } from './villainRenderer.js';
+import { renderGameOver } from '../ui/gameOver.js';
 
 const { WALL } = CELL_TYPES;
 
@@ -227,4 +228,5 @@ export const renderFrame = (ctx) => {
   renderJournal(ctx);
   renderContainerMenu(ctx);
   renderHud(ctx);
+  renderGameOver(ctx);
 };

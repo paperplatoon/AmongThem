@@ -3,6 +3,7 @@ import { syncOxygenState } from '../movement/oxygenSystem.js';
 import { tryHandleInteractionClick } from '../interactions/interactionSystem.js';
 import { handleContainerClick } from './containerMenu.js';
 import * as journalUi from './journal.js';
+import { handleGameOverClick } from './gameOver.js';
 
 const applyItemEffect = (entry) => {
   if (!entry.effect) return false;
@@ -11,6 +12,11 @@ const applyItemEffect = (entry) => {
     const stamina = player.stamina;
     stamina.current = Math.min(stamina.max, stamina.current + stamina.max * entry.effect.amount);
     stamina.drainTimer = 0;
+    return true;
+  }
+  if (entry.effect.type === 'health') {
+    const health = player.health;
+    health.current = Math.min(health.max, health.current + entry.effect.amount);
     return true;
   }
   if (entry.effect.type === 'oxygen') {
@@ -54,6 +60,7 @@ const handleCanvasClick = (canvas, event) => {
   if (tryHandleInteractionClick(worldX, worldY)) return;
   if (journalUi.handleJournalClick && journalUi.handleJournalClick(screenX, screenY)) return;
   if (handleContainerClick(screenX, screenY)) return;
+  if (handleGameOverClick(screenX, screenY)) return;
   handleInventorySelection(screenX, screenY);
 };
 

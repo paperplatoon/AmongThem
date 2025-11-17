@@ -30,6 +30,11 @@ const collectEvidenceItem = (item) => {
   markKillerConfirmed(item.roleId);
 };
 
+const collectCredits = (item) => {
+  if (!item || typeof item.amount !== 'number') return;
+  gameState.player.money += item.amount;
+};
+
 export const handleContainerClick = (screenX, screenY) => {
   if (!gameState.ui.openContainerId) return false;
   const closeHitbox = hitboxes().containerCloseButton;
@@ -53,6 +58,8 @@ export const handleContainerClick = (screenX, screenY) => {
     collectKeycardItem(item);
   } else if (item.type === 'incriminating_evidence') {
     collectEvidenceItem(item);
+  } else if (item.type === 'credits') {
+    collectCredits(item);
   } else {
     gameState.inventory.push(item);
   }
@@ -124,7 +131,10 @@ const drawContents = (ctx, panel, contents) => {
   slots.length = 0;
   contents.forEach((item, index) => {
     const y = panel.y + 64 + index * 32;
-    ctx.fillText(`• ${item.label}`, panel.x + 20, y);
+    const isCredits = item.type === 'credits';
+    ctx.fillStyle = isCredits ? gameState.config.creditsColor : '#8effd6';
+    const suffix = isCredits ? ` (+${item.amount})` : '';
+    ctx.fillText(`• ${item.label}${suffix}`, panel.x + 20, y);
     slots.push({ x: panel.x + 20, y, x2: panel.x + panel.width - 20, y2: y + 28, index });
   });
   ctx.restore();

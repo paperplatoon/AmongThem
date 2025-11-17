@@ -19,6 +19,19 @@ const getOxygenFraction = () => {
   return max > 0 ? current / max : 0;
 };
 
+const drawCredits = (ctx) => {
+  const x = padding;
+  const y = padding + barHeight + 12;
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+  ctx.fillRect(x - 6, y - 6, 180, 32);
+  ctx.fillStyle = gameState.config.creditsColor;
+  ctx.font = '18px "Courier New", monospace';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  const symbol = gameState.config.creditsSymbol || '₡';
+  ctx.fillText(`${symbol} ${gameState.player.money}`, x + 4, y + 10);
+};
+
 const drawOutline = (ctx, x, y) => {
   ctx.strokeStyle = '#1d3520';
   ctx.lineWidth = 2;
@@ -54,6 +67,7 @@ const drawHealthBar = (ctx) => {
 
 export const renderHud = (ctx) => {
   drawHealthBar(ctx);
+  drawCredits(ctx);
   const x = padding;
   const y = gameState.config.canvasHeight - padding - barHeight;
   drawBackground(ctx, x, y);

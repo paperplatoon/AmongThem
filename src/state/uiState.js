@@ -6,6 +6,7 @@ export const uiState = Object.seal({
   showMinimap: false,
   showInventory: false,
   showJournal: false,
+  showGameOver: false,
   openContainerId: null,
   journal: Object.seal({
     activeTab: roleOrder[0] ?? null
@@ -14,6 +15,7 @@ export const uiState = Object.seal({
     inventorySlots: [],
     journalTabs: [],
     containerSlots: [],
-    containerCloseButton: null
+    containerCloseButton: null,
+    gameOverButton: null
   })
 });

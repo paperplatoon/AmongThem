@@ -44,9 +44,17 @@ export const config = Object.freeze({
   player: Object.freeze({
     healthMax: 100
   }),
+  creditsColor: '#daa520',
+  creditsMin: 5,
+  creditsMax: 15,
+  creditsChance: 1 / 3,
+  creditsSymbol: '₡',
+  currencyLabel: 'Credits',
   villain: Object.freeze({
     wanderSpeed: 150,
     chaseSpeed: 440,
+    chaseSpeedFar: 260,
+    chaseSlowDistanceCells: 6,
     lostSpeed: 220,
     sightRangeCells: 6,
     sightAngleDeg: 60,

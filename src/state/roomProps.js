@@ -7,16 +7,16 @@ const ROOM_PROP_TYPES = ['desk', 'bed', 'trash', 'locker'];
 
 const PROP_CONTENT_CHANCE = Object.freeze({
   locker: 0.25,
-  desk: 0.10,
-  trash: 0.05,
-  bed: 0.01,
-  table: 0.08,
-  cabinet: 0.12
+  desk: 0.25,
+  bed: 0.25,
+  trash: 0.10,
+  table: 0.125,
+  cabinet: 0.125
 });
 
 const HALL_PROP_CONFIG = Object.freeze([
-  { type: 'table', label: 'Table', count: 20, allowsKeycard: true },
-  { type: 'cabinet', label: 'Cabinet', count: 50, allowsKeycard: true },
+  { type: 'table', label: 'Table', count: 10, allowsKeycard: true },
+  { type: 'cabinet', label: 'Cabinet', count: 10, allowsKeycard: true },
   { type: 'trash', label: 'Trash Can', count: 10, allowsKeycard: false }
 ]);
 
@@ -24,17 +24,51 @@ const shouldPopulate = (propType) => (
   Math.random() < (PROP_CONTENT_CHANCE[propType] ?? 0)
 );
 
+const LOOT_TABLE = [
+  { id: 'energy_bar', weight: 6 },
+  { id: 'bandage', weight: 3 },
+  { id: 'oxygen_canister', weight: 2 }
+];
+
+const pickWeightedItemId = () => {
+  const total = LOOT_TABLE.reduce((sum, entry) => sum + entry.weight, 0);
+  let roll = Math.random() * total;
+  for (let i = 0; i < LOOT_TABLE.length; i += 1) {
+    roll -= LOOT_TABLE[i].weight;
+    if (roll <= 0) return LOOT_TABLE[i].id;
+  }
+  return LOOT_TABLE[LOOT_TABLE.length - 1].id;
+};
+
+const maybeAddCredits = (contents, idPrefix) => {
+  if (Math.random() >= config.creditsChance) return;
+  const amountRange = config.creditsMax - config.creditsMin;
+  const amount = config.creditsMin + Math.floor(Math.random() * (amountRange + 1));
+  const creditItem = createItemFromDefinition(`${idPrefix}_credits`, 'credits');
+  if (!creditItem) return;
+  creditItem.amount = amount;
+  contents.push(creditItem);
+};
+
 const hallwayLoot = (idPrefix) => {
-  if (Math.random() < 0.05) return [createItemFromDefinition(`${idPrefix}_energy`, 'energy_bar')];
-  if (Math.random() < 0.05) return [createItemFromDefinition(`${idPrefix}_oxygen`, 'oxygen_canister')];
-  return [];
+  const contents = [];
+  maybeAddCredits(contents, idPrefix);
+  if (!shouldPopulate('hallway')) return contents;
+  const itemId = pickWeightedItemId();
+  const item = createItemFromDefinition(`${idPrefix}_${itemId}`, itemId);
+  if (item) contents.push(item);
+  return contents;
 };
 
 const buildContents = (prop, idPrefix) => {
-  if (prop.source === 'hallway') return hallwayLoot(idPrefix);
-  if (!shouldPopulate(prop.type)) return [];
-  const item = createItemFromDefinition(`${idPrefix}_${prop.type}`);
-  return item ? [item] : [];
+  const contents = [];
+  maybeAddCredits(contents, idPrefix);
+  if (prop.source === 'hallway') return [...contents, ...hallwayLoot(idPrefix)];
+  if (!shouldPopulate(prop.type)) return contents;
+  const itemId = pickWeightedItemId();
+  const item = createItemFromDefinition(`${idPrefix}_${prop.type}`, itemId);
+  if (item) contents.push(item);
+  return contents;
 };
 
 const createRoomProp = (room, propType, index) => {
