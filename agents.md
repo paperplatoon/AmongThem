@@ -30,6 +30,8 @@
 - Represent runs with a case-seed object containing roles, victim, killer, murder room, weapon, true motive, false motives, clue packs, and phase timings.
 - Maintain clear mappings: each crew role ties to a primary room, typical weapon access, and log types to feed clue generation.
 - Store clue definitions (room, type, description) so placement logic can mix guaranteed leads with flavor misdirection.
+- Villain flow: chance to escape inner corridors scales with O2 dropping below 90%. When escaped, villain roams perimeter; AI Core lockdown resets villain to the inner ring and applies an escape lockout. Villain movement/pathing is door-aware (cannot open closed doors).
+- Inner corridor caches: 20 deterministic caches placed on inner fast-lane cells (non-perimeter), each giving credits (20–30) with small chances of energy/oxygen.
 - Villain flow: chance to escape inner corridors scales with O2 dropping below 90%; when escaped, villain roams perimeter; AI Core lockdown resets villain to inner ring and applies an escape lockout timer.
 
 ## Implementation Priorities (MVP)
@@ -41,6 +43,16 @@
 6. Bridge accusation interface with success/failure logic.
 7. Critical-phase escape/hunt state after wrong accusation.
 8. Procedural case generator to randomize each loop.
+
+### Upcoming Engineering Tasks
+- Route all pointer/click events through a buffered `gameState.input` queue so interactions resolve during the main update tick instead of DOM timing.
+- Derive prop/keycard generation from a stored case seed (including RNG state) so runs are deterministic and replayable.
+- Keep collision masks in sync with live prop state—either dynamically flip grid cells when props change or query prop occupancy alongside `gridState`.
+- Villain escape/lockdown loop: O2-driven escape into perimeter, AI Core lockdown to reset villain to inner ring with lockout; ensure door-aware movement (villain never opens doors, blocked by closed states).
+- Inner caches: 20 deterministic caches on inner fast-lane cells with credits (20–30) + small chances of energy/oxygen; keep placement trait/grid-driven.
+- Add seeded RNG wrapper for villain escape rolls, perimeter targeting, and loot so runs replay identically.
+- Make LoS aware of dynamic doors/props during chase/escape.
+- Testing flag: `gameState.testing` injects debug items and a testing banner; keep dev-only.
 
 ### Upcoming Engineering Tasks
 - Route all pointer/click events through a buffered `gameState.input` queue so interactions resolve during the main update tick instead of DOM timing.

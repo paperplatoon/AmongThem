@@ -1,5 +1,6 @@
 import { gameState } from '../state/gameState.js';
 import { cellToWorldCenter, worldPointToCell, isCellSolid, withinBounds as gridWithinBounds, toIndex } from '../state/gridState.js';
+import { doorState } from '../state/doorState.js';
 import { hasLineOfSight } from '../utils/lineOfSight.js';
 import { distanceBetween } from '../utils/geometry.js';
 
@@ -33,6 +34,13 @@ const canWalkFastLane = (x, y) => isFastLaneCell(x, y);
 const canWalkPerimeter = (x, y) => isPerimeterCell(x, y);
 const canWalkFastOrPerimeter = (x, y) => canWalkFastLane(x, y) || canWalkPerimeter(x, y);
 
+const isDoorOpenAt = (x, y) => {
+  const id = doorState.cells.get(toIndex(x, y));
+  if (!id) return true;
+  const door = doorState.byId[id];
+  return door ? door.isOpen : false;
+};
+
 const findNextStep = (start, goal, canWalk) => {
   if (!start || !goal) return null;
   const width = gameState.grid.width;
@@ -56,6 +64,7 @@ const findNextStep = (start, goal, canWalk) => {
     ];
     for (const n of neighbors) {
       if (!canWalk(n.x, n.y)) continue;
+      if (!isDoorOpenAt(n.x, n.y)) continue;
       const idx = toIndex(n.x, n.y);
       if (visited[idx]) continue;
       visited[idx] = 1;
@@ -238,6 +247,7 @@ const moveTowardsTarget = (villain, targetWorld, deltaSeconds, speed, canWalk) =
   const nextY = villain.y + direction.y * step;
   const cell = worldPointToCell({ x: nextX, y: nextY });
   if (!canWalk(cell.x, cell.y)) return true;
+  if (!isDoorOpenAt(cell.x, cell.y)) return true;
   villain.x = nextX;
   villain.y = nextY;
   villain.heading = Math.atan2(direction.y, direction.x);
@@ -262,7 +272,8 @@ const updateWander = (villain, deltaSeconds) => {
 };
 
 const updateLostRoam = (villain, deltaSeconds) => {
-  updateRoam(villain, deltaSeconds, gameState.config.villain.lostSpeed, villain.isEscaped ? canWalkPerimeter : canWalkFastLane);
+  const walk = villain.isEscaped ? canWalkFastOrPerimeter : canWalkFastLane;
+  updateRoam(villain, deltaSeconds, gameState.config.villain.lostSpeed, walk);
 };
 
 const updateEscapedTravel = (villain, deltaSeconds) => {
@@ -324,8 +335,10 @@ const updateLostPlayer = (villain, deltaSeconds) => {
   if (!villain.searchOrigin) return;
   const targetWorld = villain.searchOrigin;
   const lostSpeed = gameState.config.villain.lostSpeed;
-  const canWalk = villain.isEscaped ? canWalkPerimeter : canWalkFastLane;
-  const reached = moveTowardsTarget(villain, targetWorld, deltaSeconds, lostSpeed, canWalk);
+  const canWalk = villain.isEscaped ? canWalkFastOrPerimeter : canWalkFastLane;
+  const pathStep = findNextStep({ x: villain.cellX, y: villain.cellY }, worldPointToCell(targetWorld), canWalk);
+  const target = pathStep ? cellToWorldCenter(pathStep.x, pathStep.y) : targetWorld;
+  const reached = moveTowardsTarget(villain, target, deltaSeconds, lostSpeed, canWalk);
   if (reached) assignSearchOrigin(villain);
 };
 
