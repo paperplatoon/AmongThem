@@ -353,15 +353,20 @@ const villainCanSeePlayer = (villain) => {
   const player = gameState.player;
   const vectorToPlayer = { x: player.x - villain.x, y: player.y - villain.y };
   const distance = Math.hypot(vectorToPlayer.x, vectorToPlayer.y);
+  const rangeCells = gameState.config.villain.sightRangeCells * 1.3;
   const cellDistance = distance / gameState.grid.cellSize;
-  if (cellDistance > gameState.config.villain.sightRangeCells) return false;
+  if (cellDistance > rangeCells) return false;
   const headingVector = { x: Math.cos(villain.heading), y: Math.sin(villain.heading) };
   const angle = angleBetween(headingVector, vectorToPlayer);
   const halfCone = (gameState.config.villain.sightAngleDeg * Math.PI) / 180 / 2;
+  // Sprinting makes noise: if sprinting within radius, villain detects regardless of cone.
+  if (player.stamina?.isSprinting) {
+    return true;
+  }
   if (angle > halfCone) return false;
   const villainCell = { x: villain.cellX, y: villain.cellY };
   const playerCell = worldPointToCell({ x: player.x, y: player.y });
-  return hasLineOfSight(villainCell, playerCell, gameState.config.villain.sightRangeCells);
+  return hasLineOfSight(villainCell, playerCell, rangeCells);
 };
 
 const recordPlayerSight = (villain) => {
