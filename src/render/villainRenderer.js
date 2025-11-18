@@ -9,7 +9,10 @@ export const renderVillain = (ctx) => {
     : villain.state === 'lostPlayer'
       ? '#ffce54'
       : '#ff6b6b';
-  const jumpOffset = villain.jumpTimer > 0 ? Math.sin((1 - villain.jumpTimer / 0.3) * Math.PI) * 6 : 0;
+  const noticeDuration = gameState.config.villain.noticeDurationSeconds || 0.3;
+  const jumpOffset = villain.state === 'noticePlayer'
+    ? Math.sin(Math.min(1, villain.noticeElapsed / noticeDuration) * Math.PI) * gameState.config.villain.noticeJumpHeight
+    : 0;
   ctx.beginPath();
   ctx.arc(villain.x, villain.y - jumpOffset, gameState.config.playerRadius * 1.2, 0, Math.PI * 2);
   ctx.fill();

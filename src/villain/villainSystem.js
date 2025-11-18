@@ -312,15 +312,9 @@ const updateEscapedRoam = (villain, deltaSeconds) => {
 const updateChase = (villain, deltaSeconds) => {
   const playerCell = worldPointToCell({ x: gameState.player.x, y: gameState.player.y });
   const targetWorld = cellToWorldCenter(playerCell.x, playerCell.y);
-  const dx = gameState.player.x - villain.x;
-  const dy = gameState.player.y - villain.y;
-  const distanceCells = Math.hypot(dx, dy) / gameState.grid.cellSize;
-  const slowDistance = gameState.config.villain.chaseSlowDistanceCells;
-  const chaseSpeed = distanceCells > slowDistance
-    ? gameState.config.villain.chaseSpeedFar
-    : gameState.config.villain.chaseSpeed;
   const canWalk = villain.isEscaped ? canWalkFastOrPerimeter : canWalkAny;
-  moveTowardsTarget(villain, targetWorld, deltaSeconds, chaseSpeed, canWalk);
+  const speed = Math.max(0, Math.min(gameState.config.villain.chaseSpeed, villain.currentSpeed));
+  moveTowardsTarget(villain, targetWorld, deltaSeconds, speed, canWalk);
 };
 
 const updateLostPlayer = (villain, deltaSeconds) => {
@@ -376,8 +370,12 @@ const recordPlayerSight = (villain) => {
 
 const triggerSightedPlayer = (villain) => {
   villain.hasSeenPlayer = true;
-  villain.state = 'chasePlayer';
-  villain.jumpTimer = 0.3;
+  villain.state = 'noticePlayer';
+  villain.noticeTimer = gameState.config.villain.noticeDurationSeconds;
+  villain.noticeElapsed = 0;
+  villain.chaseAccelTimer = 0;
+  villain.currentSpeed = 0;
+  villain.jumpTimer = gameState.config.villain.noticeDurationSeconds;
   recordPlayerSight(villain);
 };
 
@@ -387,6 +385,15 @@ const decayTimers = (villain, deltaSeconds) => {
   villain.isPaused = villain.pauseTimer > 0;
   villain.timeSinceLastSeen += deltaSeconds;
   if (villain.isSearching) villain.searchTimer += deltaSeconds;
+  if (villain.noticeTimer > 0) villain.noticeTimer = Math.max(0, villain.noticeTimer - deltaSeconds);
+  villain.noticeElapsed += deltaSeconds;
+  if (villain.state === 'chasePlayer' && villain.currentSpeed < gameState.config.villain.chaseSpeed) {
+    villain.chaseAccelTimer += deltaSeconds;
+    const accelDuration = gameState.config.villain.chaseAccelSeconds;
+    const t = Math.min(1, accelDuration > 0 ? villain.chaseAccelTimer / accelDuration : 1);
+    const targetSpeed = gameState.config.villain.chaseSpeed;
+    villain.currentSpeed = targetSpeed * t;
+  }
 };
 
 const assignSearchOrigin = (villain) => {
@@ -441,7 +448,7 @@ export const updateVillain = (deltaSeconds = 0) => {
   const seesPlayer = villainCanSeePlayer(villain);
   if (seesPlayer) {
     recordPlayerSight(villain);
-    if (villain.state !== 'chasePlayer') triggerSightedPlayer(villain);
+    if (villain.state !== 'chasePlayer' && villain.state !== 'noticePlayer') triggerSightedPlayer(villain);
   }
   const lostTimeout = gameState.config.villain.loseSightSeconds;
   if (!seesPlayer && villain.state === 'chasePlayer' && villain.timeSinceLastSeen >= lostTimeout) {
@@ -451,6 +458,14 @@ export const updateVillain = (deltaSeconds = 0) => {
     villain.state = 'lostPlayer';
   }
   if (villain.isPaused) return;
+  if (villain.state === 'noticePlayer') {
+    if (villain.noticeTimer <= 0) {
+      villain.state = 'chasePlayer';
+      villain.chaseAccelTimer = 0;
+      villain.currentSpeed = 0;
+    }
+    return;
+  }
   if (villain.state === 'chasePlayer') {
     updateChase(villain, deltaSeconds);
     tryImpactPlayer(villain);

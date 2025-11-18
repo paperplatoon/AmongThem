@@ -7,7 +7,7 @@ const defaultLocation = Object.freeze({
   cellY: null
 });
 
-export const villainState = Object.seal({
+export const villainState = {
   ...defaultLocation,
   heading: 0,
   speed: config.villain.wanderSpeed,
@@ -29,5 +29,9 @@ export const villainState = Object.seal({
   targetCellY: null,
   isEscaped: false,
   escapeAccumulated: 0,
-  canEscapeAt: 0
-});
+  canEscapeAt: 0,
+  noticeTimer: 0,
+  noticeElapsed: 0,
+  chaseAccelTimer: 0,
+  currentSpeed: 0
+};

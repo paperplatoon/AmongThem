@@ -50,5 +50,5 @@ export const gameState = Object.seal({
   interactions: {
     clickZones: []
   },
-  villain: villainState
+  villain: { ...villainState }
 });

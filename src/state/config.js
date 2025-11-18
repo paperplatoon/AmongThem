@@ -66,7 +66,10 @@ export const config = Object.freeze({
     escapeChancePerPctBelow90: 0.0001,
     escapeLockoutSeconds: 60,
     escapedTravelSpeed: 220,
-    escapedRoamSpeed: 200
+    escapedRoamSpeed: 200,
+    noticeDurationSeconds: 1.5,
+    noticeJumpHeight: 6,
+    chaseAccelSeconds: 1.5
   }),
   roles: Object.freeze({
     bridge: {
