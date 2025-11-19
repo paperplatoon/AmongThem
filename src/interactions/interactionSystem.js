@@ -5,6 +5,7 @@ import { markVictimIdentified, markDeskDiscovered } from '../state/journalState.
 import { collectBodySample } from '../body/bodyInteraction.js';
 import { resetVillainLockdown } from '../villain/villainSystem.js';
 import { cellToWorldCenter } from '../state/gridState.js';
+import { closeVendingMenu } from '../ui/vendingMenu.js';
 
 const scannerRange = 96;
 const propRange = 88;
@@ -103,6 +104,13 @@ const makePropZone = (prop) => ({
       prop.promptText = lockedPrompt;
       return;
     }
+    if (prop.type === 'vending_machine') {
+      closeVendingMenu();
+      gameState.ui.openContainerId = null;
+      gameState.ui.openVendingId = prop.id;
+      gameState.ui.vendingMessage = null;
+      return;
+    }
     if (prop.type === 'desk' && prop.roomId) markDeskDiscovered(prop.roomId);
     if (!prop.contents.length) {
       prop.isEmpty = true;
@@ -112,6 +120,7 @@ const makePropZone = (prop) => ({
     }
     prop.searched = true;
     prop.isEmpty = false;
+    closeVendingMenu();
     gameState.ui.openContainerId = prop.id;
   }
 });
@@ -140,6 +149,7 @@ export const updateInteractions = () => {
   gameState.props.forEach((prop) => {
     prop.promptActive = false;
     prop.promptText = prop.isEmpty ? 'EMPTY' : 'CLICK TO SEARCH';
+    if (prop.type === 'vending_machine') prop.promptText = 'CLICK TO BUY';
     const distance = distanceBetween(gameState.player, prop);
     if (distance > propRange) return;
     prop.promptActive = true;

@@ -8,6 +8,8 @@ export const uiState = Object.seal({
   showJournal: false,
   showGameOver: false,
   openContainerId: null,
+  openVendingId: null,
+  vendingMessage: null,
   journal: Object.seal({
     activeTab: roleOrder[0] ?? null
   }),
@@ -16,6 +18,8 @@ export const uiState = Object.seal({
     journalTabs: [],
     containerSlots: [],
     containerCloseButton: null,
-    gameOverButton: null
+    gameOverButton: null,
+    vendingOptions: [],
+    vendingCloseButton: null
   })
 });

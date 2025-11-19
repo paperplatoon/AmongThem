@@ -20,6 +20,11 @@ const HALL_PROP_CONFIG = Object.freeze([
   { type: 'trash', label: 'Trash Can', count: 10, allowsKeycard: false }
 ]);
 
+const VENDING_OPTIONS = Object.freeze([
+  Object.freeze({ itemId: 'energy_bar', label: 'Energy Bar', cost: 30 }),
+  Object.freeze({ itemId: 'bandage', label: 'Bandage', cost: 50 })
+]);
+
 const distanceChebyshev = (a, b) => Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
 
 const shouldPopulate = (propType) => (
@@ -212,6 +217,45 @@ const createInnerCorridorLoot = () => {
   return caches.slice(0, 20);
 };
 
+const createVendingMachine = (corridorId, suffix) => {
+  const corridor = mapState.corridors.find((entry) => entry.id === corridorId);
+  if (!corridor) return null;
+  const center = {
+    x: corridor.x + corridor.width / 2,
+    y: corridor.y + corridor.height / 2
+  };
+  const cell = worldPointToCell(center);
+  const { x, y } = cellToWorldCenter(cell.x, cell.y);
+  return Object.seal({
+    id: `vending_${suffix}`,
+    roomId: 'corridor',
+    type: 'vending_machine',
+    label: 'Vending',
+    cellX: cell.x,
+    cellY: cell.y,
+    x,
+    y,
+    lockId: null,
+    requiresKey: false,
+    contents: [],
+    promptActive: false,
+    promptText: 'CLICK TO BUY',
+    isEmpty: false,
+    searched: false,
+    source: 'vending',
+    allowsKeycard: false,
+    containsKeycard: false,
+    keycardRoleId: null,
+    highlightKeycard: false,
+    vendingOptions: VENDING_OPTIONS.map((option) => ({ ...option }))
+  });
+};
+
+const createVendingMachines = () => [
+  createVendingMachine('corridor_west', 'west'),
+  createVendingMachine('corridor_east', 'east')
+].filter(Boolean);
+
 const createRoomProp = (room, propType, index) => {
   const offsets = [
     { x: 0.2, y: 0.2 },
@@ -398,7 +442,12 @@ export const addIncriminatingEvidence = (props, killerRoleId) => {
 };
 
 export const generateRoomProps = () => {
-  const props = [...createRoomProps(), ...createHallProps(), ...createInnerCorridorLoot()];
+  const props = [
+    ...createRoomProps(),
+    ...createHallProps(),
+    ...createInnerCorridorLoot(),
+    ...createVendingMachines()
+  ];
   assignKeycardsToProps(props);
   return props;
 };

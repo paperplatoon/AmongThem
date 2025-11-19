@@ -5,6 +5,7 @@ import { renderInventory } from '../ui/inventory.js';
 import { renderJournal } from '../ui/journal.js';
 import { renderHud } from './hud.js';
 import { renderContainerMenu } from '../ui/containerMenu.js';
+import { renderVendingMenu } from '../ui/vendingMenu.js';
 import { renderVillain } from './villainRenderer.js';
 import { renderGameOver } from '../ui/gameOver.js';
 import { cellToWorldCenter } from '../state/gridState.js';
@@ -214,16 +215,32 @@ const drawProps = (ctx) => {
     const highlight = prop.highlightKeycard ? '#ff4f4f' : null;
     const outline = highlight || (prop.isEmpty ? '#2d3a55' : '#fef3b7');
     const labelColor = highlight ? '#ffdfdf' : prop.isEmpty ? '#7b84a2' : '#fef3b7';
-    ctx.strokeStyle = outline;
-    ctx.strokeRect(prop.x - size / 2, prop.y - size / 2, size, size);
-    ctx.fillStyle = labelColor;
-    ctx.font = '16px "Courier New", monospace';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
-    ctx.fillText(prop.label.toUpperCase(), prop.x, prop.y + size / 2 + 4);
+    if (prop.type === 'vending_machine') {
+      ctx.fillStyle = '#123c6b';
+      ctx.fillRect(prop.x - size / 2, prop.y - size / 2, size, size);
+      ctx.strokeStyle = '#8effd6';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(prop.x - size / 2, prop.y - size / 2, size, size);
+      ctx.fillStyle = '#fefefe';
+      ctx.font = '18px "Courier New", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('VEND', prop.x, prop.y);
+    } else {
+      ctx.strokeStyle = outline;
+      ctx.strokeRect(prop.x - size / 2, prop.y - size / 2, size, size);
+      ctx.fillStyle = labelColor;
+      ctx.font = '16px "Courier New", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      ctx.fillText(prop.label.toUpperCase(), prop.x, prop.y + size / 2 + 4);
+    }
     if (prop.promptActive) {
       ctx.fillStyle = prop.promptText === 'EMPTY' ? '#c06f6f' : '#ffffff';
-      ctx.fillText(prop.promptText || 'CLICK TO SEARCH', prop.x, prop.y - size / 2 - 18);
+      ctx.font = '16px "Courier New", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText(prop.promptText || 'CLICK TO SEARCH', prop.x, prop.y - size / 2 - 12);
     }
     ctx.restore();
   });
@@ -257,6 +274,7 @@ export const renderFrame = (ctx) => {
   renderInventory(ctx);
   renderJournal(ctx);
   renderContainerMenu(ctx);
+  renderVendingMenu(ctx);
   renderHud(ctx);
   renderGameOver(ctx);
   if (gameState.testing) {

@@ -2,6 +2,7 @@ import { gameState } from '../state/gameState.js';
 import { syncOxygenState } from '../movement/oxygenSystem.js';
 import { tryHandleInteractionClick } from '../interactions/interactionSystem.js';
 import { handleContainerClick } from './containerMenu.js';
+import { handleVendingClick } from './vendingMenu.js';
 import * as journalUi from './journal.js';
 import { handleGameOverClick } from './gameOver.js';
 import { forceVillainEscape, resetVillainLockdown } from '../villain/villainSystem.js';
@@ -68,6 +69,7 @@ const handleCanvasClick = (canvas, event) => {
   const worldY = screenY + gameState.camera.y;
   if (tryHandleInteractionClick(worldX, worldY)) return;
   if (journalUi.handleJournalClick && journalUi.handleJournalClick(screenX, screenY)) return;
+  if (handleVendingClick(screenX, screenY)) return;
   if (handleContainerClick(screenX, screenY)) return;
   if (handleGameOverClick(screenX, screenY)) return;
   handleInventorySelection(screenX, screenY);
