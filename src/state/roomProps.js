@@ -25,6 +25,13 @@ const VENDING_OPTIONS = Object.freeze([
   Object.freeze({ itemId: 'bandage', label: 'Bandage', cost: 50 })
 ]);
 
+const INNER_CACHE_CONFIG = Object.freeze({
+  marginCells: 6,
+  maxSamples: 24,
+  creditChance: 0.2,
+  minSpacingCells: 8
+});
+
 const distanceChebyshev = (a, b) => Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
 
 const shouldPopulate = (propType) => (
@@ -33,8 +40,8 @@ const shouldPopulate = (propType) => (
 
 const LOOT_TABLE = [
   { id: 'energy_bar', weight: 6 },
-  { id: 'bandage', weight: 3 },
-  { id: 'oxygen_canister', weight: 2 }
+  { id: 'bandage', weight: 4 },
+  { id: 'oxygen_canister', weight: 1 }
 ];
 
 const pickWeightedItemId = () => {
@@ -121,36 +128,61 @@ const pickSpacedCells = (candidates, count, minDistance = 2) => {
   return picked;
 };
 
-const buildSegments = () => {
-  const candidates = fastLaneCells();
-  const width = config.gridWidth;
-  const set = new Set(candidates.map((c) => `${c.x},${c.y}`));
-  const segments = [];
-  const has = (x, y) => set.has(`${x},${y}`);
+const innerBand = () => ({
+  minX: INNER_CACHE_CONFIG.marginCells,
+  maxX: config.gridWidth - INNER_CACHE_CONFIG.marginCells,
+  minY: INNER_CACHE_CONFIG.marginCells,
+  maxY: config.gridHeight - INNER_CACHE_CONFIG.marginCells
+});
 
-  // Simple sampling: divide area into a grid and pick one candidate per cell if available.
-  const sampleCols = 5;
-  const sampleRows = 4;
-  const stepX = Math.floor(config.gridWidth / sampleCols);
-  const stepY = Math.floor(config.gridHeight / sampleRows);
-  const chosen = [];
-  for (let cx = 0; cx < config.gridWidth && chosen.length < 20; cx += stepX) {
-    for (let cy = 0; cy < config.gridHeight && chosen.length < 20; cy += stepY) {
-      const startX = cx;
-      const endX = Math.min(config.gridWidth - 1, cx + stepX);
-      const startY = cy;
-      const endY = Math.min(config.gridHeight - 1, cy + stepY);
-      for (let y = startY; y <= endY && chosen.length < 20; y += 1) {
-        for (let x = startX; x <= endX && chosen.length < 20; x += 1) {
-          if (!has(x, y)) continue;
-          chosen.push({ x, y });
-          y = endY + 1;
-          break;
-        }
-      }
+const withinInnerBand = (cell) => {
+  const band = innerBand();
+  return (
+    cell.x >= band.minX &&
+    cell.x <= band.maxX &&
+    cell.y >= band.minY &&
+    cell.y <= band.maxY
+  );
+};
+
+const biasedFastLaneCells = () => fastLaneCells().filter(withinInnerBand);
+
+const distanceFromCenter = (cell) => {
+  const centerX = config.gridWidth / 2;
+  const centerY = config.gridHeight / 2;
+  return Math.hypot(cell.x - centerX, cell.y - centerY);
+};
+
+const shuffleCells = (cells) => {
+  const list = [...cells];
+  for (let i = list.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [list[i], list[j]] = [list[j], list[i]];
+  }
+  return list;
+};
+
+const sampleBiasedCells = (cells, maxSamples, stretch = 6) => {
+  const sorted = [...cells].sort((a, b) => distanceFromCenter(a) - distanceFromCenter(b));
+  const windowSize = Math.min(sorted.length, maxSamples * stretch);
+  const windowed = sorted.slice(0, windowSize);
+  return shuffleCells(windowed);
+};
+
+const chebyshevDistance = (a, b) => Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
+
+const pickSpacedBiasedCells = (cells, maxSamples, spacing) => {
+  const minSpacing = Math.max(0, spacing || 0);
+  if (!minSpacing) return cells.slice(0, maxSamples);
+  const picked = [];
+  const candidates = cells;
+  for (let i = 0; i < candidates.length && picked.length < maxSamples; i += 1) {
+    const candidate = candidates[i];
+    if (picked.every((entry) => chebyshevDistance(entry, candidate) >= minSpacing)) {
+      picked.push(candidate);
     }
   }
-  return chosen.map((cell) => [cell]);
+  return picked;
 };
 
 const assureWallNudge = (cell) => {
@@ -169,21 +201,61 @@ const assureWallNudge = (cell) => {
   return cell;
 };
 
+const fallbackSegments = (spacing) => (
+  pickSpacedBiasedCells(
+    shuffleCells(fastLaneCells()),
+    INNER_CACHE_CONFIG.maxSamples,
+    spacing
+  )
+);
+
+const innerCacheCells = () => {
+  const attempts = [
+    INNER_CACHE_CONFIG.minSpacingCells,
+    Math.max(4, INNER_CACHE_CONFIG.minSpacingCells - 2),
+    0
+  ];
+  for (let i = 0; i < attempts.length; i += 1) {
+    const spacing = attempts[i];
+    const biased = pickSpacedBiasedCells(
+      sampleBiasedCells(biasedFastLaneCells(), INNER_CACHE_CONFIG.maxSamples),
+      INNER_CACHE_CONFIG.maxSamples,
+      spacing
+    );
+    if (biased.length >= INNER_CACHE_CONFIG.maxSamples) return biased;
+    const fallback = fallbackSegments(spacing);
+    if (fallback.length >= INNER_CACHE_CONFIG.maxSamples) return fallback;
+    if (biased.length) return biased;
+    if (fallback.length) return fallback;
+  }
+  return fallbackSegments(0);
+};
+
+const maybeAddInnerCacheCredits = (contents, idPrefix) => {
+  const creditItem = createItemFromDefinition(`${idPrefix}_credits`, 'credits');
+  if (!creditItem) return;
+  creditItem.amount = 20 + Math.floor(Math.random() * 11);
+  contents.push(creditItem);
+};
+
+const ensureCacheContents = (contents, idPrefix) => {
+  if (contents.length) return;
+  const fallback = createItemFromDefinition(`${idPrefix}_fallback`, 'energy_bar');
+  if (fallback) contents.push(fallback);
+};
+
 const createInnerCorridorLoot = () => {
-  const points = buildSegments();
+  const points = innerCacheCells();
   const caches = [];
-  points.sort((a, b) => (a[0].y * config.gridWidth + a[0].x) - (b[0].y * config.gridWidth + b[0].x));
-  points.forEach((segment, idx) => {
-    const cell = assureWallNudge(segment[0]);
-    const { x, y } = cellToWorldCenter(Math.round(cell.x), Math.round(cell.y));
+  points.sort((a, b) => (a.y * config.gridWidth + a.x) - (b.y * config.gridWidth + b.x));
+  points.forEach((cell, idx) => {
+    const nudged = assureWallNudge(cell);
+    const snappedX = Math.round(nudged.x);
+    const snappedY = Math.round(nudged.y);
+    const { x, y } = cellToWorldCenter(snappedX, snappedY);
     const contents = [];
-    const creditsAmount = 20 + Math.floor(Math.random() * 11);
-    const creditItem = createItemFromDefinition(`inner_cache_${idx}_credits`, 'credits');
-    if (creditItem) {
-      creditItem.amount = creditsAmount;
-      contents.push(creditItem);
-    }
-    if (Math.random() < 0.2) {
+    maybeAddInnerCacheCredits(contents, `inner_cache_${idx}`);
+    if (Math.random() < 0.1) {
       const energy = createItemFromDefinition(`inner_cache_${idx}_energy`, 'energy_bar');
       if (energy) contents.push(energy);
     }
@@ -191,13 +263,14 @@ const createInnerCorridorLoot = () => {
       const oxygen = createItemFromDefinition(`inner_cache_${idx}_oxygen`, 'oxygen_canister');
       if (oxygen) contents.push(oxygen);
     }
+    ensureCacheContents(contents, `inner_cache_${idx}`);
     caches.push(Object.seal({
       id: `inner_cache_${idx}`,
       roomId: 'fast_lane',
       type: 'cache',
       label: 'Cache',
-      cellX: Math.round(cell.x),
-      cellY: Math.round(cell.y),
+      cellX: snappedX,
+      cellY: snappedY,
       x,
       y,
       lockId: null,
