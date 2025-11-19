@@ -32,8 +32,15 @@ export const villainState = {
   canEscapeAt: 0,
   noticeTimer: 0,
   noticeElapsed: 0,
+  noticePhase: 'idle',
+  noticePhaseTimer: 0,
+  noticeDirection: { x: 0, y: 0 },
+  noticeFlashTimer: 0,
+  noticeFlashDuration: 0,
   chaseAccelTimer: 0,
   currentSpeed: 0,
   stuckTimer: 0,
-  lastTargetDistance: null
+  lastTargetDistance: null,
+  lastSeenDirection: { x: 0, y: 0 },
+  pursueDirectionTimer: 0
 };

@@ -327,18 +327,37 @@ const getPathStepTo = (startCell, targetCell, canWalk) => {
   return findNextStep(startCell, targetCell, canWalk);
 };
 
-const updateChase = (villain, deltaSeconds) => {
-  const playerCell = worldPointToCell({ x: gameState.player.x, y: gameState.player.y });
+const projectDirectionCell = (villain) => {
+  const cells = gameState.config.villain.pursueProjectionCells || 10;
+  return {
+    x: villain.cellX + Math.round(villain.lastSeenDirection.x * cells),
+    y: villain.cellY + Math.round(villain.lastSeenDirection.y * cells)
+  };
+};
+
+const updateChase = (villain, deltaSeconds, seesPlayer) => {
+  const targetWorld = (() => {
+    if (seesPlayer || !villain.lastSeenPlayerAt) {
+      return { x: gameState.player.x, y: gameState.player.y };
+    }
+    const distanceToLast = distanceBetween(villain, villain.lastSeenPlayerAt);
+    if (distanceToLast <= gameState.grid.cellSize * 1.5 && villain.pursueDirectionTimer > 0 && villain.lastSeenDirection) {
+      const cellsAhead = projectDirectionCell(villain);
+      return cellToWorldCenter(cellsAhead.x, cellsAhead.y);
+    }
+    return villain.lastSeenPlayerAt;
+  })();
+  const targetCell = worldPointToCell(targetWorld);
   const canWalk = villain.isEscaped ? canWalkFastOrPerimeter : canWalkAny;
-  const pathStep = getPathStepTo({ x: villain.cellX, y: villain.cellY }, playerCell, canWalk);
+  const pathStep = getPathStepTo({ x: villain.cellX, y: villain.cellY }, targetCell, canWalk);
   if (!pathStep) {
     villain.stuckTimer += deltaSeconds;
     return;
   }
-  const targetWorld = cellToWorldCenter(pathStep.x, pathStep.y);
+  const stepWorld = cellToWorldCenter(pathStep.x, pathStep.y);
   const speed = Math.max(0, Math.min(gameState.config.villain.chaseSpeed, villain.currentSpeed));
-  moveTowardsTarget(villain, targetWorld, deltaSeconds, speed, canWalk);
-  updateStuckState(villain, targetWorld, deltaSeconds);
+  moveTowardsTarget(villain, stepWorld, deltaSeconds, speed, canWalk);
+  updateStuckState(villain, stepWorld, deltaSeconds);
 };
 
 const updateLostPlayer = (villain, deltaSeconds) => {
@@ -368,16 +387,32 @@ const angleBetween = (a, b) => {
   return Math.acos(Math.min(1, Math.max(-1, dot / mag)));
 };
 
+const normalizeVector = (vector) => {
+  const mag = Math.hypot(vector.x, vector.y);
+  if (!mag) return { x: 0, y: 0 };
+  return { x: vector.x / mag, y: vector.y / mag };
+};
+
+const chaseSightRangeCells = () => {
+  const screenCells = gameState.config.canvasWidth / gameState.grid.cellSize;
+  return screenCells * (gameState.config.villain.chaseSightFractionOfScreen || 0.75);
+};
+
 const villainCanSeePlayer = (villain) => {
   const player = gameState.player;
   const vectorToPlayer = { x: player.x - villain.x, y: player.y - villain.y };
   const distance = Math.hypot(vectorToPlayer.x, vectorToPlayer.y);
-  const rangeCells = gameState.config.villain.sightRangeCells * 1.3;
+  let rangeCells = gameState.config.villain.sightRangeCells * 1.3;
+  if (villain.state === 'chasePlayer') {
+    rangeCells = Math.max(rangeCells, chaseSightRangeCells());
+  }
   const cellDistance = distance / gameState.grid.cellSize;
   if (cellDistance > rangeCells) return false;
   const headingVector = { x: Math.cos(villain.heading), y: Math.sin(villain.heading) };
   const angle = angleBetween(headingVector, vectorToPlayer);
-  const halfCone = (gameState.config.villain.sightAngleDeg * Math.PI) / 180 / 2;
+  const halfCone = villain.state === 'chasePlayer'
+    ? Math.PI
+    : (gameState.config.villain.sightAngleDeg * Math.PI) / 180 / 2;
   // Sprinting makes noise: if sprinting within radius, villain detects regardless of cone.
   if (player.stamina?.isSprinting) {
     return true;
@@ -389,18 +424,34 @@ const villainCanSeePlayer = (villain) => {
 };
 
 const recordPlayerSight = (villain) => {
-  villain.lastSeenPlayerAt = { x: gameState.player.x, y: gameState.player.y };
+  const playerPos = { x: gameState.player.x, y: gameState.player.y };
+  villain.lastSeenPlayerAt = playerPos;
   villain.timeSinceLastSeen = 0;
+  const direction = normalizeVector({ x: playerPos.x - villain.x, y: playerPos.y - villain.y });
+  villain.lastSeenDirection = direction;
+  villain.pursueDirectionTimer = gameState.config.villain.lostDirectionDurationSeconds;
 };
 
 const triggerSightedPlayer = (villain) => {
   villain.hasSeenPlayer = true;
   villain.state = 'noticePlayer';
-  villain.noticeTimer = gameState.config.villain.noticeDurationSeconds;
+  const stepDuration = gameState.config.villain.noticeStepDurationSeconds;
+  const hopDuration = gameState.config.villain.noticeHopDurationSeconds;
+  villain.noticeTimer = stepDuration + hopDuration;
   villain.noticeElapsed = 0;
   villain.chaseAccelTimer = 0;
   villain.currentSpeed = 0;
-  villain.jumpTimer = gameState.config.villain.noticeDurationSeconds;
+  villain.jumpTimer = hopDuration;
+  const toPlayer = { x: gameState.player.x - villain.x, y: gameState.player.y - villain.y };
+  villain.noticeDirection = normalizeVector(toPlayer);
+  villain.noticePhase = 'step_back';
+  villain.noticePhaseTimer = stepDuration;
+  villain.noticeFlashDuration = stepDuration + hopDuration;
+  villain.noticeFlashTimer = villain.noticeFlashDuration;
+  villain.lostPlayerState = false;
+  villain.isSearching = false;
+  villain.searchTimer = 0;
+  villain.searchUntil = 0;
   recordPlayerSight(villain);
 };
 
@@ -412,6 +463,7 @@ const decayTimers = (villain, deltaSeconds) => {
   if (villain.isSearching) villain.searchTimer += deltaSeconds;
   if (villain.noticeTimer > 0) villain.noticeTimer = Math.max(0, villain.noticeTimer - deltaSeconds);
   villain.noticeElapsed += deltaSeconds;
+  if (villain.noticeFlashTimer > 0) villain.noticeFlashTimer = Math.max(0, villain.noticeFlashTimer - deltaSeconds);
   if (villain.state === 'chasePlayer' && villain.currentSpeed < gameState.config.villain.chaseSpeed) {
     villain.chaseAccelTimer += deltaSeconds;
     const accelDuration = gameState.config.villain.chaseAccelSeconds;
@@ -419,6 +471,61 @@ const decayTimers = (villain, deltaSeconds) => {
     const targetSpeed = gameState.config.villain.chaseSpeed;
     villain.currentSpeed = targetSpeed * t;
   }
+};
+
+const transitionToChase = (villain) => {
+  villain.state = 'chasePlayer';
+  villain.noticePhase = 'idle';
+  villain.noticePhaseTimer = 0;
+  villain.noticeTimer = 0;
+  villain.jumpTimer = 0;
+  villain.noticeElapsed = 0;
+  villain.noticeFlashTimer = 0;
+  villain.chaseAccelTimer = 0;
+  villain.currentSpeed = 0;
+};
+
+const stepBackSpeed = () => {
+  const distance = gameState.config.villain.noticeStepDistanceCells * gameState.grid.cellSize;
+  const duration = Math.max(0.01, gameState.config.villain.noticeStepDurationSeconds);
+  return distance / duration;
+};
+
+const applyStepBack = (villain, deltaSeconds) => {
+  const speed = stepBackSpeed();
+  const offsetX = -villain.noticeDirection.x * speed * deltaSeconds;
+  const offsetY = -villain.noticeDirection.y * speed * deltaSeconds;
+  const nextX = villain.x + offsetX;
+  const nextY = villain.y + offsetY;
+  const cell = worldPointToCell({ x: nextX, y: nextY });
+  if (canWalkAny(cell.x, cell.y)) {
+    villain.x = nextX;
+    villain.y = nextY;
+    villain.cellX = cell.x;
+    villain.cellY = cell.y;
+  }
+};
+
+const updateNoticePhase = (villain, deltaSeconds) => {
+  if (villain.noticePhase === 'step_back') {
+    applyStepBack(villain, deltaSeconds);
+    villain.noticePhaseTimer -= deltaSeconds;
+    if (villain.noticePhaseTimer <= 0) {
+      villain.noticePhase = 'hop';
+      villain.noticePhaseTimer = gameState.config.villain.noticeHopDurationSeconds;
+      villain.noticeElapsed = 0;
+      villain.jumpTimer = gameState.config.villain.noticeHopDurationSeconds;
+    }
+    return;
+  }
+  if (villain.noticePhase === 'hop') {
+    villain.noticePhaseTimer -= deltaSeconds;
+    if (villain.noticePhaseTimer <= 0) {
+      villain.noticePhase = 'ready';
+    }
+    return;
+  }
+  transitionToChase(villain);
 };
 
 const assignSearchOrigin = (villain) => {
@@ -473,11 +580,20 @@ export const updateVillain = (deltaSeconds = 0) => {
   const seesPlayer = villainCanSeePlayer(villain);
   if (seesPlayer) {
     recordPlayerSight(villain);
-    if (villain.state !== 'chasePlayer' && villain.state !== 'noticePlayer') triggerSightedPlayer(villain);
+    if (villain.state === 'wander') triggerSightedPlayer(villain);
+    if (villain.state === 'lostPlayer') {
+      villain.lostPlayerState = false;
+      villain.state = 'chasePlayer';
+    }
+  } else if (villain.pursueDirectionTimer > 0) {
+    villain.pursueDirectionTimer = Math.max(0, villain.pursueDirectionTimer - deltaSeconds);
   }
   const lostTimeout = gameState.config.villain.loseSightSeconds;
-  if (!seesPlayer && villain.state === 'chasePlayer' && villain.timeSinceLastSeen >= lostTimeout) {
-    enterLostPlayerState(villain);
+  if (!seesPlayer && villain.state === 'chasePlayer' && villain.timeSinceLastSeen >= lostTimeout && villain.pursueDirectionTimer <= 0) {
+    const distanceCells = distanceBetween(gameState.player, villain) / gameState.grid.cellSize;
+    if (distanceCells >= gameState.config.villain.loseSightDistanceCells) {
+      enterLostPlayerState(villain);
+    }
   }
   if (villain.lostPlayerState && villain.state !== 'chasePlayer') {
     villain.state = 'lostPlayer';
@@ -494,15 +610,11 @@ export const updateVillain = (deltaSeconds = 0) => {
   }
   if (villain.isPaused) return;
   if (villain.state === 'noticePlayer') {
-    if (villain.noticeTimer <= 0) {
-      villain.state = 'chasePlayer';
-      villain.chaseAccelTimer = 0;
-      villain.currentSpeed = 0;
-    }
+    updateNoticePhase(villain, deltaSeconds);
     return;
   }
   if (villain.state === 'chasePlayer') {
-    updateChase(villain, deltaSeconds);
+    updateChase(villain, deltaSeconds, seesPlayer);
     tryImpactPlayer(villain);
     return;
   }

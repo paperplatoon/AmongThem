@@ -61,15 +61,24 @@ export const config = Object.freeze({
     impactDamage: 50,
     postImpactPauseSeconds: 1,
     loseSightSeconds: 5,
-    searchDurationSeconds: 5,
+    searchDurationSeconds: 30,
     escapeCheckIntervalSeconds: 1,
     escapeChancePerPctBelow90: 0.0001,
     escapeLockoutSeconds: 60,
     escapedTravelSpeed: 220,
     escapedRoamSpeed: 200,
-    noticeDurationSeconds: 1,
+    noticeDurationSeconds: 0.4,
     noticeJumpHeight: 14,
-    chaseAccelSeconds: 1
+    chaseAccelSeconds: 1,
+    noticeStepDistanceCells: 2,
+    noticeStepDurationSeconds: 0.18,
+    noticeHopDurationSeconds: 0.22,
+    noticeFlashSpeed: 6,
+    noticeFlashColors: Object.freeze(['#ff4f4f', '#ff9fb5']),
+    loseSightDistanceCells: 30,
+    chaseSightFractionOfScreen: 0.75,
+    lostDirectionDurationSeconds: 10,
+    pursueProjectionCells: 12
   }),
   roles: Object.freeze({
     bridge: {
