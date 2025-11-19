@@ -33,5 +33,7 @@ export const villainState = {
   noticeTimer: 0,
   noticeElapsed: 0,
   chaseAccelTimer: 0,
-  currentSpeed: 0
+  currentSpeed: 0,
+  stuckTimer: 0,
+  lastTargetDistance: null
 };

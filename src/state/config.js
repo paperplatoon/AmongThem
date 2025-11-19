@@ -53,7 +53,7 @@ export const config = Object.freeze({
   villain: Object.freeze({
     wanderSpeed: 150,
     chaseSpeed: 440,
-    chaseSpeedFar: 260,
+    chaseSpeedFar: 365,
     chaseSlowDistanceCells: 6,
     lostSpeed: 220,
     sightRangeCells: 6,
@@ -67,9 +67,9 @@ export const config = Object.freeze({
     escapeLockoutSeconds: 60,
     escapedTravelSpeed: 220,
     escapedRoamSpeed: 200,
-    noticeDurationSeconds: 1.5,
-    noticeJumpHeight: 6,
-    chaseAccelSeconds: 1.5
+    noticeDurationSeconds: 1,
+    noticeJumpHeight: 14,
+    chaseAccelSeconds: 1
   }),
   roles: Object.freeze({
     bridge: {

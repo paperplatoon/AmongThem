@@ -53,6 +53,8 @@
 - Add seeded RNG wrapper for villain escape rolls, perimeter targeting, and loot so runs replay identically.
 - Make LoS aware of dynamic doors/props during chase/escape.
 - Testing flag: `gameState.testing` injects debug items and a testing banner; keep dev-only.
+- Villain notice/accel: on first detect, villain pauses and animates a jump (config-driven), then ramps chase speed over a short accel window.
+- Pathfinding: chase uses door-aware BFS steps; add stuck detection/fallback to roaming when targets are blocked by closed doors, invoking the same state transitions (enter lost state or escaped roam) so behavior stays consistent.
 
 ### Upcoming Engineering Tasks
 - Route all pointer/click events through a buffered `gameState.input` queue so interactions resolve during the main update tick instead of DOM timing.

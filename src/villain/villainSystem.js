@@ -256,6 +256,17 @@ const moveTowardsTarget = (villain, targetWorld, deltaSeconds, speed, canWalk) =
   return reached;
 };
 
+const updateStuckState = (villain, targetWorld, deltaSeconds) => {
+  if (!targetWorld) return;
+  const dist = distanceBetween(villain, targetWorld);
+  if (villain.lastTargetDistance == null || dist < villain.lastTargetDistance) {
+    villain.lastTargetDistance = dist;
+    villain.stuckTimer = 0;
+    return;
+  }
+  villain.stuckTimer += deltaSeconds;
+};
+
 const updateRoam = (villain, deltaSeconds, speed, canWalk) => {
   if (villain.targetCellX == null || villain.targetCellY == null) assignWanderTarget(villain);
   if (villain.targetCellX == null || villain.targetCellY == null) return;
@@ -274,6 +285,8 @@ const updateWander = (villain, deltaSeconds) => {
 const updateLostRoam = (villain, deltaSeconds) => {
   const walk = villain.isEscaped ? canWalkFastOrPerimeter : canWalkFastLane;
   updateRoam(villain, deltaSeconds, gameState.config.villain.lostSpeed, walk);
+  villain.stuckTimer = 0;
+  villain.lastTargetDistance = null;
 };
 
 const updateEscapedTravel = (villain, deltaSeconds) => {
@@ -309,12 +322,23 @@ const updateEscapedRoam = (villain, deltaSeconds) => {
   if (reached || distanceToTarget(villain, targetWorld) < 4) assignPerimeterTargetRandom(villain);
 };
 
+const getPathStepTo = (startCell, targetCell, canWalk) => {
+  if (!startCell || !targetCell) return null;
+  return findNextStep(startCell, targetCell, canWalk);
+};
+
 const updateChase = (villain, deltaSeconds) => {
   const playerCell = worldPointToCell({ x: gameState.player.x, y: gameState.player.y });
-  const targetWorld = cellToWorldCenter(playerCell.x, playerCell.y);
   const canWalk = villain.isEscaped ? canWalkFastOrPerimeter : canWalkAny;
+  const pathStep = getPathStepTo({ x: villain.cellX, y: villain.cellY }, playerCell, canWalk);
+  if (!pathStep) {
+    villain.stuckTimer += deltaSeconds;
+    return;
+  }
+  const targetWorld = cellToWorldCenter(pathStep.x, pathStep.y);
   const speed = Math.max(0, Math.min(gameState.config.villain.chaseSpeed, villain.currentSpeed));
   moveTowardsTarget(villain, targetWorld, deltaSeconds, speed, canWalk);
+  updateStuckState(villain, targetWorld, deltaSeconds);
 };
 
 const updateLostPlayer = (villain, deltaSeconds) => {
@@ -333,6 +357,7 @@ const updateLostPlayer = (villain, deltaSeconds) => {
   const pathStep = findNextStep({ x: villain.cellX, y: villain.cellY }, worldPointToCell(targetWorld), canWalk);
   const target = pathStep ? cellToWorldCenter(pathStep.x, pathStep.y) : targetWorld;
   const reached = moveTowardsTarget(villain, target, deltaSeconds, lostSpeed, canWalk);
+  updateStuckState(villain, target, deltaSeconds);
   if (reached) assignSearchOrigin(villain);
 };
 
@@ -456,6 +481,16 @@ export const updateVillain = (deltaSeconds = 0) => {
   }
   if (villain.lostPlayerState && villain.state !== 'chasePlayer') {
     villain.state = 'lostPlayer';
+  }
+  if (villain.stuckTimer > 1.25) {
+    villain.stuckTimer = 0;
+    villain.lastTargetDistance = null;
+    if (villain.isEscaped) {
+      villain.state = 'escaped_roam';
+      assignPerimeterTargetRandom(villain);
+    } else {
+      enterLostPlayerState(villain);
+    }
   }
   if (villain.isPaused) return;
   if (villain.state === 'noticePlayer') {
