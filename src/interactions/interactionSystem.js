@@ -6,6 +6,7 @@ import { collectBodySample } from '../body/bodyInteraction.js';
 import { resetVillainLockdown } from '../villain/villainSystem.js';
 import { cellToWorldCenter } from '../state/gridState.js';
 import { closeVendingMenu } from '../ui/vendingMenu.js';
+import { startHackingForProp, isPropComputerLocked } from '../hacking/hackingState.js';
 
 const scannerRange = 96;
 const propRange = 88;
@@ -93,6 +94,14 @@ const hasKeycard = (lockId) => (
 
 const canAccessProp = (prop) => (!prop.requiresKey || hasKeycard(prop.lockId));
 
+const closeOpenMenus = () => {
+  gameState.ui.openContainerId = null;
+  gameState.ui.openVendingId = null;
+  closeVendingMenu();
+  gameState.ui.showInventory = false;
+  gameState.ui.showJournal = false;
+};
+
 const makePropZone = (prop) => ({
   id: prop.id,
   x: prop.x - gameState.grid.cellSize / 2,
@@ -100,6 +109,11 @@ const makePropZone = (prop) => ({
   width: gameState.grid.cellSize,
   height: gameState.grid.cellSize,
   action: () => {
+    if (prop.type === 'desk' && isPropComputerLocked(prop)) {
+      closeOpenMenus();
+      startHackingForProp(prop.id);
+      return;
+    }
     if (!canAccessProp(prop)) {
       prop.promptText = lockedPrompt;
       return;
@@ -148,7 +162,11 @@ export const updateInteractions = () => {
   }
   gameState.props.forEach((prop) => {
     prop.promptActive = false;
-    prop.promptText = prop.isEmpty ? 'EMPTY' : 'CLICK TO SEARCH';
+    if (prop.type === 'desk' && isPropComputerLocked(prop)) {
+      prop.promptText = 'COMPUTER LOCKED - CLICK TO HACK';
+    } else {
+      prop.promptText = prop.isEmpty ? 'EMPTY' : 'CLICK TO SEARCH';
+    }
     if (prop.type === 'vending_machine') prop.promptText = 'CLICK TO BUY';
     const distance = distanceBetween(gameState.player, prop);
     if (distance > propRange) return;
@@ -166,6 +184,7 @@ const contains = (zone, x, y) => (
 );
 
 export const tryHandleInteractionClick = (worldX, worldY) => {
+  if (gameState.hacking.active) return false;
   const zone = gameState.interactions.clickZones.find((candidate) => contains(candidate, worldX, worldY));
   if (!zone) return false;
   zone.action();

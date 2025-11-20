@@ -20,6 +20,10 @@ export const uiState = Object.seal({
     containerCloseButton: null,
     gameOverButton: null,
     vendingOptions: [],
-    vendingCloseButton: null
+    vendingCloseButton: null,
+    hacking: Object.seal({
+      enterButton: null,
+      exitButton: null
+    })
   })
 });

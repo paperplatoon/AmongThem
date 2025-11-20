@@ -23,6 +23,22 @@ export const gameState = Object.seal({
   inventory: [],
   pressedKeys: new Set(),
   lastFrameTime: 0,
+  computerLocks: Object.seal({
+    byPropId: {},
+    locks: []
+  }),
+  hacking: Object.seal({
+    active: false,
+    lockId: null,
+    input: '',
+    state: 'idle',
+    feedback: null,
+    globalModifiers: Object.seal({
+      revealSpeed: 1,
+      sortSpeed: 1,
+      autoCompleteSpeed: 1
+    })
+  }),
   case: {
     victim: null,
     victimName: '???',

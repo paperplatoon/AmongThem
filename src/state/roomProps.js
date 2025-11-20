@@ -355,6 +355,7 @@ const createRoomProp = (room, propType, index) => {
     y,
     lockId: isLocker ? `${room.id}_locker` : null,
     requiresKey: isLocker,
+    computerLockId: null,
     contents,
     promptActive: false,
     promptText: 'CLICK TO SEARCH',

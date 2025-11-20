@@ -58,6 +58,7 @@ export const updateMovement = (deltaSeconds) => {
   const currentCell = worldPointToCell({ x: gameState.player.x, y: gameState.player.y });
   gameState.player.cellX = currentCell.x;
   gameState.player.cellY = currentCell.y;
+  if (gameState.hacking.active) return;
   const direction = normalize(getDirection(gameState.pressedKeys));
   const baseSpeed = getCurrentSpeed();
   const traits = getCellTraits(currentCell);

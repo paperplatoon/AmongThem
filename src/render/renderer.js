@@ -8,6 +8,7 @@ import { renderContainerMenu } from '../ui/containerMenu.js';
 import { renderVendingMenu } from '../ui/vendingMenu.js';
 import { renderVillain } from './villainRenderer.js';
 import { renderGameOver } from '../ui/gameOver.js';
+import { renderHacking } from '../ui/hacking.js';
 import { cellToWorldCenter } from '../state/gridState.js';
 const { WALL } = CELL_TYPES;
 
@@ -300,6 +301,7 @@ export const renderFrame = (ctx) => {
   renderContainerMenu(ctx);
   renderVendingMenu(ctx);
   renderHud(ctx);
+  renderHacking(ctx);
   renderGameOver(ctx);
   if (gameState.testing) {
     ctx.save();

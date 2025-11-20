@@ -14,6 +14,7 @@ import { updateInteractions } from './interactions/interactionSystem.js';
 import { initializeCase, applyCaseObstacles } from './state/caseState.js';
 import { updateVillain } from './villain/villainSystem.js';
 import { tryFireTaser } from './combat/taserSystem.js';
+import { handleHackingKeyInput, isHackingActive, updateHackingSystem } from './hacking/hackingState.js';
 
 const createCanvas = () => {
   const canvas = document.createElement('canvas');
@@ -40,6 +41,7 @@ const stepFrame = (ctx, time) => {
   updateDoors(delta);
   updateCamera();
   updateInteractions();
+  updateHackingSystem(delta);
   renderFrame(ctx);
   requestAnimationFrame((next) => stepFrame(ctx, next));
 };
@@ -58,11 +60,14 @@ const start = () => {
   mountCanvas(canvas);
   registerInventoryInput(canvas);
   const handleKeyDown = (key) => {
+    if (handleHackingKeyInput(key)) return;
+    if (isHackingActive()) return;
     handleMinimapToggle(key);
     handleInventoryToggle(key);
     handleJournalToggle(key);
   };
   const handleActionKey = (key) => {
+    if (isHackingActive()) return;
     if (key === 't') tryFireTaser();
   };
   bindKeyboard(gameState.pressedKeys, handleKeyDown, handleActionKey);

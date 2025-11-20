@@ -89,6 +89,12 @@ export const config = Object.freeze({
     arcLengthCells: 5,
     burstDurationSeconds: 0.6
   }),
+  hacking: Object.freeze({
+    passwordLength: 7,
+    revealIntervalSeconds: 5,
+    sortingIntervalSeconds: 5,
+    autoCompleteDelaySeconds: 5
+  }),
   roles: Object.freeze({
     bridge: {
       name: 'Captain',

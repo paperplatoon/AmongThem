@@ -6,6 +6,7 @@ import { handleVendingClick } from './vendingMenu.js';
 import * as journalUi from './journal.js';
 import { handleGameOverClick } from './gameOver.js';
 import { forceVillainEscape, resetVillainLockdown } from '../villain/villainSystem.js';
+import { handleHackingClick } from './hacking.js';
 
 const applyItemEffect = (entry) => {
   if (!entry.effect) return false;
@@ -67,6 +68,7 @@ const handleCanvasClick = (canvas, event) => {
   const screenY = (event.clientY - rect.top) * scaleY;
   const worldX = screenX + gameState.camera.x;
   const worldY = screenY + gameState.camera.y;
+  if (handleHackingClick(screenX, screenY)) return;
   if (tryHandleInteractionClick(worldX, worldY)) return;
   if (journalUi.handleJournalClick && journalUi.handleJournalClick(screenX, screenY)) return;
   if (handleVendingClick(screenX, screenY)) return;

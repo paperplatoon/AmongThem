@@ -52,6 +52,10 @@
 - Inner caches: 20 deterministic caches on inner fast-lane cells with credits (20–30) + small chances of energy/oxygen; keep placement trait/grid-driven.
 - Add seeded RNG wrapper for villain escape rolls, perimeter targeting, and loot so runs replay identically.
 - Make LoS aware of dynamic doors/props during chase/escape.
+  
+### Notes from Recent Implementation
+- Track `player.lastMoveDirection` for any directional logic (e.g., taser arcs, future cones) so abilities remain deterministic even when the player is stationary.
+- Treat unique upgrades (taser, future tools) as stateful flags rather than inventory items and reflect ownership in vending UI to avoid duplicate purchases.
 - Testing flag: `gameState.testing` injects debug items and a testing banner; keep dev-only.
 - Villain notice/accel: on first detect, villain pauses and animates a jump (config-driven), then ramps chase speed over a short accel window.
 - Pathfinding: chase uses door-aware BFS steps; add stuck detection/fallback to roaming when targets are blocked by closed doors, invoking the same state transitions (enter lost state or escaped roam) so behavior stays consistent.

@@ -2,6 +2,7 @@ import { gameState } from './gameState.js';
 import { cellToWorldCenter, worldPointToCell, markCell, WORLD_SOLID } from './gridState.js';
 import { markVictimRole, markKillerRole, markVictimIdentified } from './journalState.js';
 import { addIncriminatingEvidence } from './roomProps.js';
+import { seedComputerLocks } from '../hacking/hackingState.js';
 
 const roleKeys = Object.keys(gameState.config.roles);
 
@@ -105,4 +106,5 @@ export const initializeCase = () => {
   seedKiller(victimRole);
   spawnBody(victimRole);
   spawnScanner();
+  seedComputerLocks();
 };
