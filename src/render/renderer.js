@@ -208,6 +208,11 @@ const drawLockdownStation = (ctx) => {
   ctx.restore();
 };
 
+const currentSeconds = () => {
+  const time = gameState.lastFrameTime || performance.now();
+  return time / 1000;
+};
+
 const drawProps = (ctx) => {
   const size = cellSize() * 0.8;
   gameState.props.forEach((prop) => {
@@ -246,6 +251,24 @@ const drawProps = (ctx) => {
   });
 };
 
+const drawTaserBursts = (ctx) => {
+  const bursts = gameState.player.taser?.bursts || [];
+  if (!bursts.length) return;
+  const now = currentSeconds();
+  bursts.forEach((burst) => {
+    const remaining = burst.expiresAt - now;
+    const alpha = Math.sin((remaining / gameState.config.taser.burstDurationSeconds) * Math.PI * 4);
+    ctx.save();
+    ctx.globalAlpha = Math.abs(alpha);
+    ctx.fillStyle = '#fefefe';
+    burst.cells.forEach((cell) => {
+      const { x, y } = cellToWorldCenter(cell.x, cell.y);
+      ctx.fillRect(x - gameState.grid.cellSize / 2, y - gameState.grid.cellSize / 2, gameState.grid.cellSize, gameState.grid.cellSize);
+    });
+    ctx.restore();
+  });
+};
+
 
 const drawPlayer = (ctx) => {
   const player = gameState.player;
@@ -264,6 +287,7 @@ export const renderFrame = (ctx) => {
   drawBody(ctx);
   drawScanner(ctx);
   drawProps(ctx);
+  drawTaserBursts(ctx);
   drawDoorPanels(ctx);
   drawDoorLabels(ctx);
   drawLockdownStation(ctx);

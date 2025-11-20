@@ -16,8 +16,15 @@ const bind = (type, handler) => {
   return () => window.removeEventListener(type, handler);
 };
 
-export const bindKeyboard = (set, onKeyDown) => {
-  const unbindDown = bind('keydown', createHandler(set, true, onKeyDown));
+export const bindKeyboard = (set, onKeyDown, onKeyAction) => {
+  const downHandler = (event) => {
+    if (event.repeat) return;
+    const key = normalizeKey(event.key);
+    setKey(set, key, true);
+    if (onKeyDown) onKeyDown(key);
+    if (onKeyAction) onKeyAction(key);
+  };
+  const unbindDown = bind('keydown', downHandler);
   const unbindUp = bind('keyup', createHandler(set, false));
   return () => {
     unbindDown();

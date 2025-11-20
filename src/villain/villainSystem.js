@@ -2,7 +2,7 @@ import { gameState } from '../state/gameState.js';
 import { cellToWorldCenter, worldPointToCell, isCellSolid, withinBounds as gridWithinBounds, toIndex } from '../state/gridState.js';
 import { doorState } from '../state/doorState.js';
 import { hasLineOfSight } from '../utils/lineOfSight.js';
-import { distanceBetween } from '../utils/geometry.js';
+import { distanceBetween, normalizeVector } from '../utils/geometry.js';
 
 let fastLaneCells = null;
 let perimeterCells = null;
@@ -409,12 +409,6 @@ const angleBetween = (a, b) => {
   return Math.acos(Math.min(1, Math.max(-1, dot / mag)));
 };
 
-const normalizeVector = (vector) => {
-  const mag = Math.hypot(vector.x, vector.y);
-  if (!mag) return { x: 0, y: 0 };
-  return { x: vector.x / mag, y: vector.y / mag };
-};
-
 const chaseSightRangeCells = () => {
   const screenCells = gameState.config.canvasWidth / gameState.grid.cellSize;
   return screenCells * (gameState.config.villain.chaseSightFractionOfScreen || 0.75);
@@ -612,6 +606,19 @@ export const updateVillain = (deltaSeconds = 0) => {
   decayTimers(villain, deltaSeconds);
   updateEscapeStateForPosition(villain);
   maybeEscape(villain, deltaSeconds);
+  const now = nowSeconds();
+  const stunned = villain.stunnedUntil && villain.stunnedUntil > now;
+  if (stunned) {
+    villain.state = 'stunned';
+    villain.isPaused = true;
+    return;
+  }
+  if (villain.state === 'stunned' && villain.stunnedUntil && villain.stunnedUntil <= now) {
+    villain.state = villain.stateBeforeStun || 'wander';
+    villain.stateBeforeStun = null;
+    villain.stunnedUntil = 0;
+    villain.isPaused = false;
+  }
   const seesPlayer = villainCanSeePlayer(villain);
   if (seesPlayer) {
     recordPlayerSight(villain);
@@ -701,7 +708,10 @@ export const resetVillainLockdown = () => {
   villain.targetCellY = null;
   villain.canEscapeAt = nowSeconds() + gameState.config.villain.escapeLockoutSeconds;
 };
-const nowSeconds = () => gameState.lastFrameTime / 1000;
+const nowSeconds = () => {
+  const time = gameState.lastFrameTime || performance.now();
+  return time / 1000;
+};
 
 const currentOxygenPercent = () => {
   const { current, max } = gameState.player.oxygen;

@@ -15,6 +15,7 @@ export const playerState = Object.seal({
   angle: 0,
   velocityX: 0,
   velocityY: 0,
+  lastMoveDirection: { x: 0, y: 1 },
   walkSpeed: config.walkSpeed,
   stamina: Object.seal({
     current: config.stamina.max,
@@ -33,5 +34,10 @@ export const playerState = Object.seal({
     current: config.player.healthMax,
     max: config.player.healthMax
   }),
-  keycards: new Set()
+  keycards: new Set(),
+  taser: Object.seal({
+    hasTaser: false,
+    cooldownRemaining: 0,
+    bursts: []
+  })
 });

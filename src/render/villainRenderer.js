@@ -18,7 +18,19 @@ const lerpColor = (colorA, colorB, t) => {
   return `rgb(${r}, ${g}, ${b})`;
 };
 
+const stunFraction = (villain) => {
+  if (!villain.stunnedUntil) return 0;
+  const now = (gameState.lastFrameTime || 0) / 1000;
+  return Math.max(0, Math.min(1, (villain.stunnedUntil - now) / gameState.config.taser.stunSeconds));
+};
+
 const villainBaseColor = (villain) => {
+  const stun = stunFraction(villain);
+  if (stun > 0) {
+    const grey = '#777777';
+    const normal = villain.state === 'chasePlayer' ? '#ff9f43' : villain.state === 'lostPlayer' ? '#ffce54' : '#ff6b6b';
+    return lerpColor(grey, normal, 1 - stun);
+  }
   if (villain.noticeFlashTimer > 0 && villain.noticeFlashDuration > 0) {
     const [startColor, endColor] = gameState.config.villain.noticeFlashColors;
     const fraction = 1 - (villain.noticeFlashTimer / villain.noticeFlashDuration);

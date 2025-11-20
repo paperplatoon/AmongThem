@@ -81,6 +81,14 @@ export const config = Object.freeze({
     pursueProjectionCells: 12,
     doorPoundPauseSeconds: 1
   }),
+  taser: Object.freeze({
+    cost: 350,
+    testCost: 50,
+    cooldownSeconds: 5,
+    stunSeconds: 10,
+    arcLengthCells: 5,
+    burstDurationSeconds: 0.6
+  }),
   roles: Object.freeze({
     bridge: {
       name: 'Captain',

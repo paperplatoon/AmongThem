@@ -4,6 +4,7 @@ import { isPointWalkable } from '../collision/collisionMask.js';
 import { worldPointToCell, toIndex } from '../state/gridState.js';
 import { updateStamina, getCurrentSpeed } from './staminaSystem.js';
 import { updateOxygen } from './oxygenSystem.js';
+import { updateTaser } from '../combat/taserSystem.js';
 
 const boolToNumber = (value) => (value ? 1 : 0);
 
@@ -53,6 +54,7 @@ export const updateMovement = (deltaSeconds) => {
   if (gameState.ui.showGameOver) return;
   updateStamina(deltaSeconds);
   updateOxygen(deltaSeconds);
+  updateTaser(deltaSeconds);
   const currentCell = worldPointToCell({ x: gameState.player.x, y: gameState.player.y });
   gameState.player.cellX = currentCell.x;
   gameState.player.cellY = currentCell.y;
@@ -64,4 +66,7 @@ export const updateMovement = (deltaSeconds) => {
   const effectiveSpeed = baseSpeed * modifier;
   const velocity = scale(direction, effectiveSpeed * deltaSeconds);
   tryMove(gameState.player, velocity);
+  if (direction.x || direction.y) {
+    gameState.player.lastMoveDirection = direction;
+  }
 };

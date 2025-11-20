@@ -43,5 +43,7 @@ export const villainState = {
   lastTargetDistance: null,
   lastSeenDirection: { x: 0, y: 0 },
   pursueDirectionTimer: 0,
-  doorAttempts: 0
+  doorAttempts: 0,
+  stunnedUntil: 0,
+  stateBeforeStun: null
 };

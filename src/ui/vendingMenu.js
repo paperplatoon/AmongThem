@@ -31,6 +31,7 @@ export const handleVendingClick = (screenX, screenY) => {
   }
   const optionHit = hitboxes().vendingOptions.find((entry) => containsPoint(entry, screenX, screenY));
   if (!optionHit) return false;
+  if (optionHit.disabled) return true;
   const prop = currentVendingProp();
   if (!prop) {
     closeVendingMenu();
@@ -38,7 +39,14 @@ export const handleVendingClick = (screenX, screenY) => {
   }
   const option = prop.vendingOptions?.[optionHit.index];
   if (!option) return true;
-  const result = spendMoneyOnVending(option.itemId, option.cost);
+  if (option.itemId === 'taser' && gameState.player.taser?.hasTaser) {
+    gameState.ui.vendingMessage = 'Taser already owned.';
+    return true;
+  }
+  const price = option.itemId === 'taser' && gameState.testing
+    ? gameState.config.taser.testCost
+    : option.cost;
+  const result = spendMoneyOnVending(option.itemId, price);
   if (result.success) {
     gameState.ui.vendingMessage = `${option.label} purchased.`;
   } else if (result.reason === 'insufficient_funds') {
@@ -117,22 +125,28 @@ const drawOptions = (ctx, panel, prop) => {
   hitboxes().vendingOptions.length = 0;
   entries.forEach((option, index) => {
     const y = startY + index * lineHeight;
-    const affordable = gameState.player.money >= option.cost;
+    const owned = option.itemId === 'taser' && gameState.player.taser?.hasTaser;
+    const price = option.itemId === 'taser' && gameState.testing
+      ? gameState.config.taser.testCost
+      : option.cost;
+    const affordable = gameState.player.money >= price;
     ctx.save();
-    ctx.fillStyle = affordable ? '#8effd6' : '#c06f6f';
+    ctx.fillStyle = owned ? '#7b84a2' : affordable ? '#8effd6' : '#c06f6f';
     ctx.font = '22px "Courier New", monospace';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
-    ctx.fillText(option.label, panel.x + 24, y);
+    const label = owned ? `${option.label} (Owned)` : option.label;
+    ctx.fillText(label, panel.x + 24, y);
     ctx.textAlign = 'right';
-    ctx.fillText(`${option.cost}₡`, panel.x + panel.width - 24, y);
+    if (!owned) ctx.fillText(`${price}₡`, panel.x + panel.width - 24, y);
     ctx.restore();
     hitboxes().vendingOptions.push({
       x: panel.x + 16,
       y: y - lineHeight / 2,
       x2: panel.x + panel.width - 16,
       y2: y + lineHeight / 2,
-      index
+      index,
+      disabled: owned
     });
   });
 };

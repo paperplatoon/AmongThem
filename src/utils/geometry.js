@@ -38,3 +38,9 @@ export const shrinkRect = (rect, amount) => positiveRect(resizeRect(rect, -amoun
 export const inflateRect = (rect, amount) => positiveRect(resizeRect(rect, amount));
 
 export const distanceBetween = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+
+export const normalizeVector = (vector) => {
+  const mag = Math.hypot(vector.x, vector.y);
+  if (!mag) return { x: 0, y: 0 };
+  return { x: vector.x / mag, y: vector.y / mag };
+};

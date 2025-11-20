@@ -32,6 +32,34 @@ const drawCredits = (ctx) => {
   ctx.fillText(`${symbol} ${gameState.player.money}`, x + 4, y + 10);
 };
 
+const drawTaserStatus = (ctx) => {
+  const taser = gameState.player.taser;
+  if (!taser || !taser.hasTaser) return;
+  const iconX = padding;
+  const iconY = padding + barHeight + 50;
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+  ctx.fillRect(iconX - 8, iconY - 8, 60, 40);
+  ctx.fillStyle = '#f5d442';
+  if (taser.cooldownRemaining <= 0) {
+    ctx.font = '28px "Courier New", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('⚡', iconX + 22, iconY + 12);
+  } else {
+    ctx.fillStyle = '#fefefe';
+    ctx.font = '20px "Courier New", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const remaining = Math.ceil(taser.cooldownRemaining);
+    ctx.fillText(`${remaining}`, iconX + 22, iconY + 12);
+  }
+  ctx.fillStyle = '#c5d8ff';
+  ctx.font = '12px "Courier New", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  ctx.fillText('TASER', iconX + 22, iconY + 18);
+};
+
 const drawOutline = (ctx, x, y) => {
   ctx.strokeStyle = '#1d3520';
   ctx.lineWidth = 2;
@@ -68,6 +96,7 @@ const drawHealthBar = (ctx) => {
 export const renderHud = (ctx) => {
   drawHealthBar(ctx);
   drawCredits(ctx);
+  drawTaserStatus(ctx);
   const x = padding;
   const y = gameState.config.canvasHeight - padding - barHeight;
   drawBackground(ctx, x, y);
