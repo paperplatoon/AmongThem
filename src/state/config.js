@@ -78,7 +78,8 @@ export const config = Object.freeze({
     loseSightDistanceCells: 30,
     chaseSightFractionOfScreen: 0.75,
     lostDirectionDurationSeconds: 10,
-    pursueProjectionCells: 12
+    pursueProjectionCells: 12,
+    doorPoundPauseSeconds: 1
   }),
   roles: Object.freeze({
     bridge: {
