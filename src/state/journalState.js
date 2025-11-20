@@ -19,7 +19,8 @@ const buildEntry = (roleId) => {
     victimIdentified: false,
     isKiller: false,
     killerConfirmed: false,
-    personName: randomCrewName(roleId)
+    personName: randomCrewName(roleId),
+    status: 'unknown'
   });
 };
 
@@ -56,24 +57,44 @@ export const markVictimRole = (roleId) => {
   const entry = byId[roleId];
   if (!entry) return;
   entry.isVictim = true;
+  entry.status = 'victim';
 };
 
 export const markKillerRole = (roleId) => {
   const entry = byId[roleId];
   if (!entry) return;
-  entry.isKiller = true;
+  entry.status = 'suspect';
 };
 
 export const markVictimIdentified = (roleId) => {
   const entry = byId[roleId];
   if (!entry) return;
   entry.victimIdentified = true;
+  entry.status = 'victim';
 };
 
 export const markKillerConfirmed = (roleId) => {
   const entry = byId[roleId];
   if (!entry) return;
   entry.killerConfirmed = true;
+  entry.status = 'killer';
+  entry.isKiller = true;
+  entry.killerConfirmed = true;
+};
+export const markRoleStatus = (roleId, status) => {
+  const entry = byId[roleId];
+  if (!entry) return;
+  entry.status = status;
+  if (status === 'suspect') {
+    entry.isKiller = false;
+  } else if (status === 'killer') {
+    entry.isKiller = true;
+    entry.killerConfirmed = true;
+  } else if (status === 'victim') {
+    entry.isVictim = true;
+  } else if (status === 'cleared') {
+    entry.isKiller = false;
+  }
 };
 
 export const addEvidenceToJournal = (roleId, evidence) => {

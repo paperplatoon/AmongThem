@@ -2,6 +2,7 @@ import { gameState } from './gameState.js';
 import { cellToWorldCenter, worldPointToCell, markCell, WORLD_SOLID } from './gridState.js';
 import { markVictimRole, markKillerRole, markVictimIdentified } from './journalState.js';
 import { addIncriminatingEvidence } from './roomProps.js';
+import { EVIDENCE_TYPES } from '../evidence/evidenceHandlers.js';
 import { seedComputerLocks } from '../hacking/hackingState.js';
 
 const roleKeys = Object.keys(gameState.config.roles);
@@ -99,11 +100,71 @@ const seedKiller = (victimRole) => {
   addIncriminatingEvidence(gameState.props, killerRole);
   const keyProp = gameState.props.find((prop) => prop.keycardRoleId === killerRole);
   if (keyProp) keyProp.highlightKeycard = true;
+  return killerRole;
+};
+
+const selectSuspects = (victimRole, killerRole) => {
+  const pool = roleKeys.filter((role) => role !== victimRole && role !== killerRole);
+  const suspects = [killerRole];
+  while (suspects.length < 3 && pool.length) {
+    const index = Math.floor(Math.random() * pool.length);
+    const role = pool.splice(index, 1)[0];
+    if (role) suspects.push(role);
+  }
+  gameState.case.suspects = suspects;
+  return suspects;
+};
+
+const populateSuspectTerminals = (suspects, killerRole) => {
+  suspects.forEach((roleId) => {
+    const desk = gameState.props.find((prop) => prop.roomId === roleId && prop.type === 'desk');
+    if (!desk) return;
+    desk.contents = desk.contents || [];
+    desk.contents = desk.contents.filter((item) => item.type !== EVIDENCE_TYPES.INCRIMINATING && item.type !== EVIDENCE_TYPES.CLEAN_ALIBI);
+    if (roleId === killerRole) {
+      desk.contents.push({
+        id: `desk_evidence_${roleId}`,
+        type: EVIDENCE_TYPES.INCRIMINATING,
+        label: 'Incriminating Evidence',
+        roleId: killerRole
+      });
+    } else {
+      desk.contents.push({
+        id: `desk_alibi_${roleId}`,
+        type: EVIDENCE_TYPES.CLEAN_ALIBI,
+        label: 'Clean Alibi',
+        roleId
+      });
+    }
+    desk.promptText = 'CLICK TO SEARCH';
+    desk.isEmpty = false;
+  });
+};
+
+const addDeathThreatsToVictimDesk = (victimRole, suspects) => {
+  const desk = gameState.props.find((prop) => prop.roomId === victimRole && prop.type === 'desk');
+  if (!desk) return;
+
+  desk.contents = desk.contents || [];
+  desk.contents = desk.contents.filter((item) => item.type !== EVIDENCE_TYPES.DEATH_THREAT);
+  suspects.forEach((roleId) => {
+    desk.contents.push({
+      id: `death_threat_${victimRole}_${roleId}`,
+      type: EVIDENCE_TYPES.DEATH_THREAT,
+      label: `Death Threat from ${gameState.config.roles[roleId].name}`,
+      roleId
+    });
+  });
+  desk.promptText = 'CLICK TO SEARCH';
+  desk.isEmpty = false;
 };
 
 export const initializeCase = () => {
   const victimRole = seedVictim();
-  seedKiller(victimRole);
+  const killerRole = seedKiller(victimRole);
+  const suspects = selectSuspects(victimRole, killerRole);
+  addDeathThreatsToVictimDesk(victimRole, suspects);
+  populateSuspectTerminals(suspects, killerRole);
   spawnBody(victimRole);
   spawnScanner();
   seedComputerLocks();

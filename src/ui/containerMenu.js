@@ -1,5 +1,6 @@
 import { gameState } from '../state/gameState.js';
-import { markKeycardKnown, markKillerConfirmed, markDeskDiscovered } from '../state/journalState.js';
+import { markKeycardKnown, markDeskDiscovered } from '../state/journalState.js';
+import { handleEvidenceItem } from '../evidence/evidenceHandlers.js';
 
 const hitboxes = () => gameState.ui.hitboxes;
 
@@ -56,8 +57,8 @@ export const handleContainerClick = (screenX, screenY) => {
   if (prop.type === 'desk' && prop.roomId) markDeskDiscovered(prop.roomId);
   if (item.type === 'keycard') {
     collectKeycardItem(item);
-  } else if (item.type === 'incriminating_evidence') {
-    collectEvidenceItem(item);
+  } else if (handleEvidenceItem(item)) {
+    // evidence handled internally
   } else if (item.type === 'credits') {
     collectCredits(item);
   } else {

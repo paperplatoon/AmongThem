@@ -39,5 +39,9 @@ export const playerState = Object.seal({
     hasTaser: false,
     cooldownRemaining: 0,
     bursts: []
+  }),
+  upgrades: Object.seal({
+    keycardLocator: false,
+    hackSpeedMultiplier: 1
   })
 });

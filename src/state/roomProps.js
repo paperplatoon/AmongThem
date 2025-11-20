@@ -23,7 +23,8 @@ const HALL_PROP_CONFIG = Object.freeze([
 const VENDING_OPTIONS = Object.freeze([
   Object.freeze({ itemId: 'energy_bar', label: 'Energy Bar', cost: 30 }),
   Object.freeze({ itemId: 'bandage', label: 'Bandage', cost: 50 }),
-  Object.freeze({ itemId: 'taser', label: 'Taser', cost: config.taser.cost, unique: true })
+  Object.freeze({ itemId: 'taser', label: 'Taser', cost: config.taser.cost, unique: true }),
+  Object.freeze({ itemId: 'keycard_locator', label: 'Keycard Locator', cost: 150, unique: true })
 ]);
 
 const INNER_CACHE_CONFIG = Object.freeze({

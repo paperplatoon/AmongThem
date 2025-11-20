@@ -218,7 +218,9 @@ const drawProps = (ctx) => {
   const size = cellSize() * 0.8;
   gameState.props.forEach((prop) => {
     ctx.save();
-    const highlight = prop.highlightKeycard ? '#ff4f4f' : null;
+    const hasLocator = gameState.player.upgrades?.keycardLocator;
+    const shouldHighlight = prop.highlightKeycard || (hasLocator && prop.containsKeycard);
+    const highlight = shouldHighlight ? '#ff4f4f' : null;
     const outline = highlight || (prop.isEmpty ? '#2d3a55' : '#fef3b7');
     const labelColor = highlight ? '#ffdfdf' : prop.isEmpty ? '#7b84a2' : '#fef3b7';
     if (prop.type === 'vending_machine') {

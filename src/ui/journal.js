@@ -58,6 +58,40 @@ const drawTitle = (ctx, panel) => {
   ctx.restore();
 };
 
+const statusColor = (entry) => {
+  if (entry.status === 'victim') return '#3b5d9c';
+  if (entry.status === 'suspect') return '#d6a83b';
+  if (entry.status === 'killer') return '#d94f4f';
+  if (entry.status === 'cleared') return '#5fbf8f';
+  return '#7b84a2';
+};
+
+const tabFill = (entry, isActive) => {
+  const status = entry.status;
+  if (status === 'victim') return isActive ? '#fdfdfd' : '#f4f4f4';
+  if (status === 'suspect') return isActive ? '#6b4c12' : '#4b3810';
+  if (status === 'killer') return isActive ? '#670b17' : '#470912';
+  if (status === 'cleared') return isActive ? '#1f4a32' : '#123125';
+  return isActive ? 'rgba(15, 36, 74, 0.95)' : 'rgba(10, 24, 48, 0.7)';
+};
+
+const tabShadow = (entry) => {
+  if (entry.status === 'victim') return '0 2px 8px rgba(255, 255, 255, 0.45)';
+  if (entry.status === 'suspect') return '0 2px 8px rgba(255, 215, 92, 0.35)';
+  if (entry.status === 'killer') return '0 2px 8px rgba(255, 80, 80, 0.35)';
+  if (entry.status === 'cleared') return '0 2px 8px rgba(95, 191, 143, 0.35)';
+  return '0 2px 6px rgba(0, 0, 0, 0.35)';
+};
+
+const tabStroke = (entry, isActive) => {
+  const status = entry.status;
+  if (status === 'victim') return '#ffffff';
+  if (status === 'suspect') return '#ffd65c';
+  if (status === 'killer') return '#ff6666';
+  if (status === 'cleared') return '#5fbf8f';
+  return isActive ? '#8effd6' : '#4f7bd9';
+};
+
 const drawTabs = (ctx, panel) => {
   const tabs = gameState.journal.entries;
   const hitboxes = gameState.ui.hitboxes.journalTabs;
@@ -71,30 +105,23 @@ const drawTabs = (ctx, panel) => {
     const x = panel.x + index * tabWidth;
     const y = baseY;
     const isActive = entry.id === gameState.ui.journal.activeTab;
-    const baseColor = isActive ? 'rgba(15, 36, 74, 0.95)' : 'rgba(10, 24, 48, 0.7)';
-    const keyedColor = isActive ? 'rgba(46, 109, 72, 0.95)' : 'rgba(30, 82, 55, 0.85)';
     const label = gameState.config.roles[entry.id].name;
-    ctx.fillStyle = entry.hasKeycard ? keyedColor : baseColor;
+    ctx.fillStyle = tabFill(entry, isActive);
     ctx.fillRect(x, y, tabWidth, tabHeight);
-    ctx.strokeStyle = isActive ? '#8effd6' : '#4f7bd9';
+    ctx.strokeStyle = tabStroke(entry, isActive);
     ctx.lineWidth = 2;
     ctx.strokeRect(x, y, tabWidth, tabHeight);
-    ctx.fillStyle = isActive ? '#8effd6' : '#c5d8ff';
+    ctx.shadowColor = tabShadow(entry);
+    ctx.shadowBlur = 6;
+    ctx.fillStyle = isActive ? '#fefefe' : '#c5d8ff';
     ctx.font = '22px "Courier New", monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(label, x + tabWidth / 2, y + tabHeight / 2);
+    ctx.shadowBlur = 0;
     if (entry.hasKeycard) {
       ctx.fillStyle = '#3dd17a';
       ctx.fillRect(x + tabWidth - 30, y + 8, 14, 14);
-    }
-    if (entry.isVictim) {
-      ctx.fillStyle = entry.victimIdentified ? '#ff7575' : '#c5d8ff';
-      ctx.fillText('V', x + 16, y + tabHeight / 2);
-    }
-    if (entry.isKiller && entry.killerConfirmed) {
-      ctx.fillStyle = '#ffdf5b';
-      ctx.fillText('K', x + tabWidth - 52, y + tabHeight / 2);
     }
     hitboxes.push({ id: entry.id, x, y, width: tabWidth, height: tabHeight });
   });
@@ -152,27 +179,36 @@ const drawContent = (ctx, area, activeTab) => {
     return;
   }
   const nameLine = entry.knownName ? entry.personName : 'Unknown';
-  const status = (() => {
-    if (entry.isVictim) return entry.victimIdentified ? 'Victim Confirmed' : 'Victim Unknown';
-    if (entry.isKiller) return entry.killerConfirmed ? 'Killer Confirmed' : 'Suspect';
+  const statusLabel = (() => {
+    if (entry.status === 'victim') return entry.victimIdentified ? 'Victim Confirmed' : 'Victim';
+    if (entry.status === 'suspect') return entry.isKiller ? 'Suspect' : 'Suspect';
+    if (entry.status === 'killer') return entry.killerConfirmed ? 'Killer Confirmed' : 'Killer';
     return 'Unknown';
   })();
   const lines = [
-    `Role: ${role.name}`,
-    `Name: ${nameLine}`,
-    `Keycard: ${entry.hasKeycard ? 'Acquired' : 'Missing'}`,
-    `Status: ${status}`,
-    `Method Access: ${formatMethods(role)}`
+    { label: 'Role', value: role.name },
+    { label: 'Name', value: nameLine },
+    { label: 'Keycard', value: entry.hasKeycard ? 'Acquired' : 'Missing' },
+    { label: 'Status', value: statusLabel, isStatus: true },
+    { label: 'Method Access', value: formatMethods(role) }
   ];
   const victim = gameState.case.victim;
   if (victim && victim.roleKey === activeTab && gameState.case.identified) {
-    lines.push(`Victim Identified: ${gameState.case.victimName}`);
-    lines.push(`Cause: ${gameState.case.methodCategory}`);
-    lines.push(`Window: ${gameState.case.timeWindow}`);
+    lines.push({ label: 'Victim Identified', value: gameState.case.victimName });
+    lines.push({ label: 'Cause', value: gameState.case.methodCategory });
+    lines.push({ label: 'Window', value: gameState.case.timeWindow });
   }
   lines.forEach((line, index) => {
     const offset = index * 32;
-    ctx.fillText(line, area.x, area.y + offset);
+    ctx.fillText(`${line.label}:`, area.x, area.y + offset);
+    const labelWidth = ctx.measureText(`${line.label}: `).width;
+    if (line.isStatus) {
+      ctx.fillStyle = statusColor(entry);
+      ctx.fillText(line.value, area.x + labelWidth, area.y + offset);
+      ctx.fillStyle = '#8effd6';
+    } else {
+      ctx.fillText(line.value, area.x + labelWidth, area.y + offset);
+    }
   });
   ctx.restore();
   drawEvidenceList(ctx, area, entry);

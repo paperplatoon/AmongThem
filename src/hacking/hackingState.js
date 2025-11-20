@@ -287,20 +287,23 @@ function sortNextLetter(lock) {
 }
 
 function revealIntervalForLock(lock) {
+  const global = Math.max(gameState.player.upgrades?.hackSpeedMultiplier || 1, 0.1);
   const base = gameState.config.hacking.revealIntervalSeconds;
-  const modifier = Math.max(lock.modifiers.revealSpeed || 1, 0.1);
+  const modifier = Math.max(lock.modifiers.revealSpeed || 1, 0.1) * global;
   return Math.max(0.2, base / modifier);
 }
 
 function sortIntervalForLock(lock) {
+  const global = Math.max(gameState.player.upgrades?.hackSpeedMultiplier || 1, 0.1);
   const base = gameState.config.hacking.sortingIntervalSeconds;
-  const modifier = Math.max(lock.modifiers.sortSpeed || 1, 0.1);
+  const modifier = Math.max(lock.modifiers.sortSpeed || 1, 0.1) * global;
   return Math.max(0.2, base / modifier);
 }
 
 function autoCompleteDelayForLock(lock) {
+  const global = Math.max(gameState.player.upgrades?.hackSpeedMultiplier || 1, 0.1);
   const base = gameState.config.hacking.autoCompleteDelaySeconds;
-  const modifier = Math.max(lock.modifiers.autoCompleteSpeed || 1, 0.1);
+  const modifier = Math.max(lock.modifiers.autoCompleteSpeed || 1, 0.1) * global;
   return Math.max(0.5, base / modifier);
 }
 
