@@ -63,7 +63,7 @@ export const markVictimRole = (roleId) => {
 export const markKillerRole = (roleId) => {
   const entry = byId[roleId];
   if (!entry) return;
-  entry.status = 'suspect';
+  entry.status = 'unknown';
 };
 
 export const markVictimIdentified = (roleId) => {
@@ -77,9 +77,8 @@ export const markKillerConfirmed = (roleId) => {
   const entry = byId[roleId];
   if (!entry) return;
   entry.killerConfirmed = true;
-  entry.status = 'killer';
   entry.isKiller = true;
-  entry.killerConfirmed = true;
+  entry.status = 'killer';
 };
 export const markRoleStatus = (roleId, status) => {
   const entry = byId[roleId];

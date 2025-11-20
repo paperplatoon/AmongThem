@@ -219,7 +219,7 @@ const drawProps = (ctx) => {
   gameState.props.forEach((prop) => {
     ctx.save();
     const hasLocator = gameState.player.upgrades?.keycardLocator;
-    const shouldHighlight = prop.highlightKeycard || (hasLocator && prop.containsKeycard);
+    const shouldHighlight = hasLocator && prop.containsKeycard;
     const highlight = shouldHighlight ? '#ff4f4f' : null;
     const outline = highlight || (prop.isEmpty ? '#2d3a55' : '#fef3b7');
     const labelColor = highlight ? '#ffdfdf' : prop.isEmpty ? '#7b84a2' : '#fef3b7';

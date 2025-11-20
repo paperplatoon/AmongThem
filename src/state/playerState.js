@@ -42,6 +42,7 @@ export const playerState = Object.seal({
   }),
   upgrades: Object.seal({
     keycardLocator: false,
-    hackSpeedMultiplier: 1
+    hackSpeedMultiplier: 1,
+    hasFasterHack: false
   })
 });

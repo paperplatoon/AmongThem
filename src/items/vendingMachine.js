@@ -17,6 +17,15 @@ const purchaseKeycardLocator = () => {
   return { success: true, item: { id: 'keycard_locator_upgrade', label: 'Keycard Locator', type: 'upgrade' } };
 };
 
+const purchaseFasterHack = () => {
+  const upgrades = gameState.player.upgrades;
+  if (!upgrades) return { success: false, reason: 'no_player' };
+  if (upgrades.hasFasterHack) return { success: false, reason: 'already_owned' };
+  upgrades.hasFasterHack = true;
+  upgrades.hackSpeedMultiplier *= 2;
+  return { success: true, item: { id: 'faster_hack_upgrade', label: 'Faster Hack', type: 'upgrade' } };
+};
+
 export const spendMoneyOnVending = (itemType, cost) => {
   const player = gameState.player;
   if (!player) return { success: false, reason: 'no_player' };
@@ -34,11 +43,10 @@ export const spendMoneyOnVending = (itemType, cost) => {
     return result;
   }
   if (itemType === 'faster_hack') {
-    const upgrades = player.upgrades;
-    if (!upgrades) return { success: false, reason: 'no_player' };
-    upgrades.hackSpeedMultiplier = Math.max(upgrades.hackSpeedMultiplier * 0.5, 0.05);
+    const result = purchaseFasterHack();
+    if (!result.success) return result;
     player.money -= cost;
-    return { success: true, item: { id: 'faster_hack', label: 'Faster Hack', type: 'upgrade' } };
+    return result;
   }
   const item = createItemFromDefinition(`vending_${itemType}`, itemType);
   if (!item) return { success: false, reason: 'no_item_definition' };

@@ -99,7 +99,6 @@ const seedKiller = (victimRole) => {
   });
   addIncriminatingEvidence(gameState.props, killerRole);
   const keyProp = gameState.props.find((prop) => prop.keycardRoleId === killerRole);
-  if (keyProp) keyProp.highlightKeycard = true;
   return killerRole;
 };
 

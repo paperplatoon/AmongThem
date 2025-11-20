@@ -47,6 +47,10 @@ export const handleVendingClick = (screenX, screenY) => {
     gameState.ui.vendingMessage = 'Keycard locator already owned.';
     return true;
   }
+  if (option.itemId === 'faster_hack' && gameState.player.upgrades?.hasFasterHack) {
+    gameState.ui.vendingMessage = 'Faster hack already owned.';
+    return true;
+  }
   const price = (() => {
     if (option.itemId === 'taser') {
       return gameState.testing ? gameState.config.taser.testCost : option.cost;
@@ -139,7 +143,8 @@ const drawOptions = (ctx, panel, prop) => {
   entries.forEach((option, index) => {
     const y = startY + index * lineHeight;
     const owned = (option.itemId === 'taser' && gameState.player.taser?.hasTaser)
-      || (option.itemId === 'keycard_locator' && gameState.player.upgrades?.keycardLocator);
+      || (option.itemId === 'keycard_locator' && gameState.player.upgrades?.keycardLocator)
+      || (option.itemId === 'faster_hack' && gameState.player.upgrades?.hasFasterHack);
     const price = (() => {
       if (option.itemId === 'taser') return gameState.testing ? gameState.config.taser.testCost : option.cost;
       if (option.itemId === 'keycard_locator') return gameState.testing ? 0 : option.cost;
