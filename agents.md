@@ -90,7 +90,15 @@
 *(These are stopgap solutions to facilitate testing; they should be revisited when the full systems arrive.)*
 - **Crew Identity Discovery:** Keycards and desk searches currently flip a flag that reveals an NPC’s name and highlights their journal tab. This is a provisional shortcut until the broader clue/evidence loop is built out.
 - **Killer Proof Item:** The murderer’s locker always spawns a generic “Incriminating Evidence” item that marks them as the killer when collected. It’s a temporary win-condition proxy ahead of nuanced motive/method deduction.
-- **Keycard Prop Highlighting:** The hallway prop that contains the killer’s keycard renders bright red for debugging. This will be removed or replaced with diegetic hinting once flow is fully validated.
+- **Keycard Prop Highlighting:** (Removed) props no longer glow by default; use the Keycard Locator upgrade to surface keycard containers.
+
+## Notes from Current Implementation
+- Victim desks now spawn scripted “Death Threat” evidence pointing to three suspects (always including the killer). Collecting a threat marks that role as a suspect (yellow tab).
+- Suspect terminals spawn either “Clean Alibi” (non-killer) or “Incriminating Evidence” (killer). Clean alibis mark a role as cleared (green tab); incriminating evidence flips the role to killer (red tab).
+- `player.upgrades` tracks gameplay modifiers. Current upgrades:
+  - **Keycard Locator:** highlights any prop containing a keycard (no more per-locker debug highlight).
+  - **Faster Hack:** halves all hacking intervals once purchased (reflected on the HUD with a ⏩ icon).
+- Journal tabs are color-coded by `entry.status`: victim (white), suspect (yellow), cleared (green), killer (red), unknown (blue-grey). Status strings are now authoritative for both color and dossier text.
 
 ## Role Reference
 - Captain (Bridge) — Methods: Baton (blunt), Sidearm (impact)
