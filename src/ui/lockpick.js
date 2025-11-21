@@ -125,10 +125,10 @@ const drawCloseIcon = (ctx, panel) => {
 };
 
 const drawRows = (ctx, panel, lock) => {
-  const topY = panel.y + 110;
-  const bottomY = topY + 70;
-  const boxWidth = 48;
-  const gap = 12;
+  const topY = panel.y + 70;
+  const bottomY = topY + 42;
+  const boxWidth = 42;
+  const gap = 6;
   const startX = panel.x + (panel.width - (boxWidth * combinationLength + gap * (combinationLength - 1))) / 2;
   ctx.save();
   ctx.font = '22px "Courier New", monospace';
@@ -157,9 +157,9 @@ const drawRows = (ctx, panel, lock) => {
 };
 
 const drawDial = (ctx, panel, lock) => {
-  const radius = Math.min(panel.width, panel.height) * 0.27;
+  const radius = Math.min(panel.width, panel.height) * 0.24;
   const centerX = panel.x + panel.width / 2;
-  const centerY = panel.y + panel.height * 0.68;
+  const centerY = panel.y + panel.height * 0.7;
   ctx.save();
   ctx.fillStyle = '#0d1224';
   ctx.strokeStyle = '#4f7bd9';
@@ -194,10 +194,15 @@ const drawDial = (ctx, panel, lock) => {
   ctx.stroke();
   ctx.restore();
 
-  const targetDigit = lock.combination[Math.min(lock.attemptDigits.length, combinationLength - 1)];
-  const ledOn = lock.isUnlocked || (targetDigit != null && floorDigit(dialValue) === targetDigit);
+  const step = Math.min(lock.stepIndex, combinationLength - 1);
+  const targetDigit = lock.combination[step];
+  const ledOn = lock.isUnlocked
+    ? false
+    : lock.state === 'final_hold'
+      ? true
+      : targetDigit != null && floorDigit(lock.dialValue) === targetDigit;
   ctx.save();
-  ctx.fillStyle = ledOn ? '#ff4f4f' : '#3b1d1d';
+  ctx.fillStyle = ledOn ? '#ff2f2f' : '#3a1111';
   ctx.beginPath();
   ctx.arc(centerX, centerY - radius - 18, 12, 0, Math.PI * 2);
   ctx.fill();
