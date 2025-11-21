@@ -47,6 +47,10 @@ export const handleContainerClick = (screenX, screenY) => {
   if (!hit) return false;
   const prop = gameState.props.find((p) => p.id === gameState.ui.openContainerId);
   if (!prop) return false;
+  if (prop.lockpickId && !prop.lockpickUnlocked) {
+    gameState.ui.openContainerId = null;
+    return true;
+  }
   if (!prop.contents.length) {
     markPropEmpty(prop);
     closeContainer();
@@ -148,6 +152,11 @@ export const renderContainerMenu = (ctx) => {
   }
   const prop = gameState.props.find((p) => p.id === gameState.ui.openContainerId);
   if (!prop) {
+    gameState.ui.openContainerId = null;
+    clearContainerHitboxes();
+    return;
+  }
+  if (prop.lockpickId && !prop.lockpickUnlocked) {
     gameState.ui.openContainerId = null;
     clearContainerHitboxes();
     return;

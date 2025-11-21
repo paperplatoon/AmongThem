@@ -9,6 +9,7 @@ export const uiState = Object.seal({
   showGameOver: false,
   openContainerId: null,
   openVendingId: null,
+  openLockpickId: null,
   vendingMessage: null,
   journal: Object.seal({
     activeTab: roleOrder[0] ?? null
@@ -21,6 +22,12 @@ export const uiState = Object.seal({
     gameOverButton: null,
     vendingOptions: [],
     vendingCloseButton: null,
+    lockpick: Object.seal({
+      closeButton: null,
+      bypassButton: null,
+      leftArrow: null,
+      rightArrow: null
+    }),
     hacking: Object.seal({
       enterButton: null,
       exitButton: null

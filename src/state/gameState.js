@@ -8,6 +8,7 @@ import { gridState } from './gridState.js';
 import { generateRoomProps } from './roomProps.js';
 import { journalState } from './journalState.js';
 import { villainState } from './villainState.js';
+import { lockpickState } from './lockpickState.js';
 
 export const gameState = Object.seal({
   testing: true,
@@ -20,6 +21,7 @@ export const gameState = Object.seal({
   ui: uiState,
   camera: cameraState,
   journal: journalState,
+  lockpicks: lockpickState,
   inventory: [],
   pressedKeys: new Set(),
   lastFrameTime: 0,
@@ -66,5 +68,10 @@ export const gameState = Object.seal({
   interactions: {
     clickZones: []
   },
-  villain: { ...villainState }
+  villain: { ...villainState },
+  lockpick: Object.seal({
+    activeId: null,
+    leftHeld: false,
+    rightHeld: false
+  })
 });

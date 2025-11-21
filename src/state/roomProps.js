@@ -2,6 +2,7 @@ import { mapState, cellTraitMask, CELL_TRAITS } from './mapState.js';
 import { worldPointToCell, cellToWorldCenter, withinBounds as gridWithinBounds, isCellSolid } from './gridState.js';
 import { createItemFromDefinition } from './itemDefinitions.js';
 import { config } from './config.js';
+import { registerLockpickForProp } from './lockpickState.js';
 
 const ROOM_PROP_TYPES = ['desk', 'bed', 'trash', 'locker'];
 
@@ -346,7 +347,8 @@ const createRoomProp = (room, propType, index) => {
   const { x, y } = cellToWorldCenter(cell.x, cell.y);
   const isLocker = propType === 'locker';
   const contents = buildContents({ type: propType }, room.id);
-  return Object.seal({
+  const lockId = isLocker ? `${room.id}_locker` : null;
+  const prop = {
     id: `${room.id}_${propType}_${index}`,
     roomId: room.id,
     type: propType,
@@ -355,8 +357,8 @@ const createRoomProp = (room, propType, index) => {
     cellY: cell.y,
     x,
     y,
-    lockId: isLocker ? `${room.id}_locker` : null,
-    requiresKey: isLocker,
+    lockId,
+    requiresKey: false,
     computerLockId: null,
     contents,
     promptActive: false,
@@ -367,8 +369,16 @@ const createRoomProp = (room, propType, index) => {
     allowsKeycard: false,
     containsKeycard: false,
     keycardRoleId: null,
-    highlightKeycard: false
-  });
+    highlightKeycard: false,
+    lockpickId: null,
+    lockpickUnlocked: !isLocker
+  };
+  if (isLocker) {
+    const lock = registerLockpickForProp(prop.id);
+    prop.lockpickId = lock?.id ?? prop.id;
+    prop.lockpickUnlocked = Boolean(lock?.isUnlocked);
+  }
+  return Object.seal(prop);
 };
 
 const perimeterCorridors = mapState.corridors.filter((corridor) => corridor.type === 'perimeter');

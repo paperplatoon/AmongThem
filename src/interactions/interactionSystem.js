@@ -97,9 +97,22 @@ const canAccessProp = (prop) => (!prop.requiresKey || hasKeycard(prop.lockId));
 const closeOpenMenus = () => {
   gameState.ui.openContainerId = null;
   gameState.ui.openVendingId = null;
+  gameState.ui.openLockpickId = null;
+  gameState.lockpick.activeId = null;
+  gameState.lockpick.leftHeld = false;
+  gameState.lockpick.rightHeld = false;
   closeVendingMenu();
   gameState.ui.showInventory = false;
   gameState.ui.showJournal = false;
+};
+
+const startLockpickSession = (prop) => {
+  if (!prop?.lockpickId) return;
+  closeOpenMenus();
+  gameState.lockpick.activeId = prop.lockpickId;
+  gameState.lockpick.leftHeld = false;
+  gameState.lockpick.rightHeld = false;
+  gameState.ui.openLockpickId = prop.lockpickId;
 };
 
 const makePropZone = (prop) => ({
@@ -112,6 +125,10 @@ const makePropZone = (prop) => ({
     if (prop.type === 'desk' && isPropComputerLocked(prop)) {
       closeOpenMenus();
       startHackingForProp(prop.id);
+      return;
+    }
+    if (prop.lockpickId && !prop.lockpickUnlocked) {
+      startLockpickSession(prop);
       return;
     }
     if (!canAccessProp(prop)) {
@@ -167,10 +184,17 @@ export const updateInteractions = () => {
     } else {
       prop.promptText = prop.isEmpty ? 'EMPTY' : 'CLICK TO SEARCH';
     }
+    if (prop.lockpickId && !prop.lockpickUnlocked) {
+      prop.promptText = 'CLICK TO PICK LOCK';
+    }
     if (prop.type === 'vending_machine') prop.promptText = 'CLICK TO BUY';
     const distance = distanceBetween(gameState.player, prop);
     if (distance > propRange) return;
     prop.promptActive = true;
+    if (prop.lockpickId && !prop.lockpickUnlocked) {
+      zones.push(makePropZone(prop));
+      return;
+    }
     if (!canAccessProp(prop)) {
       prop.promptText = lockedPrompt;
       return;

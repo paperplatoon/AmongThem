@@ -7,6 +7,7 @@ import * as journalUi from './journal.js';
 import { handleGameOverClick } from './gameOver.js';
 import { forceVillainEscape, resetVillainLockdown } from '../villain/villainSystem.js';
 import { handleHackingClick } from './hacking.js';
+import { handleLockpickClick, handleLockpickPointerDown, handleLockpickPointerUp } from './lockpick.js';
 
 const applyItemEffect = (entry) => {
   if (!entry.effect) return false;
@@ -60,15 +61,24 @@ const handleInventorySelection = (screenX, screenY) => {
   return true;
 };
 
-const handleCanvasClick = (canvas, event) => {
+const getCanvasCoords = (canvas, event) => {
   const rect = canvas.getBoundingClientRect();
   const scaleX = canvas.width / rect.width;
   const scaleY = canvas.height / rect.height;
   const screenX = (event.clientX - rect.left) * scaleX;
   const screenY = (event.clientY - rect.top) * scaleY;
-  const worldX = screenX + gameState.camera.x;
-  const worldY = screenY + gameState.camera.y;
+  return {
+    screenX,
+    screenY,
+    worldX: screenX + gameState.camera.x,
+    worldY: screenY + gameState.camera.y
+  };
+};
+
+const handleCanvasClick = (canvas, event) => {
+  const { screenX, screenY, worldX, worldY } = getCanvasCoords(canvas, event);
   if (handleHackingClick(screenX, screenY)) return;
+  if (handleLockpickClick(screenX, screenY)) return;
   if (tryHandleInteractionClick(worldX, worldY)) return;
   if (journalUi.handleJournalClick && journalUi.handleJournalClick(screenX, screenY)) return;
   if (handleVendingClick(screenX, screenY)) return;
@@ -77,8 +87,21 @@ const handleCanvasClick = (canvas, event) => {
   handleInventorySelection(screenX, screenY);
 };
 
+const handlePointerDown = (canvas, event) => {
+  const { screenX, screenY } = getCanvasCoords(canvas, event);
+  if (handleLockpickPointerDown(screenX, screenY)) {
+    event.preventDefault();
+  }
+};
+
+const handlePointerUp = () => {
+  handleLockpickPointerUp();
+};
+
 export const registerInventoryInput = (canvas) => {
   canvas.addEventListener('click', (event) => handleCanvasClick(canvas, event));
+  canvas.addEventListener('mousedown', (event) => handlePointerDown(canvas, event));
+  window.addEventListener('mouseup', handlePointerUp);
 };
 
 const toggle = () => { gameState.ui.showInventory = !gameState.ui.showInventory; };

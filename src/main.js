@@ -15,6 +15,7 @@ import { initializeCase, applyCaseObstacles } from './state/caseState.js';
 import { updateVillain } from './villain/villainSystem.js';
 import { tryFireTaser } from './combat/taserSystem.js';
 import { handleHackingKeyInput, isHackingActive, updateHackingSystem } from './hacking/hackingState.js';
+import { updateLockpickSystem } from './lockpick/lockpickSystem.js';
 
 const createCanvas = () => {
   const canvas = document.createElement('canvas');
@@ -42,6 +43,7 @@ const stepFrame = (ctx, time) => {
   updateCamera();
   updateInteractions();
   updateHackingSystem(delta);
+  updateLockpickSystem(delta);
   renderFrame(ctx);
   requestAnimationFrame((next) => stepFrame(ctx, next));
 };
