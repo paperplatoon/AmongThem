@@ -129,12 +129,14 @@ export const updateLockpickSystem = (deltaSeconds) => {
   if (!lockId) return;
   const lock = getLockpickById(lockId);
   if (!lock || lock.isUnlocked) return;
-  const { delta, previousDigit } = updateDialValue(lock, deltaSeconds);
-  if (!enforceDirectionInput(lock, delta)) return;
+  const result = updateDialValue(lock, deltaSeconds);
+  const deltaMovement = result.delta;
+  const previousDigit = result.previousDigit;
+  if (!enforceDirectionInput(lock, deltaMovement)) return;
   const currentDigit = floorDigit(lock.dialValue);
   lock.lastDigit = currentDigit;
   if (currentDigit !== previousDigit) {
-    const moveDirection = directionFromDelta(delta);
+    const moveDirection = directionFromDelta(deltaMovement);
     handleTransition(lock, previousDigit, currentDigit, moveDirection);
   } else if (lock.state === 'searching') {
     const target = currentTarget(lock);
@@ -142,8 +144,9 @@ export const updateLockpickSystem = (deltaSeconds) => {
   }
   updateFinalHold(lock, deltaSeconds);
   const smoothing = Math.min(1, deltaSeconds * 12);
-  lock.displayDialValue = normalize(
-    lock.displayDialValue + (lock.dialValue - lock.displayDialValue) * smoothing
-  );
+  let displayDelta = lock.dialValue - lock.displayDialValue;
+  if (displayDelta > 5) displayDelta -= 10;
+  if (displayDelta < -5) displayDelta += 10;
+  lock.displayDialValue = normalize(lock.displayDialValue + displayDelta * smoothing);
   if (lock.feedback && lock.feedback.expiresAt <= performance.now()) lock.feedback = null;
 };
