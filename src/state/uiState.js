@@ -17,6 +17,7 @@ export const uiState = Object.seal({
   hitboxes: Object.seal({
     inventorySlots: [],
     journalTabs: [],
+    journalStatus: [],
     containerSlots: [],
     containerCloseButton: null,
     gameOverButton: null,

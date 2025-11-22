@@ -1,5 +1,12 @@
 import { gameState } from '../state/gameState.js';
 
+const STATUS_OPTIONS = Object.freeze([
+  { key: 'victim', label: 'Victim', color: '#8c5bff' },
+  { key: 'suspect', label: 'Suspect', color: '#ffd65c' },
+  { key: 'cleared', label: 'Innocent', color: '#5fbf8f' },
+  { key: 'killer', label: 'Killer', color: '#ff6666' }
+]);
+
 const toggleJournal = () => { gameState.ui.showJournal = !gameState.ui.showJournal; };
 
 const setActiveTab = (tabId) => {
@@ -12,8 +19,21 @@ export const handleJournalToggle = (key) => {
   if (key === 'j') toggleJournal();
 };
 
+const tryHandleStatusClick = (screenX, screenY) => {
+  const hits = gameState.ui.hitboxes.journalStatus;
+  const statusHit = hits.find((entry) => (
+    screenX >= entry.x && screenX <= entry.x2 && screenY >= entry.y && screenY <= entry.y2
+  ));
+  if (!statusHit) return false;
+  const journalEntry = gameState.journal.byId[statusHit.roleId];
+  if (!journalEntry) return false;
+  journalEntry.status = statusHit.status;
+  return true;
+};
+
 export const handleJournalClick = (screenX, screenY) => {
   if (!gameState.ui.showJournal) return false;
+  if (tryHandleStatusClick(screenX, screenY)) return true;
   const tabs = gameState.ui.hitboxes.journalTabs;
   const hit = tabs.find((tab) => (
     screenX >= tab.x &&
@@ -58,17 +78,9 @@ const drawTitle = (ctx, panel) => {
   ctx.restore();
 };
 
-const statusColor = (entry) => {
-  if (entry.status === 'victim') return '#3b5d9c';
-  if (entry.status === 'suspect') return '#d6a83b';
-  if (entry.status === 'killer') return '#d94f4f';
-  if (entry.status === 'cleared') return '#5fbf8f';
-  return '#7b84a2';
-};
-
 const tabFill = (entry, isActive) => {
   const status = entry.status;
-  if (status === 'victim') return isActive ? '#fdfdfd' : '#f4f4f4';
+  if (status === 'victim') return isActive ? '#4f2b7f' : '#382056';
   if (status === 'suspect') return isActive ? '#6b4c12' : '#4b3810';
   if (status === 'killer') return isActive ? '#670b17' : '#470912';
   if (status === 'cleared') return isActive ? '#1f4a32' : '#123125';
@@ -76,7 +88,7 @@ const tabFill = (entry, isActive) => {
 };
 
 const tabShadow = (entry) => {
-  if (entry.status === 'victim') return '0 2px 8px rgba(255, 255, 255, 0.45)';
+  if (entry.status === 'victim') return '0 2px 8px rgba(182, 140, 255, 0.35)';
   if (entry.status === 'suspect') return '0 2px 8px rgba(255, 215, 92, 0.35)';
   if (entry.status === 'killer') return '0 2px 8px rgba(255, 80, 80, 0.35)';
   if (entry.status === 'cleared') return '0 2px 8px rgba(95, 191, 143, 0.35)';
@@ -85,7 +97,7 @@ const tabShadow = (entry) => {
 
 const tabStroke = (entry, isActive) => {
   const status = entry.status;
-  if (status === 'victim') return '#ffffff';
+  if (status === 'victim') return '#b68cff';
   if (status === 'suspect') return '#ffd65c';
   if (status === 'killer') return '#ff6666';
   if (status === 'cleared') return '#5fbf8f';
@@ -96,6 +108,7 @@ const drawTabs = (ctx, panel) => {
   const tabs = gameState.journal.entries;
   const hitboxes = gameState.ui.hitboxes.journalTabs;
   hitboxes.length = 0;
+  gameState.ui.hitboxes.journalStatus.length = 0;
   if (!tabs.length) return { x: panel.x + 24, y: panel.y + 96, width: panel.width - 48, height: panel.height - 120 };
   const tabHeight = 64;
   const tabWidth = panel.width / tabs.length;
@@ -128,7 +141,7 @@ const drawTabs = (ctx, panel) => {
   ctx.restore();
   return {
     x: panel.x + 32,
-    y: baseY + tabHeight + 24,
+    y: baseY + tabHeight + 16,
     width: panel.width - 64,
     height: panel.height - (tabHeight + 120)
   };
@@ -136,34 +149,36 @@ const drawTabs = (ctx, panel) => {
 
 const getJournalEntry = (tabId) => gameState.journal.byId[tabId];
 
+const drawStatusControls = (ctx, area, entry, topY) => {
+  const checkboxWidth = 120;
+  const checkboxHeight = 36;
+  const spacing = 12;
+  const totalWidth = STATUS_OPTIONS.length * checkboxWidth + (STATUS_OPTIONS.length - 1) * spacing;
+  const startX = area.x;
+  const hitboxes = gameState.ui.hitboxes.journalStatus;
+  STATUS_OPTIONS.forEach((option, index) => {
+    const x = startX + index * (checkboxWidth + spacing);
+    const y = topY;
+    const isActive = entry.status === option.key;
+    ctx.save();
+    ctx.fillStyle = isActive ? option.color : 'rgba(15, 20, 34, 0.6)';
+    ctx.strokeStyle = option.color;
+    ctx.lineWidth = 2;
+    ctx.fillRect(x, y, checkboxWidth, checkboxHeight);
+    ctx.strokeRect(x, y, checkboxWidth, checkboxHeight);
+    ctx.fillStyle = isActive ? '#0a0f1c' : option.color;
+    ctx.font = '18px "Courier New", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(option.label, x + checkboxWidth / 2, y + checkboxHeight / 2);
+    ctx.restore();
+    hitboxes.push({ roleId: entry.id, status: option.key, x, y, x2: x + checkboxWidth, y2: y + checkboxHeight });
+  });
+};
+
 const formatMethods = (role) => (
   role.methods.map((method) => `${method.name} (${method.category})`).join(', ')
 );
-
-const drawEvidenceList = (ctx, area, entry) => {
-  const evidence = entry.evidence;
-  const startY = area.y + 160;
-  ctx.save();
-  ctx.fillStyle = '#c5d8ff';
-  ctx.font = '22px "Courier New", monospace';
-  ctx.fillText('Evidence:', area.x, startY);
-  ctx.restore();
-  if (!evidence.length) {
-    ctx.save();
-    ctx.fillStyle = '#8effd6';
-    ctx.font = '20px "Courier New", monospace';
-    ctx.fillText('No evidence logged.', area.x, startY + 32);
-    ctx.restore();
-    return;
-  }
-  evidence.forEach((entryItem, index) => {
-    ctx.save();
-    ctx.fillStyle = '#8effd6';
-    ctx.font = '20px "Courier New", monospace';
-    ctx.fillText(`• ${entryItem.label}`, area.x, startY + 32 + index * 26);
-    ctx.restore();
-  });
-};
 
 const drawContent = (ctx, area, activeTab) => {
   const entry = getJournalEntry(activeTab);
@@ -178,19 +193,14 @@ const drawContent = (ctx, area, activeTab) => {
     ctx.restore();
     return;
   }
+  const statusRowY = area.y;
+  drawStatusControls(ctx, area, entry, statusRowY);
+  const lineStartY = statusRowY + 56;
   const nameLine = entry.knownName ? entry.personName : 'Unknown';
-  const statusLabel = (() => {
-    if (entry.status === 'victim') return entry.victimIdentified ? 'Victim Confirmed' : 'Victim';
-    if (entry.status === 'suspect') return entry.isKiller ? 'Suspect' : 'Suspect';
-    if (entry.status === 'killer') return entry.killerConfirmed ? 'Killer Confirmed' : 'Killer';
-    return 'Unknown';
-  })();
   const lines = [
     { label: 'Role', value: role.name },
     { label: 'Name', value: nameLine },
-    { label: 'Keycard', value: entry.hasKeycard ? 'Acquired' : 'Missing' },
-    { label: 'Status', value: statusLabel, isStatus: true },
-    { label: 'Method Access', value: formatMethods(role) }
+    { label: 'Keycard', value: entry.hasKeycard ? 'Acquired' : 'Missing' }
   ];
   const victim = gameState.case.victim;
   if (victim && victim.roleKey === activeTab && gameState.case.identified) {
@@ -200,18 +210,11 @@ const drawContent = (ctx, area, activeTab) => {
   }
   lines.forEach((line, index) => {
     const offset = index * 32;
-    ctx.fillText(`${line.label}:`, area.x, area.y + offset);
+    ctx.fillText(`${line.label}:`, area.x, lineStartY + offset);
     const labelWidth = ctx.measureText(`${line.label}: `).width;
-    if (line.isStatus) {
-      ctx.fillStyle = statusColor(entry);
-      ctx.fillText(line.value, area.x + labelWidth, area.y + offset);
-      ctx.fillStyle = '#8effd6';
-    } else {
-      ctx.fillText(line.value, area.x + labelWidth, area.y + offset);
-    }
+    ctx.fillText(line.value, area.x + labelWidth, lineStartY + offset);
   });
   ctx.restore();
-  drawEvidenceList(ctx, area, entry);
 };
 
 export const renderJournal = (ctx) => {
