@@ -11,6 +11,7 @@ import { handleLockpickClick, handleLockpickPointerDown, handleLockpickPointerUp
 import { handleAccusationClick } from './accusation.js';
 import { applyFastLockpickToLocks } from '../lockpick/lockpickSystem.js';
 import { handleUpgradeButtonClick, handleUpgradesClick } from './upgrades.js';
+import { handleWeaponTestingClick } from './weaponTesting.js';
 import { OverlayId, openOverlay, closeOverlay, toggleOverlay, isOverlayActive } from '../state/overlayManager.js';
 
 const hitboxes = () => gameState.ui.hitboxes;
@@ -181,6 +182,7 @@ const handleCanvasClick = (canvas, event) => {
   if (handleUpgradesClick(screenX, screenY)) return;
   if (handleUpgradeButtonClick(screenX, screenY)) return;
   if (handleAccusationClick(screenX, screenY)) return;
+  if (handleWeaponTestingClick(screenX, screenY)) return;
   if (tryHandleInteractionClick(worldX, worldY)) return;
   if (journalUi.handleJournalClick && journalUi.handleJournalClick(screenX, screenY)) return;
   if (handleVendingClick(screenX, screenY)) return;

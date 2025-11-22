@@ -48,7 +48,8 @@ export const gameState = Object.seal({
     timeWindow: '???',
     identified: false,
     methodCategory: '???',
-    methodExact: null
+    methodExact: null,
+    weaponTestResults: {}
   },
   body: {
     cellX: null,
@@ -64,6 +65,12 @@ export const gameState = Object.seal({
     x: null,
     y: null,
     promptActive: false
+  },
+  testingStation: {
+    cellX: null,
+    cellY: null,
+    x: null,
+    y: null
   },
   props: generateRoomProps(),
   interactions: {

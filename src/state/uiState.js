@@ -48,5 +48,9 @@ export const uiState = Object.seal({
     sourcePropId: null,
     sourceItemId: null,
     previousInventoryVisible: false
+  }),
+  weaponTesting: Object.seal({
+    testedWeapons: new Set(),
+    buttons: []
   })
 });

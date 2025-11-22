@@ -13,6 +13,7 @@ import { renderAccusation } from '../ui/accusation.js';
 import { renderAccuseConsole } from './accuseConsole.js';
 import { renderLockpick } from '../ui/lockpick.js';
 import { renderUpgrades } from '../ui/upgrades.js';
+import { renderWeaponTesting } from '../ui/weaponTesting.js';
 import { cellToWorldCenter } from '../state/gridState.js';
 const { WALL } = CELL_TYPES;
 
@@ -173,6 +174,21 @@ const drawScanner = (ctx) => {
   ctx.restore();
 };
 
+const drawTestingStation = (ctx) => {
+  const station = gameState.testingStation;
+  if (station.x == null) return;
+  const size = cellSize() * 0.8;
+  ctx.save();
+  ctx.fillStyle = '#4a9eff';
+  ctx.fillRect(station.x - size / 2, station.y - size / 2, size, size);
+  ctx.fillStyle = '#0d1b3d';
+  ctx.font = '14px "Courier New", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('TEST', station.x, station.y);
+  ctx.restore();
+};
+
 const drawScannerPrompt = (ctx) => {
   if (!gameState.scanner.promptActive) return;
   const scanner = gameState.scanner;
@@ -293,6 +309,7 @@ export const renderFrame = (ctx) => {
   renderVillain(ctx);
   drawBody(ctx);
   drawScanner(ctx);
+  drawTestingStation(ctx);
   drawProps(ctx);
   drawTaserBursts(ctx);
   drawDoorPanels(ctx);
@@ -312,6 +329,7 @@ export const renderFrame = (ctx) => {
   renderLockpick(ctx);
   renderUpgrades(ctx);
   renderAccusation(ctx);
+  renderWeaponTesting(ctx);
   renderGameOver(ctx);
   if (gameState.testingModeEnabled) {
     ctx.save();

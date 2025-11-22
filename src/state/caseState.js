@@ -3,6 +3,7 @@ import { cellToWorldCenter, worldPointToCell, markCell, WORLD_SOLID } from './gr
 import { markVictimRole, markKillerRole, markVictimIdentified, markInnocenceEvidence, markWeaponCategory } from './journalState.js';
 import { EVIDENCE_TYPES } from '../evidence/evidenceHandlers.js';
 import { seedComputerLocks } from '../hacking/hackingState.js';
+import { initializeTestingStation, generateWeaponTestResults } from './weaponTestingState.js';
 
 const roleKeys = Object.keys(gameState.config.roles);
 
@@ -58,8 +59,14 @@ const spawnScanner = () => {
 export const applyCaseObstacles = () => {
   const cellX = gameState.scanner.cellX;
   const cellY = gameState.scanner.cellY;
-  if (cellX == null || cellY == null) return;
-  markCell(cellX, cellY, WORLD_SOLID);
+  if (cellX != null && cellY != null) {
+    markCell(cellX, cellY, WORLD_SOLID);
+  }
+  const stationX = gameState.testingStation.cellX;
+  const stationY = gameState.testingStation.cellY;
+  if (stationX != null && stationY != null) {
+    markCell(stationX, stationY, WORLD_SOLID);
+  }
   gameState.props.forEach((prop) => {
     if (prop.cellX == null) return;
     markCell(prop.cellX, prop.cellY, WORLD_SOLID);
@@ -225,5 +232,7 @@ export const initializeCase = () => {
   assignLockerWeaponCategories(victimRole, killerRole, motiveCandidates, remainingInnocents);
   spawnBody(victimRole);
   spawnScanner();
+  initializeTestingStation();
+  gameState.case.weaponTestResults = generateWeaponTestResults();
   seedComputerLocks();
 };

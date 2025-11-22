@@ -43,6 +43,21 @@ const makeScannerZone = () => {
   };
 };
 
+const makeTestingStationZone = () => {
+  const size = gameState.grid.cellSize;
+  return {
+    id: 'testing_station',
+    x: gameState.testingStation.x - size / 2,
+    y: gameState.testingStation.y - size / 2,
+    width: size,
+    height: size,
+    action: () => {
+      closeOpenMenus();
+      openOverlay(OverlayId.WEAPON_TESTING);
+    }
+  };
+};
+
 const makeLockdownZone = () => {
   const aiCore = gameState.map.rooms.find((room) => room.id === 'ai_core');
   if (!aiCore) return null;
@@ -199,6 +214,12 @@ export const updateInteractions = () => {
     if (distance <= scannerRange) {
       gameState.scanner.promptActive = true;
       zones.push(makeScannerZone());
+    }
+  }
+  if (gameState.testingStation.x != null) {
+    const distance = distanceBetween(gameState.player, gameState.testingStation);
+    if (distance <= scannerRange) {
+      zones.push(makeTestingStationZone());
     }
   }
   const lockdownZone = makeLockdownZone();
