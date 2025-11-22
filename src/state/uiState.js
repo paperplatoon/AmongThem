@@ -3,7 +3,6 @@ import { config } from './config.js';
 const roleOrder = Object.keys(config.roles);
 
 export const uiState = Object.seal({
-  showMinimap: false,
   showInventory: false,
   showJournal: false,
   showGameOver: false,
@@ -13,6 +12,7 @@ export const uiState = Object.seal({
   openLockpickId: null,
   openAccusation: false,
   vendingMessage: null,
+  activeOverlay: null,
   journal: Object.seal({
     activeTab: roleOrder[0] ?? null
   }),

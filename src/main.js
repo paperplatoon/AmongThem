@@ -17,6 +17,7 @@ import { tryFireTaser } from './combat/taserSystem.js';
 import { handleHackingKeyInput, isHackingActive, updateHackingSystem, applyEfficientHackToLocks } from './hacking/hackingState.js';
 import { updateLockpickSystem, applyFastLockpickToLocks } from './lockpick/lockpickSystem.js';
 import { setTestingModeEnabled, applyTestingModeEffects } from './state/testingMode.js';
+import { closeOverlay, OverlayId } from './state/overlayManager.js';
 
 const createCanvas = () => {
   const canvas = document.createElement('canvas');
@@ -71,6 +72,10 @@ const start = () => {
     if (isHackingActive()) return;
     if (gameState.ui.inventorySwap.active) {
       if (key === 'i') handleInventoryToggle(key);
+      return;
+    }
+    if (key === 'Escape') {
+      closeOverlay();
       return;
     }
     handleMinimapToggle(key);

@@ -133,8 +133,7 @@ const closeOpenMenus = () => {
   gameState.lockpick.leftHeld = false;
   gameState.lockpick.rightHeld = false;
   closeVendingMenu();
-  gameState.ui.showInventory = false;
-  gameState.ui.showJournal = false;
+  // overlay manager will be responsible for closing overlays.
 };
 
 const startLockpickSession = (prop) => {

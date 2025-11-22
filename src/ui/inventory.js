@@ -11,6 +11,7 @@ import { handleLockpickClick, handleLockpickPointerDown, handleLockpickPointerUp
 import { handleAccusationClick } from './accusation.js';
 import { applyFastLockpickToLocks } from '../lockpick/lockpickSystem.js';
 import { handleUpgradeButtonClick, handleUpgradesClick } from './upgrades.js';
+import { OverlayId, openOverlay, closeOverlay, toggleOverlay, isOverlayActive } from '../state/overlayManager.js';
 
 const hitboxes = () => gameState.ui.hitboxes;
 const swapState = () => gameState.ui.inventorySwap;
@@ -131,7 +132,7 @@ const applyItemEffect = (entry) => {
 };
 
 const handleInventorySelection = (screenX, screenY) => {
-  if (!gameState.ui.showInventory && !isInventorySwapActive()) return false;
+  if (!isOverlayActive(OverlayId.INVENTORY) && !isInventorySwapActive()) return false;
   const slots = gameState.ui.hitboxes.inventorySlots;
   const hit = slots.find((slot) => (
     screenX >= slot.x &&
@@ -205,12 +206,10 @@ export const registerInventoryInput = (canvas) => {
   window.addEventListener('mouseup', handlePointerUp);
 };
 
-const toggle = () => { gameState.ui.showInventory = !gameState.ui.showInventory; };
-
 export const handleInventoryToggle = (key) => {
   if (key !== 'i') return;
   if (isInventorySwapActive()) return;
-  toggle();
+  toggleOverlay(OverlayId.INVENTORY);
 };
 
 const drawBackground = (ctx) => {
@@ -319,7 +318,7 @@ const drawSwapPrompt = (ctx, panel) => {
 };
 
 export const renderInventory = (ctx) => {
-  if (!gameState.ui.showInventory && !isInventorySwapActive()) {
+  if (!isOverlayActive(OverlayId.INVENTORY) && !isInventorySwapActive()) {
     hitboxes().inventorySlots.length = 0;
     hitboxes().inventoryCancelButton = null;
     return;

@@ -1,4 +1,5 @@
 import { gameState } from '../state/gameState.js';
+import { OverlayId, toggleOverlay, isOverlayActive } from '../state/overlayManager.js';
 
 const STATUS_OPTIONS = Object.freeze([
   { key: 'victim', label: 'Victim', color: '#8c5bff' },
@@ -7,8 +8,6 @@ const STATUS_OPTIONS = Object.freeze([
   { key: 'killer', label: 'Killer', color: '#ff6666' }
 ]);
 
-const toggleJournal = () => { gameState.ui.showJournal = !gameState.ui.showJournal; };
-
 const setActiveTab = (tabId) => {
   const entry = gameState.journal.byId[tabId];
   if (!entry) return;
@@ -16,7 +15,7 @@ const setActiveTab = (tabId) => {
 };
 
 export const handleJournalToggle = (key) => {
-  if (key === 'j') toggleJournal();
+  if (key === 'j') toggleOverlay(OverlayId.JOURNAL);
 };
 
 const tryHandleStatusClick = (screenX, screenY) => {
@@ -32,7 +31,7 @@ const tryHandleStatusClick = (screenX, screenY) => {
 };
 
 export const handleJournalClick = (screenX, screenY) => {
-  if (!gameState.ui.showJournal) return false;
+  if (!isOverlayActive(OverlayId.JOURNAL)) return false;
   if (tryHandleStatusClick(screenX, screenY)) return true;
   const tabs = gameState.ui.hitboxes.journalTabs;
   const hit = tabs.find((tab) => (
@@ -218,7 +217,7 @@ const drawContent = (ctx, area, activeTab) => {
 };
 
 export const renderJournal = (ctx) => {
-  if (!gameState.ui.showJournal) {
+  if (!isOverlayActive(OverlayId.JOURNAL)) {
     gameState.ui.hitboxes.journalTabs.length = 0;
     return;
   }

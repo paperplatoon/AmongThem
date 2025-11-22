@@ -1,8 +1,7 @@
 import { gameState } from '../state/gameState.js';
+import { OverlayId, toggleOverlay, isOverlayActive } from '../state/overlayManager.js';
 
-const toggle = () => { gameState.ui.showMinimap = !gameState.ui.showMinimap; };
-
-export const handleMinimapToggle = (key) => { if (key === 'm') toggle(); };
+export const handleMinimapToggle = (key) => { if (key === 'm') toggleOverlay(OverlayId.MINIMAP); };
 
 const getScale = () => {
   const widthRatio = gameState.config.canvasWidth / gameState.config.worldWidth;
@@ -78,7 +77,7 @@ const drawVillain = (ctx) => {
 };
 
 export const renderMinimap = (ctx) => {
-  if (!gameState.ui.showMinimap) return;
+  if (!isOverlayActive(OverlayId.MINIMAP)) return;
   const scale = getScale();
   const offset = getOffset(scale);
   withCanvas(ctx, scale, offset, () => {
