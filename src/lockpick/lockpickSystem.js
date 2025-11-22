@@ -14,8 +14,9 @@ const normalize = (value) => {
 };
 
 const floorDigit = (value) => Math.floor(normalize(value));
+const requiredSteps = () => (gameState.player?.upgrades?.fastLockpick ? Math.min(3, combinationLength) : combinationLength);
 const currentTarget = (lock) => (
-  lock.stepIndex < combinationLength ? lock.combination[lock.stepIndex] : null
+  lock.stepIndex < requiredSteps() ? lock.combination[lock.stepIndex] : null
 );
 
 const resetAttempt = (lock, reason = null) => {
@@ -32,11 +33,12 @@ const resetAttempt = (lock, reason = null) => {
 
 const latchDigit = (lock) => {
   const index = lock.stepIndex;
-  if (index >= combinationLength) return;
+  const maxSteps = requiredSteps();
+  if (index >= maxSteps) return;
   const digit = lock.combination[index];
   lock.attemptDigits[index] = digit;
   if (lock.discoveredDigits[index] == null) lock.discoveredDigits[index] = digit;
-  if (index === combinationLength - 1) {
+  if (index === maxSteps - 1) {
     lock.state = 'final_hold';
     lock.confirmTimer = 0;
   } else {
@@ -97,7 +99,8 @@ const updateFinalHold = (lock, deltaSeconds) => {
     lock.confirmTimer = 0;
     return;
   }
-  const target = lock.combination[combinationLength - 1];
+  const steps = requiredSteps();
+  const target = lock.combination[Math.max(0, steps - 1)];
   if (floorDigit(lock.dialValue) !== target) {
     resetAttempt(lock, 'Overshoot');
     return;
@@ -129,6 +132,11 @@ export const updateLockpickSystem = (deltaSeconds) => {
   if (!lockId) return;
   const lock = getLockpickById(lockId);
   if (!lock || lock.isUnlocked) return;
+  const steps = requiredSteps();
+  if (lock.stepIndex >= steps) {
+    lock.stepIndex = steps;
+    if (lock.state !== 'final_hold') lock.state = 'final_hold';
+  }
   const result = updateDialValue(lock, deltaSeconds);
   const deltaMovement = result.delta;
   const previousDigit = result.previousDigit;
@@ -149,4 +157,18 @@ export const updateLockpickSystem = (deltaSeconds) => {
   if (displayDelta < -5) displayDelta += 10;
   lock.displayDialValue = normalize(lock.displayDialValue + displayDelta * smoothing);
   if (lock.feedback && lock.feedback.expiresAt <= performance.now()) lock.feedback = null;
+};
+
+export const applyFastLockpickToLocks = () => {
+  if (!gameState.player.upgrades?.fastLockpick) return;
+  const locks = gameState.lockpicks?.all || [];
+  locks.forEach((lock) => {
+    if (!lock || lock.isUnlocked) return;
+    const steps = requiredSteps();
+    if (lock.stepIndex >= steps) {
+      lock.stepIndex = steps;
+      lock.state = 'final_hold';
+      lock.confirmTimer = 0;
+    }
+  });
 };

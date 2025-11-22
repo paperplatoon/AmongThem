@@ -15,7 +15,7 @@ import { initializeCase, applyCaseObstacles } from './state/caseState.js';
 import { updateVillain } from './villain/villainSystem.js';
 import { tryFireTaser } from './combat/taserSystem.js';
 import { handleHackingKeyInput, isHackingActive, updateHackingSystem, applyEfficientHackToLocks } from './hacking/hackingState.js';
-import { updateLockpickSystem } from './lockpick/lockpickSystem.js';
+import { updateLockpickSystem, applyFastLockpickToLocks } from './lockpick/lockpickSystem.js';
 
 const createCanvas = () => {
   const canvas = document.createElement('canvas');
@@ -58,6 +58,8 @@ const start = () => {
     gameState.inventory.push({ id: 'test_remote_lockdown', type: 'remote_lockdown', label: 'Remote Lockdown', effect: { type: 'lockdown' } });
     gameState.player.upgrades.efficientHack = true;
     applyEfficientHackToLocks();
+    gameState.player.upgrades.fastLockpick = true;
+    applyFastLockpickToLocks();
   }
   const canvas = createCanvas();
   const ctx = canvas.getContext('2d');

@@ -1,6 +1,7 @@
 import { gameState } from '../state/gameState.js';
 import { createItemFromDefinition } from '../state/itemDefinitions.js';
 import { applyEfficientHackToLocks } from '../hacking/hackingState.js';
+import { applyFastLockpickToLocks } from '../lockpick/lockpickSystem.js';
 
 const purchaseTaser = () => {
   const taser = gameState.player.taser;
@@ -36,6 +37,15 @@ const purchaseEfficientHack = () => {
   return { success: true, item: { id: 'efficient_hack_upgrade', label: 'Efficient Hacking', type: 'upgrade' } };
 };
 
+const purchaseFastLockpick = () => {
+  const upgrades = gameState.player.upgrades;
+  if (!upgrades) return { success: false, reason: 'no_player' };
+  if (upgrades.fastLockpick) return { success: false, reason: 'already_owned' };
+  upgrades.fastLockpick = true;
+  applyFastLockpickToLocks();
+  return { success: true, item: { id: 'fast_lockpick_upgrade', label: 'Fast Lockpick', type: 'upgrade' } };
+};
+
 export const spendMoneyOnVending = (itemType, cost) => {
   const player = gameState.player;
   if (!player) return { success: false, reason: 'no_player' };
@@ -60,6 +70,12 @@ export const spendMoneyOnVending = (itemType, cost) => {
   }
   if (itemType === 'efficient_hack') {
     const result = purchaseEfficientHack();
+    if (!result.success) return result;
+    player.money -= cost;
+    return result;
+  }
+  if (itemType === 'fast_lockpick') {
+    const result = purchaseFastLockpick();
     if (!result.success) return result;
     player.money -= cost;
     return result;

@@ -63,6 +63,26 @@ const makeLockdownZone = () => {
   };
 };
 
+const makeAccuseZone = () => {
+  const bridge = gameState.map.rooms.find((room) => room.id === 'bridge');
+  if (!bridge) return null;
+  const center = { x: bridge.x + bridge.width / 2, y: bridge.y + bridge.height / 2 };
+  const size = gameState.grid.cellSize;
+  return {
+    id: 'accuse',
+    x: center.x - size / 2,
+    y: center.y - size / 2,
+    width: size,
+    height: size,
+    action: () => {
+      closeOpenMenus();
+      gameState.accusation.active = true;
+      gameState.accusation.result = 'selecting';
+      gameState.ui.openAccusation = true;
+    }
+  };
+};
+
 const makeBodyZone = () => {
   const size = gameState.grid.cellSize;
   return {
@@ -94,10 +114,23 @@ const hasKeycard = (lockId) => (
 
 const canAccessProp = (prop) => (!prop.requiresKey || hasKeycard(prop.lockId));
 
+const tryAutoUnlockLocker = (prop) => {
+  if (!prop?.lockpickId) return false;
+  if (!prop.lockId || hasKeycard(prop.lockId)) {
+    prop.lockpickUnlocked = true;
+    prop.promptText = 'CLICK TO SEARCH';
+    return true;
+  }
+  return false;
+};
+
 const closeOpenMenus = () => {
   gameState.ui.openContainerId = null;
   gameState.ui.openVendingId = null;
   gameState.ui.openLockpickId = null;
+  gameState.ui.openAccusation = false;
+  gameState.accusation.active = false;
+  gameState.accusation.result = 'idle';
   gameState.lockpick.activeId = null;
   gameState.lockpick.leftHeld = false;
   gameState.lockpick.rightHeld = false;
@@ -128,8 +161,10 @@ const makePropZone = (prop) => ({
       return;
     }
     if (prop.lockpickId && !prop.lockpickUnlocked) {
-      startLockpickSession(prop);
-      return;
+      if (!tryAutoUnlockLocker(prop)) {
+        startLockpickSession(prop);
+        return;
+      }
     }
     if (!canAccessProp(prop)) {
       prop.promptText = lockedPrompt;
@@ -173,6 +208,12 @@ export const updateInteractions = () => {
     const distance = distanceBetween(gameState.player, center);
     if (distance <= propRange) zones.push(lockdownZone);
   }
+  const accuseZone = makeAccuseZone();
+  if (accuseZone) {
+    const center = { x: accuseZone.x + accuseZone.width / 2, y: accuseZone.y + accuseZone.height / 2 };
+    const distance = distanceBetween(gameState.player, center);
+    if (distance <= propRange) zones.push(accuseZone);
+  }
   if (!gameState.body.collectedSample && gameState.body.x != null) {
     const distance = distanceBetween(gameState.player, gameState.body);
     if (distance <= propRange) zones.push(makeBodyZone());
@@ -185,15 +226,17 @@ export const updateInteractions = () => {
       prop.promptText = prop.isEmpty ? 'EMPTY' : 'CLICK TO SEARCH';
     }
     if (prop.lockpickId && !prop.lockpickUnlocked) {
-      prop.promptText = 'CLICK TO PICK LOCK';
+      prop.promptText = hasKeycard(prop.lockId) ? 'CLICK TO USE KEYCARD' : 'CLICK TO PICK LOCK';
     }
     if (prop.type === 'vending_machine') prop.promptText = 'CLICK TO BUY';
     const distance = distanceBetween(gameState.player, prop);
     if (distance > propRange) return;
     prop.promptActive = true;
     if (prop.lockpickId && !prop.lockpickUnlocked) {
-      zones.push(makePropZone(prop));
-      return;
+      if (!tryAutoUnlockLocker(prop)) {
+        zones.push(makePropZone(prop));
+        return;
+      }
     }
     if (!canAccessProp(prop)) {
       prop.promptText = lockedPrompt;

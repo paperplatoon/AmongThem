@@ -10,6 +10,7 @@ export const uiState = Object.seal({
   openContainerId: null,
   openVendingId: null,
   openLockpickId: null,
+  openAccusation: false,
   vendingMessage: null,
   journal: Object.seal({
     activeTab: roleOrder[0] ?? null
@@ -28,6 +29,10 @@ export const uiState = Object.seal({
       bypassButton: null,
       leftArrow: null,
       rightArrow: null
+    }),
+    accusation: Object.seal({
+      roleButtons: [],
+      closeButton: null
     }),
     hacking: Object.seal({
       enterButton: null,

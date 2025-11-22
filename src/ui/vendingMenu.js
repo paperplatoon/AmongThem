@@ -55,6 +55,14 @@ export const handleVendingClick = (screenX, screenY) => {
     gameState.ui.vendingMessage = 'Efficient hacking already owned.';
     return true;
   }
+  if (option.itemId === 'fast_lockpick' && gameState.player.upgrades?.fastLockpick) {
+    gameState.ui.vendingMessage = 'Fast lockpick already owned.';
+    return true;
+  }
+  if (option.itemId === 'efficient_hack' && gameState.player.upgrades?.efficientHack) {
+    gameState.ui.vendingMessage = 'Efficient hacking already owned.';
+    return true;
+  }
   const price = (() => {
     if (option.itemId === 'taser') {
       return gameState.testing ? gameState.config.taser.testCost : option.cost;
@@ -64,6 +72,12 @@ export const handleVendingClick = (screenX, screenY) => {
     }
     if (option.itemId === 'faster_hack') {
       return gameState.testing ? 20 : option.cost;
+    }
+    if (option.itemId === 'efficient_hack') {
+      return gameState.testing ? 0 : option.cost;
+    }
+    if (option.itemId === 'fast_lockpick') {
+      return gameState.testing ? 0 : option.cost;
     }
     if (option.itemId === 'efficient_hack') {
       return gameState.testing ? 0 : option.cost;
@@ -152,12 +166,14 @@ const drawOptions = (ctx, panel, prop) => {
     const owned = (option.itemId === 'taser' && gameState.player.taser?.hasTaser)
       || (option.itemId === 'keycard_locator' && gameState.player.upgrades?.keycardLocator)
       || (option.itemId === 'faster_hack' && gameState.player.upgrades?.hasFasterHack)
-      || (option.itemId === 'efficient_hack' && gameState.player.upgrades?.efficientHack);
+      || (option.itemId === 'efficient_hack' && gameState.player.upgrades?.efficientHack)
+      || (option.itemId === 'fast_lockpick' && gameState.player.upgrades?.fastLockpick);
     const price = (() => {
       if (option.itemId === 'taser') return gameState.testing ? gameState.config.taser.testCost : option.cost;
       if (option.itemId === 'keycard_locator') return gameState.testing ? 0 : option.cost;
       if (option.itemId === 'faster_hack') return gameState.testing ? 20 : option.cost;
       if (option.itemId === 'efficient_hack') return gameState.testing ? 0 : option.cost;
+      if (option.itemId === 'fast_lockpick') return gameState.testing ? 0 : option.cost;
       return option.cost;
     })();
     const affordable = gameState.player.money >= price;

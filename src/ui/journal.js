@@ -202,11 +202,11 @@ const drawContent = (ctx, area, activeTab) => {
     { label: 'Name', value: nameLine },
     { label: 'Keycard', value: entry.hasKeycard ? 'Acquired' : 'Missing' }
   ];
-  const victim = gameState.case.victim;
-  if (victim && victim.roleKey === activeTab && gameState.case.identified) {
-    lines.push({ label: 'Victim Identified', value: gameState.case.victimName });
-    lines.push({ label: 'Cause', value: gameState.case.methodCategory });
-    lines.push({ label: 'Window', value: gameState.case.timeWindow });
+  if (entry.id === gameState.case.victim?.roleKey && gameState.case.methodCategory && gameState.case.identified) {
+    lines.push({ label: 'Cause of Death', value: gameState.case.methodCategory });
+  }
+  if (entry.weaponCategory) {
+    lines.push({ label: 'Locker Evidence', value: entry.weaponCategory });
   }
   lines.forEach((line, index) => {
     const offset = index * 32;

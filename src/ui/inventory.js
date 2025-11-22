@@ -9,6 +9,8 @@ import { forceVillainEscape, resetVillainLockdown } from '../villain/villainSyst
 import { handleHackingClick } from './hacking.js';
 import { applyEfficientHackToLocks } from '../hacking/hackingState.js';
 import { handleLockpickClick, handleLockpickPointerDown, handleLockpickPointerUp } from './lockpick.js';
+import { handleAccusationClick } from './accusation.js';
+import { applyFastLockpickToLocks } from '../lockpick/lockpickSystem.js';
 
 const applyItemEffect = (entry) => {
   if (!entry.effect) return false;
@@ -46,6 +48,12 @@ const applyItemEffect = (entry) => {
     if (player.upgrades.efficientHack) return false;
     player.upgrades.efficientHack = true;
     applyEfficientHackToLocks();
+    return true;
+  }
+  if (entry.effect.type === 'fast_lockpick') {
+    if (player.upgrades.fastLockpick) return false;
+    player.upgrades.fastLockpick = true;
+    applyFastLockpickToLocks();
     return true;
   }
   return false;
@@ -86,6 +94,7 @@ const handleCanvasClick = (canvas, event) => {
   const { screenX, screenY, worldX, worldY } = getCanvasCoords(canvas, event);
   if (handleHackingClick(screenX, screenY)) return;
   if (handleLockpickClick(screenX, screenY)) return;
+  if (handleAccusationClick(screenX, screenY)) return;
   if (tryHandleInteractionClick(worldX, worldY)) return;
   if (journalUi.handleJournalClick && journalUi.handleJournalClick(screenX, screenY)) return;
   if (handleVendingClick(screenX, screenY)) return;

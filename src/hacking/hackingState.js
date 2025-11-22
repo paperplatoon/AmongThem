@@ -24,6 +24,7 @@ const defaultModifiers = () => Object.seal({
 });
 
 const hasEfficientHack = () => Boolean(gameState.player.upgrades?.efficientHack);
+const nowSeconds = () => (gameState.lastFrameTime || performance.now()) / 1000;
 
 const applyEfficientHackToLock = (lock) => {
   if (!lock || !hasEfficientHack()) return;
@@ -181,7 +182,7 @@ const unlockComputerLock = (lock) => {
   lock.scrambled = [...lock.letters];
   const prop = findPropById(lock.propId);
   if (prop) {
-    prop.computerUnlocked = true;
+    prop.computerLockId = null;
   }
 };
 

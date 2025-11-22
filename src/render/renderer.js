@@ -9,6 +9,8 @@ import { renderVendingMenu } from '../ui/vendingMenu.js';
 import { renderVillain } from './villainRenderer.js';
 import { renderGameOver } from '../ui/gameOver.js';
 import { renderHacking } from '../ui/hacking.js';
+import { renderAccusation } from '../ui/accusation.js';
+import { renderAccuseConsole } from './accuseConsole.js';
 import { renderLockpick } from '../ui/lockpick.js';
 import { cellToWorldCenter } from '../state/gridState.js';
 const { WALL } = CELL_TYPES;
@@ -295,6 +297,7 @@ export const renderFrame = (ctx) => {
   drawDoorPanels(ctx);
   drawDoorLabels(ctx);
   drawLockdownStation(ctx);
+  renderAccuseConsole(ctx);
   drawPlayer(ctx);
   drawScannerPrompt(ctx);
   ctx.restore();
@@ -306,6 +309,7 @@ export const renderFrame = (ctx) => {
   renderHud(ctx);
   renderHacking(ctx);
   renderLockpick(ctx);
+  renderAccusation(ctx);
   renderGameOver(ctx);
   if (gameState.testing) {
     ctx.save();

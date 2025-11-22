@@ -1,5 +1,5 @@
 import { gameState } from '../state/gameState.js';
-import { markKeycardKnown, markDeskDiscovered } from '../state/journalState.js';
+import { markKeycardKnown, markDeskDiscovered, addEvidenceToJournal, markWeaponCategory } from '../state/journalState.js';
 import { handleEvidenceItem } from '../evidence/evidenceHandlers.js';
 
 const hitboxes = () => gameState.ui.hitboxes;
@@ -24,11 +24,6 @@ const collectKeycardItem = (item) => {
   if (!item) return;
   gameState.player.keycards.add(item.lockerId);
   if (item.roleId) markKeycardKnown(item.roleId);
-};
-
-const collectEvidenceItem = (item) => {
-  if (!item) return;
-  markKillerConfirmed(item.roleId);
 };
 
 const collectCredits = (item) => {
@@ -62,13 +57,17 @@ export const handleContainerClick = (screenX, screenY) => {
   if (item.type === 'keycard') {
     collectKeycardItem(item);
   } else if (handleEvidenceItem(item)) {
-    // evidence handled internally
+    const targetRole = item.roleId ?? prop.roomId;
+    addEvidenceToJournal(targetRole, item);
+    if (item.type === 'weapon_category') {
+      markWeaponCategory(targetRole, item.label);
+    }
+    prop.contents.splice(hit.index, 1);
   } else if (item.type === 'credits') {
     collectCredits(item);
+    prop.contents.splice(hit.index, 1);
   } else {
     gameState.inventory.push(item);
-  }
-  if (!item.persistent) {
     prop.contents.splice(hit.index, 1);
   }
   if (!prop.contents.length) {

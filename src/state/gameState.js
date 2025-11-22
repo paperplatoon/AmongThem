@@ -73,5 +73,9 @@ export const gameState = Object.seal({
     activeId: null,
     leftHeld: false,
     rightHeld: false
+  }),
+  accusation: Object.seal({
+    active: false,
+    result: 'idle'
   })
 });

@@ -3,7 +3,8 @@ export const EVIDENCE_TYPES = Object.freeze({
   INCRIMINATING: 'incriminating_evidence',
   CLEAN_ALIBI: 'clean_alibi',
   INNOCENCE: 'innocence_evidence',
-  MOTIVE: 'motive_evidence'
+  MOTIVE: 'motive_evidence',
+  WEAPON_CATEGORY: 'weapon_category'
 });
 
 export const handleEvidenceItem = (item) => {

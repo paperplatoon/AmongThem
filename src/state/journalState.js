@@ -21,7 +21,8 @@ const buildEntry = (roleId) => {
     killerConfirmed: false,
     personName: randomCrewName(roleId),
     status: 'unknown',
-    hasInnocenceEvidence: false
+    hasInnocenceEvidence: false,
+    weaponCategory: null
   });
 };
 
@@ -105,4 +106,10 @@ export const markInnocenceEvidence = (roleId) => {
   const entry = byId[roleId];
   if (!entry) return;
   entry.hasInnocenceEvidence = true;
+};
+
+export const markWeaponCategory = (roleId, category) => {
+  const entry = byId[roleId];
+  if (!entry) return;
+  entry.weaponCategory = category;
 };

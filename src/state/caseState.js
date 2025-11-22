@@ -1,18 +1,21 @@
 import { gameState } from './gameState.js';
 import { cellToWorldCenter, worldPointToCell, markCell, WORLD_SOLID } from './gridState.js';
-import { markVictimRole, markKillerRole, markVictimIdentified, markInnocenceEvidence } from './journalState.js';
+import { markVictimRole, markKillerRole, markVictimIdentified, markInnocenceEvidence, markWeaponCategory } from './journalState.js';
 import { addIncriminatingEvidence } from './roomProps.js';
 import { EVIDENCE_TYPES } from '../evidence/evidenceHandlers.js';
 import { seedComputerLocks } from '../hacking/hackingState.js';
 
 const roleKeys = Object.keys(gameState.config.roles);
 
-const randomRoleKey = () => roleKeys[Math.floor(Math.random() * roleKeys.length)];
+const WEAPON_CATEGORIES = Object.freeze([
+  { key: 'poisoning', label: 'Poisoning', lockerLabel: 'Poison' },
+  { key: 'stabbing', label: 'Stabbing', lockerLabel: 'Stabbing weapon' },
+  { key: 'blunt', label: 'Blunt Impact', lockerLabel: 'Blunt weapon' },
+  { key: 'gun', label: 'Gunshot', lockerLabel: 'Gun' },
+  { key: 'strangulation', label: 'Strangulation', lockerLabel: 'Strangling weapon' }
+]);
 
-const randomMethod = (roleKey) => {
-  const methods = gameState.config.roles[roleKey].methods;
-  return methods[Math.floor(Math.random() * methods.length)];
-};
+const randomRoleKey = () => roleKeys[Math.floor(Math.random() * roleKeys.length)];
 
 const chooseVictimRole = () => randomRoleKey();
 
@@ -68,24 +71,25 @@ const seedVictim = () => {
   const roleKey = chooseVictimRole();
   const role = gameState.config.roles[roleKey];
   const entry = gameState.journal.byId[roleKey];
-  const method = randomMethod(roleKey);
+  const method = WEAPON_CATEGORIES[Math.floor(Math.random() * WEAPON_CATEGORIES.length)];
   const victimName = entry?.personName ?? role.names[0] ?? role.name;
   const timeWindow = randomTimeWindow();
   gameState.case.victim = {
     roleKey,
     roleName: role.name,
-    methodCategory: method.category,
-    methodName: method.name
+    methodCategory: method.key,
+    methodName: method.label
   };
   markVictimRole(roleKey);
-  gameState.case.methodCategory = '???';
+  gameState.case.methodCategory = method.label;
+  gameState.case.murderWeaponCategory = method.key;
   gameState.case.victimName = '???';
   gameState.case.victimOccupation = '???';
   gameState.case.timeWindow = '???';
   gameState.case.pending = Object.seal({
     victimName,
     victimOccupation: role.name,
-    methodCategory: method.category,
+    methodCategory: method.label,
     timeWindow
   });
   return roleKey;
@@ -119,6 +123,48 @@ const buildSuspectPools = (victimRole, killerRole) => {
   const remaining = [...pool];
   gameState.case.suspects = motiveCandidates;
   return { innocents, motiveCandidates, remainingInnocents: remaining };
+};
+
+const randomWeaponCategory = (excludeKey = null) => {
+  const pool = WEAPON_CATEGORIES.filter((cat) => cat.key !== excludeKey);
+  if (!pool.length) return WEAPON_CATEGORIES[0];
+  return pool[Math.floor(Math.random() * pool.length)];
+};
+
+const assignLockerWeaponCategories = (victimRole, killerRole, motiveCandidates, nonMotiveRoles) => {
+  const assignments = new Map();
+  const murderCategory = WEAPON_CATEGORIES.find((cat) => cat.key === gameState.case.murderWeaponCategory) || randomWeaponCategory();
+  assignments.set(killerRole, murderCategory);
+  const murderPartnerCount = Math.min(2, nonMotiveRoles.length);
+  const murderPartners = nonMotiveRoles.slice(0, murderPartnerCount);
+  murderPartners.forEach((roleId) => assignments.set(roleId, murderCategory));
+  motiveCandidates.forEach((roleId) => {
+    if (roleId === killerRole) return;
+    assignments.set(roleId, assignments.get(roleId) || randomWeaponCategory(murderCategory.key));
+  });
+  roleKeys.forEach((roleId) => {
+    if (roleId === victimRole) {
+      if (!assignments.has(roleId)) assignments.set(roleId, randomWeaponCategory());
+      return;
+    }
+    if (!assignments.has(roleId)) assignments.set(roleId, randomWeaponCategory());
+  });
+  gameState.props.forEach((prop) => {
+    if (prop.type !== 'locker' || !prop.roomId) return;
+    const category = assignments.get(prop.roomId);
+    if (!category) return;
+    prop.contents = prop.contents || [];
+    prop.contents = prop.contents.filter((item) => item.type !== 'weapon_category');
+    prop.contents.push({
+      id: `weapon_${prop.roomId}`,
+      type: 'weapon_category',
+      label: category.lockerLabel || category.label,
+      category: category.key,
+      persistent: false
+    });
+    prop.promptText = 'CLICK TO SEARCH';
+    prop.isEmpty = false;
+  });
 };
 
 const populateSuspectTerminals = (suspects, killerRole, motiveSuspects, innocenceSuspects) => {
@@ -186,7 +232,8 @@ export const initializeCase = () => {
   const { innocents, motiveCandidates, remainingInnocents } = buildSuspectPools(victimRole, killerRole);
   addInnocenceEvidenceToVictimDesk(victimRole, innocents);
   gameState.case.innocents = [...innocents, ...remainingInnocents];
-  populateSuspectTerminals(motiveCandidates, killerRole, motiveCandidates, remainingInnocents);
+  populateSuspectTerminals([...motiveCandidates, ...remainingInnocents], killerRole, motiveCandidates, remainingInnocents);
+  assignLockerWeaponCategories(victimRole, killerRole, motiveCandidates, remainingInnocents);
   spawnBody(victimRole);
   spawnScanner();
   seedComputerLocks();

@@ -5,7 +5,8 @@ export const ITEM_TYPES = Object.freeze({
   CREDITS: 'credits',
   DISABLE_POWER: 'disable_power',
   REMOTE_LOCKDOWN: 'remote_lockdown',
-  EFFICIENT_HACK: 'efficient_hack'
+  EFFICIENT_HACK: 'efficient_hack',
+  FAST_LOCKPICK: 'fast_lockpick'
 });
 
 export const ITEM_DEFINITIONS = Object.freeze({
@@ -36,6 +37,10 @@ export const ITEM_DEFINITIONS = Object.freeze({
   [ITEM_TYPES.EFFICIENT_HACK]: Object.freeze({
     label: 'Efficient Hacking',
     effect: { type: 'efficient_hack' }
+  }),
+  [ITEM_TYPES.FAST_LOCKPICK]: Object.freeze({
+    label: 'Fast Lockpick',
+    effect: { type: 'fast_lockpick' }
   })
 });
 
