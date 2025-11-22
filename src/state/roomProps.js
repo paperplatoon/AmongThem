@@ -24,15 +24,9 @@ const HALL_PROP_CONFIG = Object.freeze([
 const VENDING_OPTIONS = Object.freeze([
   Object.freeze({ itemId: 'energy_bar', label: 'Energy Bar', cost: 30 }),
   Object.freeze({ itemId: 'bandage', label: 'Bandage', cost: 50 }),
-  Object.freeze({ itemId: 'taser', label: 'Taser', cost: config.taser.cost, unique: true }),
-  Object.freeze({ itemId: 'keycard_locator', label: 'Keycard Locator', cost: 150, unique: true }),
-  Object.freeze({ itemId: 'faster_hack', label: 'Faster Hack', cost: 100, unique: false }),
-  Object.freeze({ itemId: 'efficient_hack', label: 'Efficient Hacking', cost: 200, unique: true }),
-  Object.freeze({ itemId: 'crowbar', label: 'Crowbar', cost: 120, unique: false }),
-  Object.freeze({ itemId: 'computer_virus', label: 'Computer Virus', cost: 180, unique: false }),
-  Object.freeze({ itemId: 'fast_lockpick', label: 'Fast Lockpick', cost: 200, unique: true }),
-  Object.freeze({ itemId: 'skeleton_key', label: 'Skeleton Key', cost: 500, unique: true, rare: true }),
-  Object.freeze({ itemId: 'master_virus', label: 'Master Virus', cost: 500, unique: true, rare: true })
+  Object.freeze({ itemId: 'taser', label: 'Taser', cost: 350, unique: true }),
+  Object.freeze({ itemId: 'crowbar', label: 'Crowbar', cost: 85, unique: false }),
+  Object.freeze({ itemId: 'computer_virus', label: 'Computer Virus', cost: 100, unique: false })
 ]);
 
 const INNER_CACHE_CONFIG = Object.freeze({
@@ -520,20 +514,6 @@ const assignKeycardsToProps = (props) => {
     prop.containsKeycard = true;
     prop.keycardRoleId = roleId;
   });
-};
-
-export const addIncriminatingEvidence = (props, killerRoleId) => {
-  if (!killerRoleId) return;
-  const locker = props.find((prop) => prop.lockId === `${killerRoleId}_locker`);
-  if (!locker) return;
-  locker.contents.push({
-    id: `evidence_${killerRoleId}`,
-    type: 'incriminating_evidence',
-    label: 'Incriminating Evidence',
-    roleId: killerRoleId
-  });
-  locker.promptText = 'CLICK TO SEARCH';
-  locker.isEmpty = false;
 };
 
 export const generateRoomProps = () => {

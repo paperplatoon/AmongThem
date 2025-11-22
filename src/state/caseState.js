@@ -1,7 +1,6 @@
 import { gameState } from './gameState.js';
 import { cellToWorldCenter, worldPointToCell, markCell, WORLD_SOLID } from './gridState.js';
 import { markVictimRole, markKillerRole, markVictimIdentified, markInnocenceEvidence, markWeaponCategory } from './journalState.js';
-import { addIncriminatingEvidence } from './roomProps.js';
 import { EVIDENCE_TYPES } from '../evidence/evidenceHandlers.js';
 import { seedComputerLocks } from '../hacking/hackingState.js';
 
@@ -101,8 +100,6 @@ const seedKiller = (victimRole) => {
   gameState.case.killer = Object.seal({
     roleKey: killerRole
   });
-  addIncriminatingEvidence(gameState.props, killerRole);
-  const keyProp = gameState.props.find((prop) => prop.keycardRoleId === killerRole);
   return killerRole;
 };
 
@@ -180,14 +177,6 @@ const populateSuspectTerminals = (suspects, killerRole, motiveSuspects, innocenc
         label: `Possible Motive: ${gameState.config.roles[roleId].name}`,
         roleId,
         persistent: true
-      });
-    }
-    if (roleId === killerRole) {
-      computer.contents.push({
-        id: `computer_evidence_${roleId}`,
-        type: EVIDENCE_TYPES.INCRIMINATING,
-        label: 'Incriminating Evidence',
-        roleId: killerRole
       });
     }
     if (innocenceSuspects.includes(roleId)) {

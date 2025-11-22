@@ -71,6 +71,7 @@ export const handleContainerClick = (screenX, screenY) => {
   if (prop.type === 'computer' && prop.roomId) markComputerDiscovered(prop.roomId);
   if (item.type === 'keycard') {
     collectKeycardItem(item);
+    prop.contents.splice(hit.index, 1);
   } else if (handleEvidenceItem(item)) {
     const targetRole = item.roleId ?? prop.roomId;
     addEvidenceToJournal(targetRole, item);

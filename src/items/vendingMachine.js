@@ -1,7 +1,5 @@
 import { gameState } from '../state/gameState.js';
 import { createItemFromDefinition } from '../state/itemDefinitions.js';
-import { applyEfficientHackToLocks } from '../hacking/hackingState.js';
-import { applyFastLockpickToLocks } from '../lockpick/lockpickSystem.js';
 
 const purchaseTaser = () => {
   const taser = gameState.player.taser;
@@ -68,42 +66,6 @@ export const spendMoneyOnVending = (itemType, cost) => {
   if (player.money < cost) return { success: false, reason: 'insufficient_funds' };
   if (itemType === 'taser') {
     const result = purchaseTaser();
-    if (!result.success) return result;
-    player.money -= cost;
-    return result;
-  }
-  if (itemType === 'keycard_locator') {
-    const result = purchaseKeycardLocator();
-    if (!result.success) return result;
-    player.money -= cost;
-    return result;
-  }
-  if (itemType === 'faster_hack') {
-    const result = purchaseFasterHack();
-    if (!result.success) return result;
-    player.money -= cost;
-    return result;
-  }
-  if (itemType === 'efficient_hack') {
-    const result = purchaseEfficientHack();
-    if (!result.success) return result;
-    player.money -= cost;
-    return result;
-  }
-  if (itemType === 'fast_lockpick') {
-    const result = purchaseFastLockpick();
-    if (!result.success) return result;
-    player.money -= cost;
-    return result;
-  }
-  if (itemType === 'skeleton_key') {
-    const result = purchaseSkeletonKey();
-    if (!result.success) return result;
-    player.money -= cost;
-    return result;
-  }
-  if (itemType === 'master_virus') {
-    const result = purchaseMasterVirus();
     if (!result.success) return result;
     player.money -= cost;
     return result;
