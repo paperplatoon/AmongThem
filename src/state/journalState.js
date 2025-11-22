@@ -49,7 +49,7 @@ export const markKeycardKnown = (roleId) => {
   setNameKnown(entry);
 };
 
-export const markDeskDiscovered = (roleId) => {
+export const markComputerDiscovered = (roleId) => {
   const entry = byId[roleId];
   if (!entry) return;
   setNameKnown(entry);

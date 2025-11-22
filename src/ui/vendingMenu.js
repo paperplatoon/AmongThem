@@ -63,6 +63,10 @@ export const handleVendingClick = (screenX, screenY) => {
     gameState.ui.vendingMessage = 'Skeleton key already owned.';
     return true;
   }
+  if (option.itemId === 'master_virus' && gameState.player.upgrades?.masterVirus) {
+    gameState.ui.vendingMessage = 'Master virus already uploaded.';
+    return true;
+  }
   const price = (() => {
     if (option.itemId === 'taser') {
       return gameState.testing ? gameState.config.taser.testCost : option.cost;
@@ -76,6 +80,7 @@ export const handleVendingClick = (screenX, screenY) => {
     if (option.itemId === 'efficient_hack') return gameState.testing ? 0 : option.cost;
     if (option.itemId === 'fast_lockpick') return gameState.testing ? 0 : option.cost;
     if (option.itemId === 'skeleton_key') return gameState.testing ? 0 : option.cost;
+    if (option.itemId === 'master_virus') return gameState.testing ? 0 : option.cost;
     return option.cost;
   })();
   const result = spendMoneyOnVending(option.itemId, price);
@@ -83,6 +88,8 @@ export const handleVendingClick = (screenX, screenY) => {
     gameState.ui.vendingMessage = `${option.label} purchased.`;
   } else if (result.reason === 'insufficient_funds') {
     gameState.ui.vendingMessage = 'Not enough credits.';
+  } else if (result.reason === 'inventory_full') {
+    gameState.ui.vendingMessage = 'Inventory full.';
   } else {
     gameState.ui.vendingMessage = 'Vending failed.';
   }
@@ -162,7 +169,8 @@ const drawOptions = (ctx, panel, prop) => {
       || (option.itemId === 'faster_hack' && gameState.player.upgrades?.hasFasterHack)
       || (option.itemId === 'efficient_hack' && gameState.player.upgrades?.efficientHack)
       || (option.itemId === 'fast_lockpick' && gameState.player.upgrades?.fastLockpick)
-      || (option.itemId === 'skeleton_key' && gameState.player.upgrades?.skeletonKey);
+      || (option.itemId === 'skeleton_key' && gameState.player.upgrades?.skeletonKey)
+      || (option.itemId === 'master_virus' && gameState.player.upgrades?.masterVirus);
     const price = (() => {
       if (option.itemId === 'taser') return gameState.testing ? gameState.config.taser.testCost : option.cost;
       if (option.itemId === 'keycard_locator') return gameState.testing ? 0 : option.cost;
@@ -170,6 +178,7 @@ const drawOptions = (ctx, panel, prop) => {
       if (option.itemId === 'efficient_hack') return gameState.testing ? 0 : option.cost;
       if (option.itemId === 'fast_lockpick') return gameState.testing ? 0 : option.cost;
       if (option.itemId === 'skeleton_key') return gameState.testing ? 0 : option.cost;
+      if (option.itemId === 'master_virus') return gameState.testing ? 0 : option.cost;
       return option.cost;
     })();
     const affordable = gameState.player.money >= price;

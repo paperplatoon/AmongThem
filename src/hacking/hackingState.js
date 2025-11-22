@@ -87,10 +87,10 @@ const shufflePasswords = (words) => {
 
 const listRoleOrder = () => Object.keys(gameState.config.roles);
 
-const indexDesksByRoom = () => {
+const indexComputersByRoom = () => {
   const map = new Map();
   gameState.props.forEach((prop) => {
-    if (prop.type !== 'desk') return;
+    if (prop.type !== 'computer') return;
     if (!prop.roomId) return;
     map.set(prop.roomId, prop);
   });
@@ -116,12 +116,12 @@ const samplePasswords = (count) => {
 export const seedComputerLocks = () => {
   exitHackingSession();
   clearExistingLocks();
-  const desks = indexDesksByRoom();
-  const roles = listRoleOrder().filter((roleId) => desks.has(roleId));
+  const computers = indexComputersByRoom();
+  const roles = listRoleOrder().filter((roleId) => computers.has(roleId));
   if (!roles.length) return;
   const passwords = samplePasswords(roles.length);
   roles.forEach((roleId, index) => {
-    const prop = desks.get(roleId);
+    const prop = computers.get(roleId);
     if (!prop) return;
     const password = passwords[index];
     if (!password) return;
@@ -131,6 +131,9 @@ export const seedComputerLocks = () => {
     gameState.computerLocks.byPropId[prop.id] = lock;
     prop.computerLockId = lock.id;
   });
+  if (gameState.player.upgrades?.masterVirus) {
+    applyMasterVirusToLocks();
+  }
 };
 
 export const getComputerLockByPropId = (propId) => (
@@ -141,6 +144,7 @@ export const listComputerLocks = () => gameState.computerLocks.locks;
 
 export const isPropComputerLocked = (prop) => {
   if (!prop) return false;
+  if (gameState.player.upgrades?.masterVirus) return false;
   const lock = getComputerLockByPropId(prop.id);
   if (!lock) return false;
   return !isLockHacked(lock);
@@ -151,10 +155,19 @@ export const applyEfficientHackToLocks = () => {
   listComputerLocks().forEach((lock) => applyEfficientHackToLock(lock));
 };
 
+export const applyMasterVirusToLocks = () => {
+  if (!gameState.player.upgrades?.masterVirus) return;
+  listComputerLocks().forEach((lock) => unlockComputerLock(lock));
+};
+
 export const startHackingForProp = (propId) => {
   const lock = getComputerLockByPropId(propId);
   if (!lock) return false;
   if (isLockHacked(lock)) return false;
+  if (gameState.player.upgrades?.masterVirus) {
+    applyMasterVirusToLocks();
+    return false;
+  }
   setHackingSession({
     active: true,
     lockId: lock.id,

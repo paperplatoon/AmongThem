@@ -169,13 +169,13 @@ const assignLockerWeaponCategories = (victimRole, killerRole, motiveCandidates, 
 
 const populateSuspectTerminals = (suspects, killerRole, motiveSuspects, innocenceSuspects) => {
   suspects.forEach((roleId) => {
-    const desk = gameState.props.find((prop) => prop.roomId === roleId && prop.type === 'desk');
-    if (!desk) return;
-    desk.contents = desk.contents || [];
-    desk.contents = desk.contents.filter((item) => item.type !== EVIDENCE_TYPES.INCRIMINATING && item.type !== EVIDENCE_TYPES.CLEAN_ALIBI);
+    const computer = gameState.props.find((prop) => prop.roomId === roleId && prop.type === 'computer');
+    if (!computer) return;
+    computer.contents = computer.contents || [];
+    computer.contents = computer.contents.filter((item) => item.type !== EVIDENCE_TYPES.INCRIMINATING && item.type !== EVIDENCE_TYPES.CLEAN_ALIBI);
     if (motiveSuspects.includes(roleId)) {
-      desk.contents.push({
-        id: `desk_motive_${roleId}`,
+      computer.contents.push({
+        id: `computer_motive_${roleId}`,
         type: EVIDENCE_TYPES.MOTIVE,
         label: `Possible Motive: ${gameState.config.roles[roleId].name}`,
         roleId,
@@ -183,16 +183,16 @@ const populateSuspectTerminals = (suspects, killerRole, motiveSuspects, innocenc
       });
     }
     if (roleId === killerRole) {
-      desk.contents.push({
-        id: `desk_evidence_${roleId}`,
+      computer.contents.push({
+        id: `computer_evidence_${roleId}`,
         type: EVIDENCE_TYPES.INCRIMINATING,
         label: 'Incriminating Evidence',
         roleId: killerRole
       });
     }
     if (innocenceSuspects.includes(roleId)) {
-      desk.contents.push({
-        id: `desk_innocence_${roleId}`,
+      computer.contents.push({
+        id: `computer_innocence_${roleId}`,
         type: EVIDENCE_TYPES.INNOCENCE,
         label: `Terminal Log: ${gameState.config.roles[roleId].name} accounted for`,
         roleId,
@@ -200,20 +200,20 @@ const populateSuspectTerminals = (suspects, killerRole, motiveSuspects, innocenc
       });
       markInnocenceEvidence(roleId);
     }
-    desk.promptText = 'CLICK TO SEARCH';
-    desk.isEmpty = false;
+    computer.promptText = 'CLICK TO SEARCH';
+    computer.isEmpty = false;
   });
 };
 
-const addInnocenceEvidenceToVictimDesk = (victimRole, innocents) => {
-  const desk = gameState.props.find((prop) => prop.roomId === victimRole && prop.type === 'desk');
-  if (!desk) return;
+const addInnocenceEvidenceToVictimComputer = (victimRole, innocents) => {
+  const computer = gameState.props.find((prop) => prop.roomId === victimRole && prop.type === 'computer');
+  if (!computer) return;
 
-  desk.contents = desk.contents || [];
-  desk.contents = desk.contents.filter((item) => item.type !== EVIDENCE_TYPES.INNOCENCE);
+  computer.contents = computer.contents || [];
+  computer.contents = computer.contents.filter((item) => item.type !== EVIDENCE_TYPES.INNOCENCE);
   innocents.forEach((roleId) => {
     const roleName = gameState.config.roles[roleId].name;
-    desk.contents.push({
+    computer.contents.push({
       id: `innocence_${victimRole}_${roleId}`,
       type: EVIDENCE_TYPES.INNOCENCE,
       label: `Terminal Log: ${roleName} accounted for`,
@@ -222,15 +222,15 @@ const addInnocenceEvidenceToVictimDesk = (victimRole, innocents) => {
     });
     markInnocenceEvidence(roleId);
   });
-  desk.promptText = 'CLICK TO REVIEW';
-  desk.isEmpty = false;
+  computer.promptText = 'CLICK TO REVIEW';
+  computer.isEmpty = false;
 };
 
 export const initializeCase = () => {
   const victimRole = seedVictim();
   const killerRole = seedKiller(victimRole);
   const { innocents, motiveCandidates, remainingInnocents } = buildSuspectPools(victimRole, killerRole);
-  addInnocenceEvidenceToVictimDesk(victimRole, innocents);
+  addInnocenceEvidenceToVictimComputer(victimRole, innocents);
   gameState.case.innocents = [...innocents, ...remainingInnocents];
   populateSuspectTerminals([...motiveCandidates, ...remainingInnocents], killerRole, motiveCandidates, remainingInnocents);
   assignLockerWeaponCategories(victimRole, killerRole, motiveCandidates, remainingInnocents);

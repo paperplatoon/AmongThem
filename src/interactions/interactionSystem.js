@@ -1,7 +1,7 @@
 import { gameState } from '../state/gameState.js';
 import { distanceBetween } from '../utils/geometry.js';
 import { syncOxygenState } from '../movement/oxygenSystem.js';
-import { markVictimIdentified, markDeskDiscovered } from '../state/journalState.js';
+import { markVictimIdentified, markComputerDiscovered } from '../state/journalState.js';
 import { collectBodySample } from '../body/bodyInteraction.js';
 import { resetVillainLockdown } from '../villain/villainSystem.js';
 import { cellToWorldCenter } from '../state/gridState.js';
@@ -12,13 +12,10 @@ const scannerRange = 96;
 const propRange = 88;
 const lockedPrompt = 'LOCKED - KEYCARD REQUIRED';
 
-const hasMedicalSample = () => (
-  gameState.inventory.some((item) => item.type === 'medical_sample')
-);
+const hasMedicalSample = () => Boolean(gameState.body.playerHasSample);
 
 const removeMedicalSample = () => {
-  const index = gameState.inventory.findIndex((item) => item.type === 'medical_sample');
-  if (index >= 0) gameState.inventory.splice(index, 1);
+  gameState.body.playerHasSample = false;
 };
 
 const applyScannerResults = () => {
@@ -156,7 +153,7 @@ const makePropZone = (prop) => ({
   width: gameState.grid.cellSize,
   height: gameState.grid.cellSize,
   action: () => {
-    if (prop.type === 'desk' && isPropComputerLocked(prop)) {
+    if (prop.type === 'computer' && isPropComputerLocked(prop)) {
       closeOpenMenus();
       startHackingForProp(prop.id);
       return;
@@ -178,7 +175,7 @@ const makePropZone = (prop) => ({
       gameState.ui.vendingMessage = null;
       return;
     }
-    if (prop.type === 'desk' && prop.roomId) markDeskDiscovered(prop.roomId);
+    if (prop.type === 'computer' && prop.roomId) markComputerDiscovered(prop.roomId);
     if (!prop.contents.length) {
       prop.isEmpty = true;
       prop.promptText = 'EMPTY';
@@ -221,7 +218,7 @@ export const updateInteractions = () => {
   }
   gameState.props.forEach((prop) => {
     prop.promptActive = false;
-    if (prop.type === 'desk' && isPropComputerLocked(prop)) {
+    if (prop.type === 'computer' && isPropComputerLocked(prop)) {
       prop.promptText = 'COMPUTER LOCKED - CLICK TO HACK';
     } else {
       prop.promptText = prop.isEmpty ? 'EMPTY' : 'CLICK TO SEARCH';

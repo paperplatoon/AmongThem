@@ -20,6 +20,7 @@ export const config = Object.freeze({
   cellSize: 32,
   gridWidth: Math.ceil(8064 / 32),
   gridHeight: Math.ceil(5472 / 32),
+  inventorySlots: 8,
   itemPickupRange: 160,
   itemRadius: 24,
   corridorColor: '#0f1636',

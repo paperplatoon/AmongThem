@@ -1,6 +1,6 @@
 import { gameState } from '../state/gameState.js';
 import { createItemFromDefinition } from '../state/itemDefinitions.js';
-import { applyEfficientHackToLocks } from '../hacking/hackingState.js';
+import { applyEfficientHackToLocks, applyMasterVirusToLocks } from '../hacking/hackingState.js';
 import { applyFastLockpickToLocks } from '../lockpick/lockpickSystem.js';
 
 const purchaseTaser = () => {
@@ -54,6 +54,15 @@ const purchaseSkeletonKey = () => {
   return { success: true, item: { id: 'skeleton_key_upgrade', label: 'Skeleton Key', type: 'upgrade' } };
 };
 
+const purchaseMasterVirus = () => {
+  const upgrades = gameState.player.upgrades;
+  if (!upgrades) return { success: false, reason: 'no_player' };
+  if (upgrades.masterVirus) return { success: false, reason: 'already_owned' };
+  upgrades.masterVirus = true;
+  applyMasterVirusToLocks();
+  return { success: true, item: { id: 'master_virus_upgrade', label: 'Master Virus', type: 'upgrade' } };
+};
+
 export const spendMoneyOnVending = (itemType, cost) => {
   const player = gameState.player;
   if (!player) return { success: false, reason: 'no_player' };
@@ -94,8 +103,17 @@ export const spendMoneyOnVending = (itemType, cost) => {
     player.money -= cost;
     return result;
   }
+  if (itemType === 'master_virus') {
+    const result = purchaseMasterVirus();
+    if (!result.success) return result;
+    player.money -= cost;
+    return result;
+  }
   const item = createItemFromDefinition(`vending_${itemType}`, itemType);
   if (!item) return { success: false, reason: 'no_item_definition' };
+  if (gameState.inventory.length >= gameState.config.inventorySlots) {
+    return { success: false, reason: 'inventory_full' };
+  }
   player.money -= cost;
   gameState.inventory.push(item);
   return { success: true, item };

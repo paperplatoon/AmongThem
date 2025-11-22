@@ -53,7 +53,8 @@ const upgradeList = () => {
     { label: 'Faster Hack', active: upgrades.hasFasterHack },
     { label: 'Efficient Hacking', active: upgrades.efficientHack },
     { label: 'Fast Lockpick', active: upgrades.fastLockpick },
-    { label: 'Skeleton Key', active: upgrades.skeletonKey }
+    { label: 'Skeleton Key', active: upgrades.skeletonKey },
+    { label: 'Master Virus', active: upgrades.masterVirus }
   ];
 };
 

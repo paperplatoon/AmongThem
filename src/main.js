@@ -14,7 +14,7 @@ import { updateInteractions } from './interactions/interactionSystem.js';
 import { initializeCase, applyCaseObstacles } from './state/caseState.js';
 import { updateVillain } from './villain/villainSystem.js';
 import { tryFireTaser } from './combat/taserSystem.js';
-import { handleHackingKeyInput, isHackingActive, updateHackingSystem, applyEfficientHackToLocks } from './hacking/hackingState.js';
+import { handleHackingKeyInput, isHackingActive, updateHackingSystem, applyEfficientHackToLocks, applyMasterVirusToLocks } from './hacking/hackingState.js';
 import { updateLockpickSystem, applyFastLockpickToLocks } from './lockpick/lockpickSystem.js';
 
 const createCanvas = () => {
@@ -50,18 +50,17 @@ const stepFrame = (ctx, time) => {
 
 const start = () => {
   gameState.testing = true;
--  initializeCase();
   initializeCase();
   buildSolidMask();
   applyCaseObstacles();
   if (gameState.testing) {
-    gameState.inventory.push({ id: 'test_disable_power', type: 'disable_power', label: 'Disable Power', effect: { type: 'force_escape' } });
-    gameState.inventory.push({ id: 'test_remote_lockdown', type: 'remote_lockdown', label: 'Remote Lockdown', effect: { type: 'lockdown' } });
     gameState.player.upgrades.efficientHack = true;
     applyEfficientHackToLocks();
     gameState.player.upgrades.fastLockpick = true;
     applyFastLockpickToLocks();
     gameState.player.upgrades.skeletonKey = true;
+    gameState.player.upgrades.masterVirus = true;
+    applyMasterVirusToLocks();
   }
   const canvas = createCanvas();
   const ctx = canvas.getContext('2d');
@@ -70,6 +69,10 @@ const start = () => {
   const handleKeyDown = (key) => {
     if (handleHackingKeyInput(key)) return;
     if (isHackingActive()) return;
+    if (gameState.ui.inventorySwap.active) {
+      if (key === 'i') handleInventoryToggle(key);
+      return;
+    }
     handleMinimapToggle(key);
     handleInventoryToggle(key);
     handleJournalToggle(key);

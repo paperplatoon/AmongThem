@@ -46,6 +46,7 @@ export const playerState = Object.seal({
     hasFasterHack: false,
     efficientHack: false,
     fastLockpick: false,
-    skeletonKey: false
+    skeletonKey: false,
+    masterVirus: false
   })
 });

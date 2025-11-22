@@ -24,7 +24,7 @@
 - **Weapon/Method Categories:** Knife, Blunt, Poison, Fire, Gun, Decompression, Acid, Electrocution; autopsy reveals category only.
 - **Time Phases:** Secure (safe), Unstable (vents risky, lights flicker), Critical (rapid oxygen loss forcing resolution).
 - **Accusation Outcomes:** Correct = success; Wrong = oxygen crunch with choice to flee or hunt via Bridge console overlay.
-- **Clue Placement:** Victim desk stores innocence logs, suspect desks can contain motive/innocence evidence, and lockers store weapon-category clues that must be inspected to log them in the journal.
+- **Clue Placement:** Victim computers store innocence logs, suspect computers can contain motive/innocence evidence, and lockers store weapon-category clues that must be inspected to log them in the journal.
 
 ## Content & Data Model Guidelines
 - Represent runs with a case-seed object containing roles, victim, killer, murder room, weapon, true motive, false motives, clue packs, and phase timings.
@@ -36,7 +36,7 @@
 
 ## Implementation Priorities (MVP)
 1. Movement across rooms with safe vs. unsafe paths.
-2. Interactive clues collectible into the notebook (include locker/desk logs).
+2. Interactive clues collectible into the notebook (include locker/computer logs).
 3. Notebook UI that separates Method/Motive evidence with manual status toggles.
 4. Medbay autopsy flow returning method category and logging it once identified.
 5. Oxygen/time management driving phase shifts.
@@ -90,12 +90,12 @@
 
 ## Temporary Implementations
 *(These are stopgap solutions to facilitate testing; they should be revisited when the full systems arrive.)*
-- **Crew Identity Discovery:** Keycards and desk searches currently flip a flag that reveals an NPC’s name and highlights their journal tab. This is a provisional shortcut until the broader clue/evidence loop is built out.
+- **Crew Identity Discovery:** Keycards and computer searches currently flip a flag that reveals an NPC’s name and highlights their journal tab. This is a provisional shortcut until the broader clue/evidence loop is built out.
 - **Killer Proof Item:** The murderer’s locker always spawns a generic “Incriminating Evidence” item that marks them as the killer when collected. It’s a temporary win-condition proxy ahead of nuanced motive/method deduction.
 - **Keycard Prop Highlighting:** (Removed) props no longer glow by default; use the Keycard Locator upgrade to surface keycard containers.
 
 ## Notes from Current Implementation
-- Victim desks now spawn scripted “Death Threat” evidence pointing to three suspects (always including the killer). Collecting a threat marks that role as a suspect (yellow tab).
+- Victim computers now spawn scripted “Death Threat” evidence pointing to three suspects (always including the killer). Collecting a threat marks that role as a suspect (yellow tab).
 - Suspect terminals spawn either “Clean Alibi” (non-killer) or “Incriminating Evidence” (killer). Clean alibis mark a role as cleared (green tab); incriminating evidence flips the role to killer (red tab).
 - `player.upgrades` tracks gameplay modifiers. Current upgrades:
   - **Keycard Locator:** highlights any prop containing a keycard (no more per-locker debug highlight).

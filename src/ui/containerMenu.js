@@ -1,8 +1,12 @@
 import { gameState } from '../state/gameState.js';
-import { markKeycardKnown, markDeskDiscovered, addEvidenceToJournal, markWeaponCategory } from '../state/journalState.js';
+import { markKeycardKnown, markComputerDiscovered, addEvidenceToJournal, markWeaponCategory } from '../state/journalState.js';
 import { handleEvidenceItem } from '../evidence/evidenceHandlers.js';
 
 const hitboxes = () => gameState.ui.hitboxes;
+
+const isInventoryFull = () => (
+  gameState.inventory.length >= gameState.config.inventorySlots
+);
 
 const clearContainerHitboxes = () => {
   hitboxes().containerSlots.length = 0;
@@ -31,6 +35,17 @@ const collectCredits = (item) => {
   gameState.player.money += item.amount;
 };
 
+const beginInventorySwap = (prop, item) => {
+  if (gameState.ui.inventorySwap.active) return;
+  const swap = gameState.ui.inventorySwap;
+  swap.active = true;
+  swap.incomingItem = item;
+  swap.sourcePropId = prop.id;
+  swap.sourceItemId = item.id;
+  swap.previousInventoryVisible = gameState.ui.showInventory;
+  gameState.ui.showInventory = true;
+};
+
 export const handleContainerClick = (screenX, screenY) => {
   if (!gameState.ui.openContainerId) return false;
   const closeHitbox = hitboxes().containerCloseButton;
@@ -53,7 +68,7 @@ export const handleContainerClick = (screenX, screenY) => {
   }
   const item = prop.contents[hit.index];
   if (!item) return false;
-  if (prop.type === 'desk' && prop.roomId) markDeskDiscovered(prop.roomId);
+  if (prop.type === 'computer' && prop.roomId) markComputerDiscovered(prop.roomId);
   if (item.type === 'keycard') {
     collectKeycardItem(item);
   } else if (handleEvidenceItem(item)) {
@@ -67,6 +82,10 @@ export const handleContainerClick = (screenX, screenY) => {
     collectCredits(item);
     prop.contents.splice(hit.index, 1);
   } else {
+    if (isInventoryFull()) {
+      beginInventorySwap(prop, item);
+      return true;
+    }
     gameState.inventory.push(item);
     prop.contents.splice(hit.index, 1);
   }

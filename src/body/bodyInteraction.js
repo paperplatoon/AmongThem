@@ -1,15 +1,9 @@
 import { gameState } from '../state/gameState.js';
-const hasMedicalSample = () => (
-  gameState.inventory.some((entry) => entry.type === 'medical_sample')
-);
+const hasMedicalSample = () => Boolean(gameState.body.playerHasSample);
 
 const addMedicalSample = () => {
   if (hasMedicalSample()) return;
-  gameState.inventory.push({
-    id: 'medical_sample',
-    label: 'Medical Sample',
-    type: 'medical_sample'
-  });
+  gameState.body.playerHasSample = true;
 };
 
 export const collectBodySample = () => {

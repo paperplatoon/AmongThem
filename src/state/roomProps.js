@@ -4,11 +4,11 @@ import { createItemFromDefinition } from './itemDefinitions.js';
 import { config } from './config.js';
 import { registerLockpickForProp } from './lockpickState.js';
 
-const ROOM_PROP_TYPES = ['desk', 'bed', 'trash', 'locker'];
+const ROOM_PROP_TYPES = ['computer', 'bed', 'trash', 'locker'];
 
 const PROP_CONTENT_CHANCE = Object.freeze({
   locker: 0.25,
-  desk: 0.25,
+  computer: 0.25,
   bed: 0.25,
   trash: 0.10,
   table: 0.125,
@@ -29,7 +29,8 @@ const VENDING_OPTIONS = Object.freeze([
   Object.freeze({ itemId: 'faster_hack', label: 'Faster Hack', cost: 100, unique: false }),
   Object.freeze({ itemId: 'efficient_hack', label: 'Efficient Hacking', cost: 200, unique: true }),
   Object.freeze({ itemId: 'fast_lockpick', label: 'Fast Lockpick', cost: 200, unique: true }),
-  Object.freeze({ itemId: 'skeleton_key', label: 'Skeleton Key', cost: 500, unique: true, rare: true })
+  Object.freeze({ itemId: 'skeleton_key', label: 'Skeleton Key', cost: 500, unique: true, rare: true }),
+  Object.freeze({ itemId: 'master_virus', label: 'Master Virus', cost: 500, unique: true, rare: true })
 ]);
 
 const INNER_CACHE_CONFIG = Object.freeze({

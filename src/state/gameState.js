@@ -55,7 +55,8 @@ export const gameState = Object.seal({
     cellY: null,
     x: null,
     y: null,
-    collectedSample: false
+    collectedSample: false,
+    playerHasSample: false
   },
   scanner: {
     cellX: null,

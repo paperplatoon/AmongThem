@@ -18,6 +18,7 @@ export const uiState = Object.seal({
   }),
   hitboxes: Object.seal({
     inventorySlots: [],
+    inventoryCancelButton: null,
     journalTabs: [],
     journalStatus: [],
     containerSlots: [],
@@ -41,5 +42,12 @@ export const uiState = Object.seal({
       enterButton: null,
       exitButton: null
     })
+  }),
+  inventorySwap: Object.seal({
+    active: false,
+    incomingItem: null,
+    sourcePropId: null,
+    sourceItemId: null,
+    previousInventoryVisible: false
   })
 });
