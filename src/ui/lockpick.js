@@ -1,23 +1,17 @@
 import { gameState } from '../state/gameState.js';
 import { getLockpickById, combinationLength, lockpickDirectionForStep } from '../state/lockpickState.js';
-import { useCrowbarOnActiveLock } from '../lockpick/lockpickSystem.js';
+import { bypassActiveLockpick, countInventoryItem } from '../lockpick/lockpickSystem.js';
+import { hasSkeletonKeyUpgrade } from '../state/upgradeSelectors.js';
 
 const floorDigit = (value) => Math.floor((((value % 10) + 10) % 10));
 
 const hitboxes = () => gameState.ui.hitboxes.lockpick;
 
-const countCrowbars = () => (
-  gameState.inventory.reduce((total, item) => (
-    item?.type === 'crowbar' ? total + 1 : total
-  ), 0)
-);
+const countCrowbars = () => countInventoryItem('crowbar');
 
 const circledNumbers = ['⓪', '①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩', '⑪', '⑫', '⑬', '⑭', '⑮', '⑯', '⑰', '⑱', '⑲', '⑳'];
 
-const formatCrowbarCount = (count) => {
-  if (count >= 0 && count < circledNumbers.length) return circledNumbers[count];
-  return `(${count})`;
-};
+const formatCrowbarCount = (count) => `(${count})`;
 
 const clearHitboxes = () => {
   const box = hitboxes();
@@ -76,7 +70,7 @@ export const handleLockpickClick = (screenX, screenY) => {
     return true;
   }
   if (box.bypassButton && pointInRect(box.bypassButton)) {
-    useCrowbarOnActiveLock();
+    bypassActiveLockpick();
     return true;
   }
   return false;
@@ -228,7 +222,6 @@ const drawDial = (ctx, panel, lock) => {
 };
 
 const drawControls = (ctx, panel, lock) => {
-  hitboxes().bypassButton = null;
   const arrowWidth = 110;
   const arrowHeight = 80;
   const arrowsY = panel.y + panel.height * 0.6;
@@ -256,16 +249,18 @@ const drawControls = (ctx, panel, lock) => {
   hitboxes().rightArrow = { x: rightX, y: arrowsY, x2: rightX + arrowWidth, y2: arrowsY + arrowHeight };
 };
 
-const drawCrowbarButton = (ctx, panel, lock) => {
-  const count = countCrowbars();
-  if (!count || lock?.isUnlocked) {
+const drawBypassButton = (ctx, panel, lock) => {
+  const hasKey = hasSkeletonKeyUpgrade();
+  const crowbars = countCrowbars();
+  if (!hasKey && crowbars <= 0) {
     hitboxes().bypassButton = null;
     return;
   }
-  const width = 210;
+  const width = panel.width * 0.18;
   const height = 42;
-  const x = panel.x + 32;
-  const y = panel.y + 24;
+  const spacing = 16;
+  const x = panel.x + spacing;
+  const y = panel.y + panel.height - height - spacing;
   ctx.save();
   ctx.fillStyle = '#1f4d3f';
   ctx.strokeStyle = '#3dd17a';
@@ -276,7 +271,8 @@ const drawCrowbarButton = (ctx, panel, lock) => {
   ctx.font = '18px "Courier New", monospace';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(`Use Crowbar ${formatCrowbarCount(count)}`, x + width / 2, y + height / 2);
+  const label = hasKey ? 'Use Skeleton Key' : `Crowbars ${formatCrowbarCount(crowbars)}`;
+  ctx.fillText(label, x + width / 2, y + height / 2);
   ctx.restore();
   hitboxes().bypassButton = { x, y, x2: x + width, y2: y + height };
 };
@@ -299,5 +295,5 @@ export const renderLockpick = (ctx) => {
   drawRows(ctx, panel, lock);
   drawDial(ctx, panel, lock);
   drawControls(ctx, panel, lock);
-  drawCrowbarButton(ctx, panel, lock);
+  drawBypassButton(ctx, panel, lock);
 };

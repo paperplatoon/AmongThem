@@ -1,6 +1,7 @@
 import { gameState } from '../state/gameState.js';
 import { getLockpickById, combinationLength, lockpickDirectionForStep } from '../state/lockpickState.js';
 import { finalizeLockUnlock } from './lockpickHelpers.js';
+import { hasSkeletonKeyUpgrade } from '../state/upgradeSelectors.js';
 
 const DIAL_RANGE = 10;
 const DIAL_SPEED = 2.2;
@@ -186,15 +187,33 @@ const consumeInventoryItem = (type) => {
   return true;
 };
 
+const hasCrowbar = () => countItemInInventory('crowbar') > 0;
+
 export const useCrowbarOnActiveLock = () => {
   const activeId = gameState.lockpick.activeId;
   if (!activeId) return false;
   const lock = getLockpickById(activeId);
   if (!lock || lock.isUnlocked) return false;
-  if (!countItemInInventory('crowbar')) return false;
+  if (!hasCrowbar()) return false;
   if (!consumeInventoryItem('crowbar')) return false;
   finalizeLockUnlock(activeId);
   return true;
+};
+
+export const bypassActiveLockpick = () => {
+  const activeId = gameState.lockpick.activeId;
+  if (!activeId) return false;
+  const lock = getLockpickById(activeId);
+  if (!lock || lock.isUnlocked) return false;
+  if (hasSkeletonKeyUpgrade()) {
+    finalizeLockUnlock(activeId);
+    return true;
+  }
+  if (hasCrowbar() && consumeInventoryItem('crowbar')) {
+    finalizeLockUnlock(activeId);
+    return true;
+  }
+  return false;
 };
 
 export const countInventoryItem = (type) => countItemInInventory(type);
