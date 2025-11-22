@@ -7,6 +7,7 @@ import { resetVillainLockdown } from '../villain/villainSystem.js';
 import { cellToWorldCenter } from '../state/gridState.js';
 import { closeVendingMenu } from '../ui/vendingMenu.js';
 import { startHackingForProp, isPropComputerLocked } from '../hacking/hackingState.js';
+import { closeOverlay, openOverlay, OverlayId } from '../state/overlayManager.js';
 
 const scannerRange = 96;
 const propRange = 88;
@@ -126,14 +127,13 @@ const closeOpenMenus = () => {
   gameState.ui.openVendingId = null;
   gameState.ui.openLockpickId = null;
   gameState.ui.openAccusation = false;
-  gameState.ui.showUpgrades = false;
   gameState.accusation.active = false;
   gameState.accusation.result = 'idle';
   gameState.lockpick.activeId = null;
   gameState.lockpick.leftHeld = false;
   gameState.lockpick.rightHeld = false;
   closeVendingMenu();
-  // overlay manager will be responsible for closing overlays.
+  closeOverlay();
 };
 
 const startLockpickSession = (prop) => {
@@ -172,6 +172,7 @@ const makePropZone = (prop) => ({
       gameState.ui.openContainerId = null;
       gameState.ui.openVendingId = prop.id;
       gameState.ui.vendingMessage = null;
+      openOverlay(OverlayId.VENDING);
       return;
     }
     if (prop.type === 'computer' && prop.roomId) markComputerDiscovered(prop.roomId);
@@ -185,6 +186,7 @@ const makePropZone = (prop) => ({
     prop.isEmpty = false;
     closeVendingMenu();
     gameState.ui.openContainerId = prop.id;
+    openOverlay(OverlayId.CONTAINER);
   }
 });
 

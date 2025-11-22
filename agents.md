@@ -55,6 +55,9 @@
 
 ### System Design Guideline
 - Route every major interaction through a single helper (e.g., hacking, vending pricing, lockpicking). These gate functions read the current state and expose deterministic controls (like “Use Virus” buttons) so cheats/testing toggles can add modifiers without permanently mutating game data. Keeping these gates centralized ensures new upgrades and testing tools layer cleanly without scattering special cases across the codebase.
+
+### Collaboration Preferences
+- For large or multi-layered features, don’t jump straight into implementation. First, pause to reason through the requirements, propose the architecture (functions, state, modules to touch), and confirm it aligns with the project’s declarative/state-driven philosophy before writing code. This keeps future changes predictable and aligns with the way I like to iterate.
   
 ### Notes from Recent Implementation
 - Track `player.lastMoveDirection` for any directional logic (e.g., taser arcs, future cones) so abilities remain deterministic even when the player is stationary.

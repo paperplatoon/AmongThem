@@ -1,5 +1,6 @@
 import { gameState } from '../state/gameState.js';
 import { spendMoneyOnVending } from '../items/vendingMachine.js';
+import { closeOverlay, isOverlayActive, OverlayId } from '../state/overlayManager.js';
 
 const hitboxes = () => gameState.ui.hitboxes;
 
@@ -12,6 +13,7 @@ export const closeVendingMenu = () => {
   gameState.ui.openVendingId = null;
   gameState.ui.vendingMessage = null;
   clearVendingHitboxes();
+  if (isOverlayActive(OverlayId.VENDING)) closeOverlay();
 };
 
 const currentVendingProp = () => (
@@ -180,7 +182,7 @@ const drawMessage = (ctx, panel) => {
 };
 
 export const renderVendingMenu = (ctx) => {
-  if (!gameState.ui.openVendingId) {
+  if (!gameState.ui.openVendingId || !isOverlayActive(OverlayId.VENDING)) {
     clearVendingHitboxes();
     return;
   }

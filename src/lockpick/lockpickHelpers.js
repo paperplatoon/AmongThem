@@ -1,5 +1,6 @@
 import { gameState } from '../state/gameState.js';
 import { markLockpickUnlocked } from '../state/lockpickState.js';
+import { openOverlay, OverlayId } from '../state/overlayManager.js';
 
 const findPropByLockId = (lockId) => (
   gameState.props.find((prop) => prop.lockpickId === lockId) || null
@@ -18,5 +19,6 @@ export const finalizeLockUnlock = (lockId, { openContainer = true } = {}) => {
   }
   if (openContainer && prop) {
     gameState.ui.openContainerId = prop.id;
+    openOverlay(OverlayId.CONTAINER);
   }
 };

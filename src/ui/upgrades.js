@@ -1,6 +1,7 @@
 import { gameState } from '../state/gameState.js';
 import { hasSkeletonKeyUpgrade, hasMasterVirusUpgrade } from '../state/upgradeSelectors.js';
 import { isTestingModeEnabled, toggleTestingMode } from '../state/testingMode.js';
+import { OverlayId, toggleOverlay, isOverlayActive, closeOverlay } from '../state/overlayManager.js';
 
 const hitboxes = () => gameState.ui.hitboxes;
 
@@ -12,12 +13,12 @@ export const handleUpgradeButtonClick = (screenX, screenY) => {
   const rect = hitboxes().upgradeButton;
   if (!rect) return false;
   if (!buttonRect(screenX, screenY, rect)) return false;
-  gameState.ui.showUpgrades = true;
+  toggleOverlay(OverlayId.UPGRADES);
   return true;
 };
 
 export const handleUpgradesClick = (screenX, screenY) => {
-  if (!gameState.ui.showUpgrades) return false;
+  if (!isOverlayActive(OverlayId.UPGRADES)) return false;
   const overlay = hitboxes().upgradesOverlay;
   if (buttonRect(screenX, screenY, overlay.testingToggle)) {
     toggleTestingMode();
@@ -25,7 +26,7 @@ export const handleUpgradesClick = (screenX, screenY) => {
   }
   const closeRect = overlay.closeButton;
   if (buttonRect(screenX, screenY, closeRect)) {
-    gameState.ui.showUpgrades = false;
+    closeOverlay();
     return true;
   }
   return true;
@@ -88,7 +89,7 @@ const drawTestingToggle = (ctx, panel, list) => {
 };
 
 export const renderUpgrades = (ctx) => {
-  if (!gameState.ui.showUpgrades) {
+  if (!isOverlayActive(OverlayId.UPGRADES)) {
     hitboxes().upgradesOverlay.closeButton = null;
     hitboxes().upgradesOverlay.testingToggle = null;
     return;

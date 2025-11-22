@@ -1,6 +1,7 @@
 import { gameState } from '../state/gameState.js';
 import { markKeycardKnown, markComputerDiscovered, addEvidenceToJournal, markWeaponCategory } from '../state/journalState.js';
 import { handleEvidenceItem } from '../evidence/evidenceHandlers.js';
+import { OverlayId, closeOverlay, openOverlay, isOverlayActive } from '../state/overlayManager.js';
 
 const hitboxes = () => gameState.ui.hitboxes;
 
@@ -16,6 +17,7 @@ const clearContainerHitboxes = () => {
 const closeContainer = () => {
   gameState.ui.openContainerId = null;
   clearContainerHitboxes();
+  if (isOverlayActive(OverlayId.CONTAINER)) closeOverlay();
 };
 
 const markPropEmpty = (prop) => {
@@ -42,8 +44,8 @@ const beginInventorySwap = (prop, item) => {
   swap.incomingItem = item;
   swap.sourcePropId = prop.id;
   swap.sourceItemId = item.id;
-  swap.previousInventoryVisible = gameState.ui.showInventory;
-  gameState.ui.showInventory = true;
+  swap.previousOverlay = gameState.ui.activeOverlay;
+  openOverlay(OverlayId.INVENTORY);
 };
 
 export const handleContainerClick = (screenX, screenY) => {
@@ -167,7 +169,7 @@ const drawContents = (ctx, panel, contents) => {
 };
 
 export const renderContainerMenu = (ctx) => {
-  if (!gameState.ui.openContainerId) {
+  if (!gameState.ui.openContainerId || !isOverlayActive(OverlayId.CONTAINER)) {
     clearContainerHitboxes();
     return;
   }

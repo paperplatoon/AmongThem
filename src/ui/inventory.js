@@ -23,12 +23,16 @@ const clearInventorySwapState = () => {
   swap.incomingItem = null;
   swap.sourcePropId = null;
   swap.sourceItemId = null;
-  swap.previousInventoryVisible = false;
+  swap.previousOverlay = null;
 };
 
 const restoreInventoryVisibility = () => {
   const swap = swapState();
-  gameState.ui.showInventory = swap.previousInventoryVisible;
+  if (swap.previousOverlay) {
+    openOverlay(swap.previousOverlay);
+  } else {
+    closeOverlay();
+  }
 };
 
 const cancelInventorySwapPrompt = () => {

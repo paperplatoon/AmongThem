@@ -2,6 +2,7 @@ import { gameState } from '../state/gameState.js';
 import { PASSWORD_WORDS } from '../state/passwords.js';
 import { hasMasterVirusUpgrade } from '../state/upgradeSelectors.js';
 import { consumeInventoryItemByType, countInventoryItem } from '../lockpick/lockpickSystem.js';
+import { openOverlay, OverlayId } from '../state/overlayManager.js';
 
 const uppercaseWord = (word) => (word || '').toUpperCase();
 
@@ -188,6 +189,14 @@ const unlockComputerLock = (lock) => {
   }
 };
 
+const openComputerOverlay = (lock) => {
+  if (!lock) return;
+  const prop = findPropById(lock.propId);
+  if (!prop) return;
+  gameState.ui.openContainerId = prop.id;
+  openOverlay(OverlayId.CONTAINER);
+};
+
 export const useComputerVirusOnActiveLock = () => {
   const lock = activeLock();
   if (!lock || isLockHacked(lock)) return false;
@@ -195,6 +204,7 @@ export const useComputerVirusOnActiveLock = () => {
   if (!consumeInventoryItemByType('computer_virus')) return false;
   unlockComputerLock(lock);
   exitHackingSession();
+  openComputerOverlay(lock);
   return true;
 };
 
@@ -204,6 +214,7 @@ export const useMasterVirusOnActiveLock = () => {
   if (!lock || isLockHacked(lock)) return false;
   unlockComputerLock(lock);
   exitHackingSession();
+  openComputerOverlay(lock);
   return true;
 };
 
@@ -236,6 +247,7 @@ const tryAutoSubmit = () => {
   if (guess !== lock.password) return;
   unlockComputerLock(lock);
   exitHackingSession();
+  openComputerOverlay(lock);
 };
 
 export const submitHackingInput = () => {
@@ -246,6 +258,7 @@ export const submitHackingInput = () => {
   if (guess === lock.password) {
     unlockComputerLock(lock);
     exitHackingSession();
+    openComputerOverlay(lock);
     return true;
   }
   setFeedback('Incorrect password', 'error');

@@ -3,10 +3,8 @@ import { config } from './config.js';
 const roleOrder = Object.keys(config.roles);
 
 export const uiState = Object.seal({
-  showInventory: false,
   showJournal: false,
   showGameOver: false,
-  showUpgrades: false,
   openContainerId: null,
   openVendingId: null,
   openLockpickId: null,
