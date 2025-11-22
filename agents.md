@@ -19,12 +19,12 @@
 4. **Accuse** a crew role from the Bridge console using your assembled theory.
 5. **Resolve** with either a correct accusation (win), or a critical-phase escape/hunt rush if wrong.
 
-## Key Systems to Preserve
 - **Notebook Tabs:** Method vs. Motive cards auto-sorted and reviewable at any time.
 - **Motive Axes:** Romantic, Professional, Ideological, Criminal, Psychological; only one is correct per run, others act as red herrings.
 - **Weapon/Method Categories:** Knife, Blunt, Poison, Fire, Gun, Decompression, Acid, Electrocution; autopsy reveals category only.
 - **Time Phases:** Secure (safe), Unstable (vents risky, lights flicker), Critical (rapid oxygen loss forcing resolution).
-- **Accusation Outcomes:** Correct = success; Wrong = oxygen crunch with choice to flee or hunt.
+- **Accusation Outcomes:** Correct = success; Wrong = oxygen crunch with choice to flee or hunt via Bridge console overlay.
+- **Clue Placement:** Victim desk stores innocence logs, suspect desks can contain motive/innocence evidence, and lockers store weapon-category clues that must be inspected to log them in the journal.
 
 ## Content & Data Model Guidelines
 - Represent runs with a case-seed object containing roles, victim, killer, murder room, weapon, true motive, false motives, clue packs, and phase timings.
@@ -36,13 +36,13 @@
 
 ## Implementation Priorities (MVP)
 1. Movement across rooms with safe vs. unsafe paths.
-2. Interactive clues collectible into the notebook.
-3. Notebook UI that separates Method/Motive evidence.
-4. Medbay autopsy flow returning method category.
+2. Interactive clues collectible into the notebook (include locker/desk logs).
+3. Notebook UI that separates Method/Motive evidence with manual status toggles.
+4. Medbay autopsy flow returning method category and logging it once identified.
 5. Oxygen/time management driving phase shifts.
-6. Bridge accusation interface with success/failure logic.
+6. Bridge accusation interface with success/failure logic and visible console.
 7. Critical-phase escape/hunt state after wrong accusation.
-8. Procedural case generator to randomize each loop.
+8. Procedural case generator to randomize each loop, including motive/innocence/weapon evidence placement.
 
 ### Upcoming Engineering Tasks
 - Route all pointer/click events through a buffered `gameState.input` queue so interactions resolve during the main update tick instead of DOM timing.
@@ -55,8 +55,10 @@
   
 ### Notes from Recent Implementation
 - Track `player.lastMoveDirection` for any directional logic (e.g., taser arcs, future cones) so abilities remain deterministic even when the player is stationary.
-- Treat unique upgrades (taser, future tools) as stateful flags rather than inventory items and reflect ownership in vending UI to avoid duplicate purchases.
-- Testing flag: `gameState.testing` injects debug items and a testing banner; keep dev-only.
+- Treat unique upgrades (taser, future tools, Efficient Hack, Fast Lockpick, Skeleton Key) as stateful flags rather than inventory items and reflect ownership in vending UI to avoid duplicate purchases.
+- Testing mode auto-enables key upgrades (Efficient Hack, Fast Lockpick, Skeleton Key) for rapid iteration.
+- Vending stock can include rare upgrades (e.g., Skeleton Key) based on RNG; rare flags determine appearance per run.
+- HUD includes a “View Upgrades” overlay; all overlays (hacking, lockpick, accusation, upgrades) follow the same state-driven hitbox pattern.
 - Villain notice/accel: on first detect, villain pauses and animates a jump (config-driven), then ramps chase speed over a short accel window.
 - Pathfinding: chase uses door-aware BFS steps; add stuck detection/fallback to roaming when targets are blocked by closed doors, invoking the same state transitions (enter lost state or escaped roam) so behavior stays consistent.
 
