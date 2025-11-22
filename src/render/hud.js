@@ -78,6 +78,28 @@ const drawHackStatus = (ctx) => {
   ctx.fillText('HACK', iconX + 22, iconY + 18);
 };
 
+const drawUpgradeButton = (ctx) => {
+  const width = 150;
+  const height = 32;
+  const x = gameState.config.canvasWidth - padding - width;
+  const y = padding + 55;
+  ctx.save();
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+  ctx.fillRect(x - 4, y - 4, width + 8, height + 8);
+  ctx.fillStyle = '#1f2a4f';
+  ctx.strokeStyle = '#8effd6';
+  ctx.lineWidth = 2;
+  ctx.fillRect(x, y, width, height);
+  ctx.strokeRect(x, y, width, height);
+  ctx.fillStyle = '#fefefe';
+  ctx.font = '16px "Courier New", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('View Upgrades', x + width / 2, y + height / 2);
+  ctx.restore();
+  gameState.ui.hitboxes.upgradeButton = { x, y, x2: x + width, y2: y + height };
+};
+
 const drawOutline = (ctx, x, y) => {
   ctx.strokeStyle = '#1d3520';
   ctx.lineWidth = 2;
@@ -131,4 +153,5 @@ export const renderHud = (ctx) => {
   ctx.textAlign = 'left';
   ctx.textBaseline = 'top';
   ctx.fillText(`O2: ${oxygenPercent.toFixed(1)}%`, oxygenX, oxygenY);
+  drawUpgradeButton(ctx);
 };

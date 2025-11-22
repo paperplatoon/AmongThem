@@ -28,7 +28,8 @@ const VENDING_OPTIONS = Object.freeze([
   Object.freeze({ itemId: 'keycard_locator', label: 'Keycard Locator', cost: 150, unique: true }),
   Object.freeze({ itemId: 'faster_hack', label: 'Faster Hack', cost: 100, unique: false }),
   Object.freeze({ itemId: 'efficient_hack', label: 'Efficient Hacking', cost: 200, unique: true }),
-  Object.freeze({ itemId: 'fast_lockpick', label: 'Fast Lockpick', cost: 200, unique: true })
+  Object.freeze({ itemId: 'fast_lockpick', label: 'Fast Lockpick', cost: 200, unique: true }),
+  Object.freeze({ itemId: 'skeleton_key', label: 'Skeleton Key', cost: 500, unique: true, rare: true })
 ]);
 
 const INNER_CACHE_CONFIG = Object.freeze({
@@ -326,7 +327,7 @@ const createVendingMachine = (corridorId, suffix) => {
     containsKeycard: false,
     keycardRoleId: null,
     highlightKeycard: false,
-    vendingOptions: VENDING_OPTIONS.map((option) => ({ ...option }))
+    vendingOptions: VENDING_OPTIONS.filter((option) => !option.rare || Math.random() < 0.5).map((option) => ({ ...option }))
   });
 };
 

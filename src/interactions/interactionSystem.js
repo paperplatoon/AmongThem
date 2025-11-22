@@ -116,7 +116,7 @@ const canAccessProp = (prop) => (!prop.requiresKey || hasKeycard(prop.lockId));
 
 const tryAutoUnlockLocker = (prop) => {
   if (!prop?.lockpickId) return false;
-  if (!prop.lockId || hasKeycard(prop.lockId)) {
+  if (!prop.lockId || hasKeycard(prop.lockId) || gameState.player.upgrades.skeletonKey) {
     prop.lockpickUnlocked = true;
     prop.promptText = 'CLICK TO SEARCH';
     return true;
@@ -129,6 +129,7 @@ const closeOpenMenus = () => {
   gameState.ui.openVendingId = null;
   gameState.ui.openLockpickId = null;
   gameState.ui.openAccusation = false;
+  gameState.ui.showUpgrades = false;
   gameState.accusation.active = false;
   gameState.accusation.result = 'idle';
   gameState.lockpick.activeId = null;
@@ -226,7 +227,8 @@ export const updateInteractions = () => {
       prop.promptText = prop.isEmpty ? 'EMPTY' : 'CLICK TO SEARCH';
     }
     if (prop.lockpickId && !prop.lockpickUnlocked) {
-      prop.promptText = hasKeycard(prop.lockId) ? 'CLICK TO USE KEYCARD' : 'CLICK TO PICK LOCK';
+      const hasKey = hasKeycard(prop.lockId) || gameState.player.upgrades.skeletonKey;
+      prop.promptText = hasKey ? 'CLICK TO USE KEYCARD' : 'CLICK TO PICK LOCK';
     }
     if (prop.type === 'vending_machine') prop.promptText = 'CLICK TO BUY';
     const distance = distanceBetween(gameState.player, prop);

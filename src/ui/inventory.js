@@ -11,6 +11,7 @@ import { applyEfficientHackToLocks } from '../hacking/hackingState.js';
 import { handleLockpickClick, handleLockpickPointerDown, handleLockpickPointerUp } from './lockpick.js';
 import { handleAccusationClick } from './accusation.js';
 import { applyFastLockpickToLocks } from '../lockpick/lockpickSystem.js';
+import { handleUpgradeButtonClick, handleUpgradesClick } from './upgrades.js';
 
 const applyItemEffect = (entry) => {
   if (!entry.effect) return false;
@@ -56,6 +57,11 @@ const applyItemEffect = (entry) => {
     applyFastLockpickToLocks();
     return true;
   }
+  if (entry.effect.type === 'skeleton_key') {
+    if (player.upgrades.skeletonKey) return false;
+    player.upgrades.skeletonKey = true;
+    return true;
+  }
   return false;
 };
 
@@ -94,6 +100,8 @@ const handleCanvasClick = (canvas, event) => {
   const { screenX, screenY, worldX, worldY } = getCanvasCoords(canvas, event);
   if (handleHackingClick(screenX, screenY)) return;
   if (handleLockpickClick(screenX, screenY)) return;
+  if (handleUpgradesClick(screenX, screenY)) return;
+  if (handleUpgradeButtonClick(screenX, screenY)) return;
   if (handleAccusationClick(screenX, screenY)) return;
   if (tryHandleInteractionClick(worldX, worldY)) return;
   if (journalUi.handleJournalClick && journalUi.handleJournalClick(screenX, screenY)) return;

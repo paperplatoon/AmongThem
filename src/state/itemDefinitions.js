@@ -6,7 +6,8 @@ export const ITEM_TYPES = Object.freeze({
   DISABLE_POWER: 'disable_power',
   REMOTE_LOCKDOWN: 'remote_lockdown',
   EFFICIENT_HACK: 'efficient_hack',
-  FAST_LOCKPICK: 'fast_lockpick'
+  FAST_LOCKPICK: 'fast_lockpick',
+  SKELETON_KEY: 'skeleton_key'
 });
 
 export const ITEM_DEFINITIONS = Object.freeze({
@@ -41,6 +42,10 @@ export const ITEM_DEFINITIONS = Object.freeze({
   [ITEM_TYPES.FAST_LOCKPICK]: Object.freeze({
     label: 'Fast Lockpick',
     effect: { type: 'fast_lockpick' }
+  }),
+  [ITEM_TYPES.SKELETON_KEY]: Object.freeze({
+    label: 'Skeleton Key',
+    effect: { type: 'skeleton_key' }
   })
 });
 

@@ -12,6 +12,7 @@ import { renderHacking } from '../ui/hacking.js';
 import { renderAccusation } from '../ui/accusation.js';
 import { renderAccuseConsole } from './accuseConsole.js';
 import { renderLockpick } from '../ui/lockpick.js';
+import { renderUpgrades } from '../ui/upgrades.js';
 import { cellToWorldCenter } from '../state/gridState.js';
 const { WALL } = CELL_TYPES;
 
@@ -309,6 +310,7 @@ export const renderFrame = (ctx) => {
   renderHud(ctx);
   renderHacking(ctx);
   renderLockpick(ctx);
+  renderUpgrades(ctx);
   renderAccusation(ctx);
   renderGameOver(ctx);
   if (gameState.testing) {

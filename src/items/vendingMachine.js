@@ -46,6 +46,14 @@ const purchaseFastLockpick = () => {
   return { success: true, item: { id: 'fast_lockpick_upgrade', label: 'Fast Lockpick', type: 'upgrade' } };
 };
 
+const purchaseSkeletonKey = () => {
+  const upgrades = gameState.player.upgrades;
+  if (!upgrades) return { success: false, reason: 'no_player' };
+  if (upgrades.skeletonKey) return { success: false, reason: 'already_owned' };
+  upgrades.skeletonKey = true;
+  return { success: true, item: { id: 'skeleton_key_upgrade', label: 'Skeleton Key', type: 'upgrade' } };
+};
+
 export const spendMoneyOnVending = (itemType, cost) => {
   const player = gameState.player;
   if (!player) return { success: false, reason: 'no_player' };
@@ -76,6 +84,12 @@ export const spendMoneyOnVending = (itemType, cost) => {
   }
   if (itemType === 'fast_lockpick') {
     const result = purchaseFastLockpick();
+    if (!result.success) return result;
+    player.money -= cost;
+    return result;
+  }
+  if (itemType === 'skeleton_key') {
+    const result = purchaseSkeletonKey();
     if (!result.success) return result;
     player.money -= cost;
     return result;

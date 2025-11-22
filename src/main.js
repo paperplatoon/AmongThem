@@ -50,6 +50,7 @@ const stepFrame = (ctx, time) => {
 
 const start = () => {
   gameState.testing = true;
+-  initializeCase();
   initializeCase();
   buildSolidMask();
   applyCaseObstacles();
@@ -60,6 +61,7 @@ const start = () => {
     applyEfficientHackToLocks();
     gameState.player.upgrades.fastLockpick = true;
     applyFastLockpickToLocks();
+    gameState.player.upgrades.skeletonKey = true;
   }
   const canvas = createCanvas();
   const ctx = canvas.getContext('2d');

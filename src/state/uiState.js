@@ -7,6 +7,7 @@ export const uiState = Object.seal({
   showInventory: false,
   showJournal: false,
   showGameOver: false,
+  showUpgrades: false,
   openContainerId: null,
   openVendingId: null,
   openLockpickId: null,
@@ -34,6 +35,8 @@ export const uiState = Object.seal({
       roleButtons: [],
       closeButton: null
     }),
+    upgradeButton: null,
+    upgradesOverlay: Object.seal({ closeButton: null }),
     hacking: Object.seal({
       enterButton: null,
       exitButton: null
