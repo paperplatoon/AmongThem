@@ -65,12 +65,12 @@ const upgradeList = () => {
   ];
 };
 
-const drawTestingToggle = (ctx, panel) => {
+const drawTestingToggle = (ctx, panel, list) => {
   const active = isTestingModeEnabled();
-  const width = panel.width - 40;
-  const height = 44;
-  const x = panel.x + 20;
-  const y = panel.y + panel.height - height - 40;
+  const width = panel.width - 60;
+  const height = 30;
+  const x = panel.x + 30;
+  const y = panel.y + 70 + list.length * 32 + 20;
   ctx.save();
   ctx.fillStyle = active ? '#1f4d3f' : '#2f3e69';
   ctx.strokeStyle = active ? '#3dd17a' : '#6d8cff';
@@ -78,7 +78,7 @@ const drawTestingToggle = (ctx, panel) => {
   ctx.fillRect(x, y, width, height);
   ctx.strokeRect(x, y, width, height);
   ctx.fillStyle = '#fefefe';
-  ctx.font = '20px "Courier New", monospace';
+  ctx.font = '18px "Courier New", monospace';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   const label = active ? 'Testing Mode: ON' : 'Testing Mode: OFF';
@@ -113,7 +113,7 @@ export const renderUpgrades = (ctx) => {
     ctx.fillText(`${entry.active ? '✓' : '✕'} ${entry.label}`, panel.x + 20, y);
   });
   ctx.restore();
-  drawTestingToggle(ctx, panel);
+  drawTestingToggle(ctx, panel, list);
   const closeSize = 28;
   const closeX = panel.x + panel.width - closeSize - 12;
   const closeY = panel.y + 12;

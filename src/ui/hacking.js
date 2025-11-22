@@ -5,14 +5,23 @@ import {
   isHackingActive,
   getComputerLockByPropId,
   describeHackingPhase,
-  timeUntilNextEvent
+  timeUntilNextEvent,
+  useComputerVirusOnActiveLock,
+  useMasterVirusOnActiveLock
 } from '../hacking/hackingState.js';
+import { countInventoryItem } from '../lockpick/lockpickSystem.js';
+import { hasMasterVirusUpgrade } from '../state/upgradeSelectors.js';
 
 const hitboxes = () => gameState.ui.hitboxes.hacking;
 
 const activeLock = () => getComputerLockByPropId(gameState.hacking.lockId);
 
 const letterBoxes = (lock) => (lock ? lock.password.length : gameState.config.hacking.passwordLength);
+
+const formatVirusCount = (count) => {
+  if (count <= 0) return '';
+  return `( ${count} )`;
+};
 
 const backdropColor = 'rgba(4, 6, 14, 0.8)';
 const panelColor = 'rgba(12, 20, 40, 0.95)';
@@ -116,7 +125,8 @@ const drawButtons = (ctx, panel, canSubmit) => {
   const buttonHeight = 42;
   const spacing = 16;
   const exitX = panel.x + panel.width - buttonWidth - spacing;
-  const enterX = exitX - buttonWidth - spacing;
+  const virusX = panel.x + spacing;
+  const enterX = virusX + buttonWidth + spacing;
   const y = panel.y + panel.height - buttonHeight - spacing;
 
   ctx.save();
@@ -141,12 +151,34 @@ const drawButtons = (ctx, panel, canSubmit) => {
 
   hitboxes().enterButton = { x: enterX, y, x2: enterX + buttonWidth, y2: y + buttonHeight, enabled: canSubmit };
   hitboxes().exitButton = { x: exitX, y, x2: exitX + buttonWidth, y2: y + buttonHeight };
+
+  const permanent = hasMasterVirusUpgrade();
+  const count = countInventoryItem('computer_virus');
+  if (!permanent && !count) {
+    hitboxes().virusButton = null;
+    return;
+  }
+  ctx.save();
+  ctx.fillStyle = '#1f4d3f';
+  ctx.strokeStyle = '#3dd17a';
+  ctx.lineWidth = 2;
+  ctx.fillRect(virusX, y, buttonWidth, buttonHeight);
+  ctx.strokeRect(virusX, y, buttonWidth, buttonHeight);
+  ctx.fillStyle = '#8effd6';
+  ctx.font = '18px "Courier New", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  const label = permanent ? 'Use Master Virus' : `Use Virus ${formatVirusCount(count)}`;
+  ctx.fillText(label, virusX + buttonWidth / 2, y + buttonHeight / 2);
+  ctx.restore();
+  hitboxes().virusButton = { x: virusX, y, x2: virusX + buttonWidth, y2: y + buttonHeight };
 };
 
 export const renderHacking = (ctx) => {
   if (!isHackingActive()) {
     hitboxes().enterButton = null;
     hitboxes().exitButton = null;
+    hitboxes().virusButton = null;
     return;
   }
   const lock = activeLock();
@@ -184,7 +216,13 @@ const pointInRect = (rect, x, y) => (
 
 export const handleHackingClick = (screenX, screenY) => {
   if (!isHackingActive()) return false;
-  const { enterButton, exitButton } = hitboxes();
+  const { enterButton, exitButton, virusButton } = hitboxes();
+  if (virusButton && pointInRect(virusButton, screenX, screenY)) {
+    if (!useMasterVirusOnActiveLock()) {
+      useComputerVirusOnActiveLock();
+    }
+    return true;
+  }
   if (exitButton && pointInRect(exitButton, screenX, screenY)) {
     exitHackingSession();
     return true;

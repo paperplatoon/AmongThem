@@ -6,7 +6,7 @@ import { handleVendingClick } from './vendingMenu.js';
 import * as journalUi from './journal.js';
 import { handleGameOverClick } from './gameOver.js';
 import { handleHackingClick } from './hacking.js';
-import { applyEfficientHackToLocks, applyMasterVirusToLocks } from '../hacking/hackingState.js';
+import { applyEfficientHackToLocks } from '../hacking/hackingState.js';
 import { handleLockpickClick, handleLockpickPointerDown, handleLockpickPointerUp } from './lockpick.js';
 import { handleAccusationClick } from './accusation.js';
 import { applyFastLockpickToLocks } from '../lockpick/lockpickSystem.js';
@@ -125,7 +125,6 @@ const applyItemEffect = (entry) => {
   if (entry.effect.type === 'master_virus') {
     if (player.upgrades.masterVirus) return false;
     player.upgrades.masterVirus = true;
-    applyMasterVirusToLocks();
     return true;
   }
   return false;

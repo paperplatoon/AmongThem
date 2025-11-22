@@ -29,6 +29,7 @@ const VENDING_OPTIONS = Object.freeze([
   Object.freeze({ itemId: 'faster_hack', label: 'Faster Hack', cost: 100, unique: false }),
   Object.freeze({ itemId: 'efficient_hack', label: 'Efficient Hacking', cost: 200, unique: true }),
   Object.freeze({ itemId: 'crowbar', label: 'Crowbar', cost: 120, unique: false }),
+  Object.freeze({ itemId: 'computer_virus', label: 'Computer Virus', cost: 180, unique: false }),
   Object.freeze({ itemId: 'fast_lockpick', label: 'Fast Lockpick', cost: 200, unique: true }),
   Object.freeze({ itemId: 'skeleton_key', label: 'Skeleton Key', cost: 500, unique: true, rare: true }),
   Object.freeze({ itemId: 'master_virus', label: 'Master Virus', cost: 500, unique: true, rare: true })
@@ -51,7 +52,8 @@ const LOOT_TABLE = [
   { id: 'energy_bar', weight: 6 },
   { id: 'bandage', weight: 4 },
   { id: 'oxygen_canister', weight: 1 },
-  { id: 'crowbar', weight: 2 }
+  { id: 'crowbar', weight: 2 },
+  { id: 'computer_virus', weight: 1 }
 ];
 
 const pickWeightedItemId = () => {

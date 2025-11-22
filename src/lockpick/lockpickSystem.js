@@ -173,14 +173,14 @@ export const applyFastLockpickToLocks = () => {
   });
 };
 
-const crowbarCount = () => (
+const countItemInInventory = (type) => (
   gameState.inventory.reduce((total, item) => (
-    item?.type === 'crowbar' ? total + 1 : total
+    item?.type === type ? total + 1 : total
   ), 0)
 );
 
-const consumeCrowbar = () => {
-  const index = gameState.inventory.findIndex((item) => item?.type === 'crowbar');
+const consumeInventoryItem = (type) => {
+  const index = gameState.inventory.findIndex((item) => item?.type === type);
   if (index === -1) return false;
   gameState.inventory.splice(index, 1);
   return true;
@@ -191,8 +191,11 @@ export const useCrowbarOnActiveLock = () => {
   if (!activeId) return false;
   const lock = getLockpickById(activeId);
   if (!lock || lock.isUnlocked) return false;
-  if (!crowbarCount()) return false;
-  if (!consumeCrowbar()) return false;
+  if (!countItemInInventory('crowbar')) return false;
+  if (!consumeInventoryItem('crowbar')) return false;
   finalizeLockUnlock(activeId);
   return true;
 };
+
+export const countInventoryItem = (type) => countItemInInventory(type);
+export const consumeInventoryItemByType = (type) => consumeInventoryItem(type);

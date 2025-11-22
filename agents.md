@@ -52,6 +52,9 @@
 - Inner caches: 20 deterministic caches on inner fast-lane cells with credits (20–30) + small chances of energy/oxygen; keep placement trait/grid-driven.
 - Add seeded RNG wrapper for villain escape rolls, perimeter targeting, and loot so runs replay identically.
 - Make LoS aware of dynamic doors/props during chase/escape.
+
+### System Design Guideline
+- Route every major interaction through a single helper (e.g., hacking, vending pricing, lockpicking). These gate functions read the current state and expose deterministic controls (like “Use Virus” buttons) so cheats/testing toggles can add modifiers without permanently mutating game data. Keeping these gates centralized ensures new upgrades and testing tools layer cleanly without scattering special cases across the codebase.
   
 ### Notes from Recent Implementation
 - Track `player.lastMoveDirection` for any directional logic (e.g., taser arcs, future cones) so abilities remain deterministic even when the player is stationary.

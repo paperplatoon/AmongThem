@@ -1,6 +1,6 @@
 import { gameState } from '../state/gameState.js';
 import { createItemFromDefinition } from '../state/itemDefinitions.js';
-import { applyEfficientHackToLocks, applyMasterVirusToLocks } from '../hacking/hackingState.js';
+import { applyEfficientHackToLocks } from '../hacking/hackingState.js';
 import { applyFastLockpickToLocks } from '../lockpick/lockpickSystem.js';
 
 const purchaseTaser = () => {
@@ -59,7 +59,6 @@ const purchaseMasterVirus = () => {
   if (!upgrades) return { success: false, reason: 'no_player' };
   if (upgrades.masterVirus) return { success: false, reason: 'already_owned' };
   upgrades.masterVirus = true;
-  applyMasterVirusToLocks();
   return { success: true, item: { id: 'master_virus_upgrade', label: 'Master Virus', type: 'upgrade' } };
 };
 

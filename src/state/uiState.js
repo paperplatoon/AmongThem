@@ -40,7 +40,8 @@ export const uiState = Object.seal({
     upgradesOverlay: Object.seal({ closeButton: null, testingToggle: null }),
     hacking: Object.seal({
       enterButton: null,
-      exitButton: null
+      exitButton: null,
+      virusButton: null
     })
   }),
   inventorySwap: Object.seal({

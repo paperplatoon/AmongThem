@@ -14,7 +14,7 @@ import { updateInteractions } from './interactions/interactionSystem.js';
 import { initializeCase, applyCaseObstacles } from './state/caseState.js';
 import { updateVillain } from './villain/villainSystem.js';
 import { tryFireTaser } from './combat/taserSystem.js';
-import { handleHackingKeyInput, isHackingActive, updateHackingSystem, applyEfficientHackToLocks, applyMasterVirusToLocks } from './hacking/hackingState.js';
+import { handleHackingKeyInput, isHackingActive, updateHackingSystem, applyEfficientHackToLocks } from './hacking/hackingState.js';
 import { updateLockpickSystem, applyFastLockpickToLocks } from './lockpick/lockpickSystem.js';
 import { setTestingModeEnabled, applyTestingModeEffects } from './state/testingMode.js';
 
@@ -61,7 +61,6 @@ const start = () => {
     applyEfficientHackToLocks();
     gameState.player.upgrades.fastLockpick = true;
     applyFastLockpickToLocks();
-    applyMasterVirusToLocks();
   }
   const canvas = createCanvas();
   const ctx = canvas.getContext('2d');

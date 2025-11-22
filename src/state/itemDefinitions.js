@@ -7,7 +7,8 @@ export const ITEM_TYPES = Object.freeze({
   FAST_LOCKPICK: 'fast_lockpick',
   SKELETON_KEY: 'skeleton_key',
   MASTER_VIRUS: 'master_virus',
-  CROWBAR: 'crowbar'
+  CROWBAR: 'crowbar',
+  COMPUTER_VIRUS: 'computer_virus'
 });
 
 export const ITEM_DEFINITIONS = Object.freeze({
@@ -45,6 +46,10 @@ export const ITEM_DEFINITIONS = Object.freeze({
   }),
   [ITEM_TYPES.CROWBAR]: Object.freeze({
     label: 'Crowbar',
+    effect: null
+  }),
+  [ITEM_TYPES.COMPUTER_VIRUS]: Object.freeze({
+    label: 'Computer Virus',
     effect: null
   })
 });
