@@ -20,6 +20,11 @@ const currentVendingProp = () => (
   gameState.props.find((prop) => prop.id === gameState.ui.openVendingId)
 );
 
+const priceForOption = (option) => {
+  if (!option) return 0;
+  return option.cost;
+};
+
 const containsPoint = (rect, x, y) => (
   rect && x >= rect.x && x <= rect.x2 && y >= rect.y && y <= rect.y2
 );
@@ -48,14 +53,7 @@ export const handleVendingClick = (screenX, screenY) => {
   if (option.itemId === 'keycard_locator' || option.itemId === 'faster_hack' || option.itemId === 'efficient_hack' || option.itemId === 'fast_lockpick' || option.itemId === 'skeleton_key' || option.itemId === 'master_virus') {
     return true;
   }
-  const price = (() => {
-    if (option.itemId === 'taser') {
-      return gameState.testing ? gameState.config.taser.testCost : option.cost;
-    }
-    if (option.itemId === 'crowbar') return gameState.testing ? 0 : option.cost;
-    if (option.itemId === 'computer_virus') return gameState.testing ? 0 : option.cost;
-    return option.cost;
-  })();
+  const price = priceForOption(option);
   const result = spendMoneyOnVending(option.itemId, price);
   if (result.success) {
     gameState.ui.vendingMessage = `${option.label} purchased.`;
@@ -138,16 +136,7 @@ const drawOptions = (ctx, panel, prop) => {
   entries.forEach((option, index) => {
     const y = startY + index * lineHeight;
     const owned = (option.itemId === 'taser' && gameState.player.taser?.hasTaser);
-    const price = (() => {
-      if (option.itemId === 'taser') return gameState.testing ? gameState.config.taser.testCost : option.cost;
-      if (option.itemId === 'keycard_locator') return gameState.testing ? 0 : option.cost;
-      if (option.itemId === 'faster_hack') return gameState.testing ? 20 : option.cost;
-      if (option.itemId === 'efficient_hack') return gameState.testing ? 0 : option.cost;
-      if (option.itemId === 'fast_lockpick') return gameState.testing ? 0 : option.cost;
-      if (option.itemId === 'skeleton_key') return gameState.testing ? 0 : option.cost;
-      if (option.itemId === 'master_virus') return gameState.testing ? 0 : option.cost;
-      return option.cost;
-    })();
+    const price = priceForOption(option);
     const affordable = gameState.player.money >= price;
     ctx.save();
     ctx.fillStyle = owned ? '#7b84a2' : affordable ? '#8effd6' : '#c06f6f';

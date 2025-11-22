@@ -24,7 +24,7 @@ const HALL_PROP_CONFIG = Object.freeze([
 const VENDING_OPTIONS = Object.freeze([
   Object.freeze({ itemId: 'energy_bar', label: 'Energy Bar', cost: 30 }),
   Object.freeze({ itemId: 'bandage', label: 'Bandage', cost: 50 }),
-  Object.freeze({ itemId: 'taser', label: 'Taser', cost: 350, unique: true }),
+  Object.freeze({ itemId: 'taser', label: 'Taser', cost: 300, unique: true }),
   Object.freeze({ itemId: 'crowbar', label: 'Crowbar', cost: 85, unique: false }),
   Object.freeze({ itemId: 'computer_virus', label: 'Computer Virus', cost: 100, unique: false })
 ]);
@@ -33,7 +33,9 @@ const INNER_CACHE_CONFIG = Object.freeze({
   marginCells: 6,
   maxSamples: 24,
   creditChance: 0.2,
-  minSpacingCells: 8
+  minSpacingCells: 8,
+  centerBiasPower: 2,
+  minCenterWeight: 0.05
 });
 
 const distanceChebyshev = (a, b) => Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
@@ -91,49 +93,6 @@ const buildContents = (prop, idPrefix) => {
   return contents;
 };
 
-const fastLaneCells = () => {
-  const mask = cellTraitMask;
-  const flags = CELL_TRAITS;
-  if (!mask || !flags) return [];
-  const cells = [];
-  const width = config.gridWidth;
-  for (let index = 0; index < mask.length; index += 1) {
-    if (!(mask[index] & flags.FAST_LANE)) continue;
-    if (mask[index] & flags.OUTER_HALL) continue;
-    const x = index % width;
-    const y = Math.floor(index / width);
-    cells.push({ x, y });
-  }
-  return cells;
-};
-
-const pickSpacedCells = (candidates, count, minDistance = 2) => {
-  const picked = [];
-  const grid = candidates.reduce((acc, cell) => {
-    if (!acc[cell.x]) acc[cell.x] = {};
-    acc[cell.x][cell.y] = true;
-    return acc;
-  }, {});
-  const step = Math.max(1, minDistance);
-  for (let x = 0; x < config.gridWidth && picked.length < count; x += step) {
-    for (let y = 0; y < config.gridHeight && picked.length < count; y += step) {
-      if (!grid[x] || !grid[x][y]) continue;
-      const cell = { x, y };
-      if (picked.some((p) => distanceChebyshev(p, cell) < minDistance)) continue;
-      picked.push(cell);
-    }
-  }
-  if (picked.length < count) {
-    const remaining = [...candidates];
-    for (let i = 0; i < remaining.length && picked.length < count; i += 1) {
-      const cell = remaining[i];
-      if (picked.some((p) => distanceChebyshev(p, cell) < minDistance)) continue;
-      picked.push(cell);
-    }
-  }
-  return picked;
-};
-
 const innerBand = () => ({
   minX: INNER_CACHE_CONFIG.marginCells,
   maxX: config.gridWidth - INNER_CACHE_CONFIG.marginCells,
@@ -149,46 +108,6 @@ const withinInnerBand = (cell) => {
     cell.y >= band.minY &&
     cell.y <= band.maxY
   );
-};
-
-const biasedFastLaneCells = () => fastLaneCells().filter(withinInnerBand);
-
-const distanceFromCenter = (cell) => {
-  const centerX = config.gridWidth / 2;
-  const centerY = config.gridHeight / 2;
-  return Math.hypot(cell.x - centerX, cell.y - centerY);
-};
-
-const shuffleCells = (cells) => {
-  const list = [...cells];
-  for (let i = list.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [list[i], list[j]] = [list[j], list[i]];
-  }
-  return list;
-};
-
-const sampleBiasedCells = (cells, maxSamples, stretch = 6) => {
-  const sorted = [...cells].sort((a, b) => distanceFromCenter(a) - distanceFromCenter(b));
-  const windowSize = Math.min(sorted.length, maxSamples * stretch);
-  const windowed = sorted.slice(0, windowSize);
-  return shuffleCells(windowed);
-};
-
-const chebyshevDistance = (a, b) => Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
-
-const pickSpacedBiasedCells = (cells, maxSamples, spacing) => {
-  const minSpacing = Math.max(0, spacing || 0);
-  if (!minSpacing) return cells.slice(0, maxSamples);
-  const picked = [];
-  const candidates = cells;
-  for (let i = 0; i < candidates.length && picked.length < maxSamples; i += 1) {
-    const candidate = candidates[i];
-    if (picked.every((entry) => chebyshevDistance(entry, candidate) >= minSpacing)) {
-      picked.push(candidate);
-    }
-  }
-  return picked;
 };
 
 const assureWallNudge = (cell) => {
@@ -207,34 +126,87 @@ const assureWallNudge = (cell) => {
   return cell;
 };
 
-const fallbackSegments = (spacing) => (
-  pickSpacedBiasedCells(
-    shuffleCells(fastLaneCells()),
-    INNER_CACHE_CONFIG.maxSamples,
-    spacing
-  )
+let cachedFastLaneMeta = null;
+
+const innerBoundsInCells = () => ({
+  minX: Math.round(mapState.corridorInner.left / config.cellSize),
+  maxX: Math.round(mapState.corridorInner.right / config.cellSize),
+  minY: Math.round(mapState.corridorInner.top / config.cellSize),
+  maxY: Math.round(mapState.corridorInner.bottom / config.cellSize)
+});
+
+const computeFastLaneMeta = () => {
+  const mask = cellTraitMask;
+  const flags = CELL_TRAITS;
+  if (!mask || !flags) return [];
+  const width = config.gridWidth;
+  const bounds = innerBoundsInCells();
+  const centerWorldX = mapState.corridorInner.left + mapState.corridorInner.width / 2;
+  const centerWorldY = mapState.corridorInner.top + mapState.corridorInner.height / 2;
+  const centerX = Math.round(centerWorldX / config.cellSize);
+  const centerY = Math.round(centerWorldY / config.cellSize);
+  const maxDx = Math.max(centerX - bounds.minX, bounds.maxX - centerX);
+  const maxDy = Math.max(centerY - bounds.minY, bounds.maxY - centerY);
+  const maxDistance = Math.max(maxDx, maxDy, 1);
+  const meta = [];
+  for (let index = 0; index < mask.length; index += 1) {
+    if (!(mask[index] & flags.FAST_LANE)) continue;
+    if (mask[index] & flags.OUTER_HALL) continue;
+    const x = index % width;
+    const y = Math.floor(index / width);
+    if (!withinInnerBand({ x, y })) continue;
+    const dist = Math.max(Math.abs(x - centerX), Math.abs(y - centerY));
+    const normalized = 1 - Math.min(1, dist / maxDistance);
+    meta.push({ x, y, centerWeight: normalized });
+  }
+  return meta;
+};
+
+const fastLaneMeta = () => {
+  if (!cachedFastLaneMeta) cachedFastLaneMeta = computeFastLaneMeta();
+  return cachedFastLaneMeta;
+};
+
+const scoreFastLaneEntry = (entry) => {
+  const biasPower = Math.max(INNER_CACHE_CONFIG.centerBiasPower || 1, 0.1);
+  const minWeight = Math.max(0, INNER_CACHE_CONFIG.minCenterWeight || 0);
+  const weight = Math.max(entry.centerWeight, minWeight);
+  return Math.pow(weight, biasPower);
+};
+
+const prioritizedFastLaneEntries = () => (
+  fastLaneMeta()
+    .map((entry) => ({ ...entry, score: scoreFastLaneEntry(entry) + Math.random() * 0.0001 }))
+    .sort((a, b) => b.score - a.score)
 );
 
+const tryPickEntriesForSpacing = (candidates, spacing, maxSamples) => {
+  const picked = [];
+  const minSpacing = Math.max(0, spacing || 0);
+  for (let i = 0; i < candidates.length && picked.length < maxSamples; i += 1) {
+    const candidate = candidates[i];
+    if (minSpacing > 0 && picked.some((entry) => distanceChebyshev(entry, candidate) < minSpacing)) continue;
+    picked.push(candidate);
+  }
+  return picked;
+};
+
 const innerCacheCells = () => {
+  const candidates = prioritizedFastLaneEntries();
+  if (!candidates.length) return [];
   const attempts = [
     INNER_CACHE_CONFIG.minSpacingCells,
-    Math.max(4, INNER_CACHE_CONFIG.minSpacingCells - 2),
+    Math.max(0, INNER_CACHE_CONFIG.minSpacingCells - 2),
     0
   ];
   for (let i = 0; i < attempts.length; i += 1) {
     const spacing = attempts[i];
-    const biased = pickSpacedBiasedCells(
-      sampleBiasedCells(biasedFastLaneCells(), INNER_CACHE_CONFIG.maxSamples),
-      INNER_CACHE_CONFIG.maxSamples,
-      spacing
-    );
-    if (biased.length >= INNER_CACHE_CONFIG.maxSamples) return biased;
-    const fallback = fallbackSegments(spacing);
-    if (fallback.length >= INNER_CACHE_CONFIG.maxSamples) return fallback;
-    if (biased.length) return biased;
-    if (fallback.length) return fallback;
+    const picked = tryPickEntriesForSpacing(candidates, spacing, INNER_CACHE_CONFIG.maxSamples);
+    if (picked.length >= INNER_CACHE_CONFIG.maxSamples || i === attempts.length - 1) {
+      return picked.slice(0, INNER_CACHE_CONFIG.maxSamples);
+    }
   }
-  return fallbackSegments(0);
+  return candidates.slice(0, INNER_CACHE_CONFIG.maxSamples);
 };
 
 const maybeAddInnerCacheCredits = (contents, idPrefix) => {

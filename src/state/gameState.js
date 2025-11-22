@@ -11,7 +11,6 @@ import { villainState } from './villainState.js';
 import { lockpickState } from './lockpickState.js';
 
 export const gameState = Object.seal({
-  testing: true,
   testingModeEnabled: false,
   config,
   grid: gridState,

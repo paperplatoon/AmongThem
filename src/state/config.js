@@ -83,8 +83,7 @@ export const config = Object.freeze({
     doorPoundPauseSeconds: 1
   }),
   taser: Object.freeze({
-    cost: 350,
-    testCost: 50,
+    cost: 300,
     cooldownSeconds: 5,
     stunSeconds: 10,
     arcLengthCells: 5,
