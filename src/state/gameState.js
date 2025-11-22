@@ -9,6 +9,7 @@ import { generateRoomProps } from './roomProps.js';
 import { journalState } from './journalState.js';
 import { villainState } from './villainState.js';
 import { lockpickState } from './lockpickState.js';
+import { visualEffectsState } from './visualEffects.js';
 
 export const gameState = Object.seal({
   testingModeEnabled: false,
@@ -85,5 +86,6 @@ export const gameState = Object.seal({
   accusation: Object.seal({
     active: false,
     result: 'idle'
-  })
+  }),
+  visualEffects: visualEffectsState
 });

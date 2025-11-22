@@ -1,6 +1,7 @@
 import { gameState } from '../state/gameState.js';
 import { spendMoneyOnVending } from '../items/vendingMachine.js';
 import { closeOverlay, isOverlayActive, OverlayId } from '../state/overlayManager.js';
+import { addFloatingText, addClickRipple } from '../state/visualEffects.js';
 
 const hitboxes = () => gameState.ui.hitboxes;
 
@@ -33,11 +34,13 @@ export const handleVendingClick = (screenX, screenY) => {
   if (!gameState.ui.openVendingId) return false;
   const closeHitbox = hitboxes().vendingCloseButton;
   if (containsPoint(closeHitbox, screenX, screenY)) {
+    addClickRipple((closeHitbox.x + closeHitbox.x2) / 2, (closeHitbox.y + closeHitbox.y2) / 2, '#ff6b6b');
     closeVendingMenu();
     return true;
   }
   const optionHit = hitboxes().vendingOptions.find((entry) => containsPoint(entry, screenX, screenY));
   if (!optionHit) return false;
+  addClickRipple((optionHit.x + optionHit.x2) / 2, (optionHit.y + optionHit.y2) / 2, '#8effd6');
   if (optionHit.disabled) return true;
   const prop = currentVendingProp();
   if (!prop) {
@@ -57,6 +60,9 @@ export const handleVendingClick = (screenX, screenY) => {
   const result = spendMoneyOnVending(option.itemId, price);
   if (result.success) {
     gameState.ui.vendingMessage = `${option.label} purchased.`;
+    const centerX = gameState.config.canvasWidth / 2;
+    const centerY = gameState.config.canvasHeight / 2;
+    addFloatingText(centerX, centerY, `-${price}₡`, '#ff6b6b');
   } else if (result.reason === 'insufficient_funds') {
     gameState.ui.vendingMessage = 'Not enough credits.';
   } else if (result.reason === 'inventory_full') {

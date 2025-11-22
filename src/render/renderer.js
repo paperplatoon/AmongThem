@@ -14,6 +14,7 @@ import { renderAccuseConsole } from './accuseConsole.js';
 import { renderLockpick } from '../ui/lockpick.js';
 import { renderUpgrades } from '../ui/upgrades.js';
 import { renderWeaponTesting } from '../ui/weaponTesting.js';
+import { renderVisualEffects } from './visualEffects.js';
 import { cellToWorldCenter } from '../state/gridState.js';
 const { WALL } = CELL_TYPES;
 
@@ -331,6 +332,7 @@ export const renderFrame = (ctx) => {
   renderAccusation(ctx);
   renderWeaponTesting(ctx);
   renderGameOver(ctx);
+  renderVisualEffects(ctx);
   if (gameState.testingModeEnabled) {
     ctx.save();
     ctx.fillStyle = '#ffaa33';

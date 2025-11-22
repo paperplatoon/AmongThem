@@ -1,4 +1,5 @@
 import { gameState } from '../state/gameState.js';
+import { addClickRipple } from '../state/visualEffects.js';
 const hitboxes = () => gameState.ui.hitboxes.accusation;
 
 const clearHitboxes = () => {
@@ -118,6 +119,7 @@ export const handleAccusationClick = (screenX, screenY) => {
   if (gameState.accusation.result !== 'selecting') {
     const closeHit = hitboxes().closeButton;
     if (closeHit && screenX >= closeHit.x && screenX <= closeHit.x2 && screenY >= closeHit.y && screenY <= closeHit.y2) {
+      addClickRipple((closeHit.x + closeHit.x2) / 2, (closeHit.y + closeHit.y2) / 2, '#8effd6');
       window.location.reload();
       return true;
     }
@@ -127,6 +129,7 @@ export const handleAccusationClick = (screenX, screenY) => {
     screenX >= button.x && screenX <= button.x2 && screenY >= button.y && screenY <= button.y2
   ));
   if (!roleHit) return false;
+  addClickRipple((roleHit.x + roleHit.x2) / 2, (roleHit.y + roleHit.y2) / 2, '#ffd24a');
   resolveAccusation(roleHit.roleId);
   return true;
 };

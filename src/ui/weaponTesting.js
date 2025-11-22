@@ -1,5 +1,6 @@
 import { gameState } from '../state/gameState.js';
 import { isOverlayActive, OverlayId } from '../state/overlayManager.js';
+import { addFloatingText, addClickRipple } from '../state/visualEffects.js';
 
 const TEST_COST = 150;
 
@@ -20,6 +21,11 @@ export const handleWeaponTestingClick = (screenX, screenY) => {
 
   if (!buttonHit) return false;
 
+  // Add click ripple
+  const btnCenterX = (buttonHit.x + buttonHit.x2) / 2;
+  const btnCenterY = (buttonHit.y + buttonHit.y2) / 2;
+  addClickRipple(btnCenterX, btnCenterY, '#8effd6');
+
   // Check if player has enough money
   if (gameState.player.money < TEST_COST) {
     return true; // Consumed click but no action
@@ -30,6 +36,11 @@ export const handleWeaponTestingClick = (screenX, screenY) => {
 
   // Mark weapon as tested
   gameState.ui.weaponTesting.testedWeapons.add(buttonHit.roleId);
+
+  // Show floating text
+  const centerX = gameState.config.canvasWidth / 2;
+  const centerY = gameState.config.canvasHeight / 2;
+  addFloatingText(centerX, centerY, `-${TEST_COST}₡`, '#ff6b6b');
 
   // Result already pre-computed in gameState.case.weaponTestResults
   return true;

@@ -2,6 +2,7 @@ import { gameState } from '../state/gameState.js';
 import { markKeycardKnown, markComputerDiscovered, addEvidenceToJournal, markWeaponCategory } from '../state/journalState.js';
 import { handleEvidenceItem } from '../evidence/evidenceHandlers.js';
 import { OverlayId, closeOverlay, openOverlay, isOverlayActive } from '../state/overlayManager.js';
+import { addFloatingText, addClickRipple } from '../state/visualEffects.js';
 
 const hitboxes = () => gameState.ui.hitboxes;
 
@@ -32,9 +33,12 @@ const collectKeycardItem = (item) => {
   if (item.roleId) markKeycardKnown(item.roleId);
 };
 
-const collectCredits = (item) => {
+const collectCredits = (item, x, y) => {
   if (!item || typeof item.amount !== 'number') return;
   gameState.player.money += item.amount;
+  if (x !== undefined && y !== undefined) {
+    addFloatingText(x, y, `+${item.amount}₡`, '#ffd24a');
+  }
 };
 
 const beginInventorySwap = (prop, item) => {
@@ -52,11 +56,17 @@ export const handleContainerClick = (screenX, screenY) => {
   if (!gameState.ui.openContainerId) return false;
   const closeHitbox = hitboxes().containerCloseButton;
   if (closeHitbox && screenX >= closeHitbox.x && screenX <= closeHitbox.x2 && screenY >= closeHitbox.y && screenY <= closeHitbox.y2) {
+    addClickRipple((closeHitbox.x + closeHitbox.x2) / 2, (closeHitbox.y + closeHitbox.y2) / 2, '#ff6b6b');
     closeContainer();
     return true;
   }
   const hit = hitboxes().containerSlots.find((slot) => screenX >= slot.x && screenX <= slot.x2 && screenY >= slot.y && screenY <= slot.y2);
   if (!hit) return false;
+
+  // Add click ripple
+  const centerX = (hit.x + hit.x2) / 2;
+  const centerY = (hit.y + hit.y2) / 2;
+  addClickRipple(centerX, centerY, '#8effd6');
   const prop = gameState.props.find((p) => p.id === gameState.ui.openContainerId);
   if (!prop) return false;
   if (prop.lockpickId && !prop.lockpickUnlocked) {
@@ -82,7 +92,9 @@ export const handleContainerClick = (screenX, screenY) => {
     }
     prop.contents.splice(hit.index, 1);
   } else if (item.type === 'credits') {
-    collectCredits(item);
+    const centerX = (hit.x + hit.x2) / 2;
+    const centerY = (hit.y + hit.y2) / 2;
+    collectCredits(item, centerX, centerY);
     prop.contents.splice(hit.index, 1);
   } else {
     if (isInventoryFull()) {

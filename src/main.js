@@ -17,6 +17,7 @@ import { tryFireTaser } from './combat/taserSystem.js';
 import { handleHackingKeyInput, isHackingActive, updateHackingSystem } from './hacking/hackingState.js';
 import { updateLockpickSystem } from './lockpick/lockpickSystem.js';
 import { closeOverlay, OverlayId } from './state/overlayManager.js';
+import { updateVisualEffects } from './state/visualEffects.js';
 
 const createCanvas = () => {
   const canvas = document.createElement('canvas');
@@ -45,6 +46,7 @@ const stepFrame = (ctx, time) => {
   updateInteractions();
   updateHackingSystem(delta);
   updateLockpickSystem(delta);
+  updateVisualEffects(delta);
   renderFrame(ctx);
   requestAnimationFrame((next) => stepFrame(ctx, next));
 };
