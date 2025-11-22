@@ -7,3 +7,7 @@ export const hasSkeletonKeyUpgrade = () => (
 export const hasMasterVirusUpgrade = () => (
   Boolean(gameState.player.upgrades?.masterVirus) || Boolean(gameState.player.upgrades?.testingMasterVirus)
 );
+
+export const hasElectricBootsUpgrade = () => (
+  Boolean(gameState.player.upgrades?.electricBoots) || Boolean(gameState.player.upgrades?.testingElectricBoots)
+);

@@ -1,4 +1,5 @@
 import { gameState } from '../state/gameState.js';
+import { hasElectricBootsUpgrade } from '../state/upgradeSelectors.js';
 
 const getConfig = () => gameState.config.stamina;
 
@@ -53,6 +54,7 @@ export const getCurrentSpeed = () => {
   const player = gameState.player;
   const baseSpeed = player.walkSpeed;
   const stamina = player.stamina;
-  if (!stamina.isSprinting) return baseSpeed;
-  return baseSpeed * gameState.config.stamina.sprintMultiplier;
+  const bootMultiplier = hasElectricBootsUpgrade() ? 1.5 : 1;
+  if (!stamina.isSprinting) return baseSpeed * bootMultiplier;
+  return baseSpeed * gameState.config.stamina.sprintMultiplier * bootMultiplier;
 };

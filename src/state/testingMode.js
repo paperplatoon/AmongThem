@@ -8,6 +8,7 @@ export const setTestingModeEnabled = (enabled) => {
   gameState.testingModeEnabled = enabled;
   gameState.player.upgrades.testingMasterVirus = enabled;
   gameState.player.upgrades.testingSkeletonKey = enabled;
+  gameState.player.upgrades.testingElectricBoots = enabled;
   if (enabled) {
     gameState.player.money += CREDIT_BONUS;
   }

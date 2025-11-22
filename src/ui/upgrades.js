@@ -1,5 +1,5 @@
 import { gameState } from '../state/gameState.js';
-import { hasSkeletonKeyUpgrade, hasMasterVirusUpgrade } from '../state/upgradeSelectors.js';
+import { hasSkeletonKeyUpgrade, hasMasterVirusUpgrade, hasElectricBootsUpgrade } from '../state/upgradeSelectors.js';
 import { isTestingModeEnabled, toggleTestingMode } from '../state/testingMode.js';
 import { OverlayId, toggleOverlay, isOverlayActive, closeOverlay } from '../state/overlayManager.js';
 
@@ -56,14 +56,16 @@ const drawPanel = (ctx) => {
 
 const upgradeList = () => {
   const upgrades = gameState.player.upgrades || {};
-  return [
+  const allUpgrades = [
     { label: 'Keycard Locator', active: upgrades.keycardLocator },
     { label: 'Faster Hack', active: upgrades.hasFasterHack },
     { label: 'Efficient Hacking', active: upgrades.efficientHack },
     { label: 'Fast Lockpick', active: upgrades.fastLockpick },
     { label: 'Skeleton Key', active: hasSkeletonKeyUpgrade() },
-    { label: 'Master Virus', active: hasMasterVirusUpgrade() }
+    { label: 'Master Virus', active: hasMasterVirusUpgrade() },
+    { label: 'Electric Boots', active: hasElectricBootsUpgrade() }
   ];
+  return allUpgrades.filter((upgrade) => upgrade.active);
 };
 
 const drawTestingToggle = (ctx, panel, list) => {
@@ -108,11 +110,16 @@ export const renderUpgrades = (ctx) => {
   ctx.font = '22px "Courier New", monospace';
   ctx.textAlign = 'left';
   ctx.textBaseline = 'top';
-  list.forEach((entry, index) => {
-    const y = panel.y + 70 + index * 32;
-    ctx.fillStyle = entry.active ? '#8effd6' : '#7b84a2';
-    ctx.fillText(`${entry.active ? '✓' : '✕'} ${entry.label}`, panel.x + 20, y);
-  });
+  if (list.length === 0) {
+    ctx.fillStyle = '#7b84a2';
+    ctx.fillText('No upgrades yet', panel.x + 20, panel.y + 70);
+  } else {
+    list.forEach((entry, index) => {
+      const y = panel.y + 70 + index * 32;
+      ctx.fillStyle = '#8effd6';
+      ctx.fillText(`✓ ${entry.label}`, panel.x + 20, y);
+    });
+  }
   ctx.restore();
   drawTestingToggle(ctx, panel, list);
   const closeSize = 28;
