@@ -1,9 +1,23 @@
 import { gameState } from '../state/gameState.js';
 import { getLockpickById, combinationLength, lockpickDirectionForStep } from '../state/lockpickState.js';
+import { useCrowbarOnActiveLock } from '../lockpick/lockpickSystem.js';
 
 const floorDigit = (value) => Math.floor((((value % 10) + 10) % 10));
 
 const hitboxes = () => gameState.ui.hitboxes.lockpick;
+
+const countCrowbars = () => (
+  gameState.inventory.reduce((total, item) => (
+    item?.type === 'crowbar' ? total + 1 : total
+  ), 0)
+);
+
+const circledNumbers = ['⓪', '①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩', '⑪', '⑫', '⑬', '⑭', '⑮', '⑯', '⑰', '⑱', '⑲', '⑳'];
+
+const formatCrowbarCount = (count) => {
+  if (count >= 0 && count < circledNumbers.length) return circledNumbers[count];
+  return `(${count})`;
+};
 
 const clearHitboxes = () => {
   const box = hitboxes();
@@ -59,6 +73,10 @@ export const handleLockpickClick = (screenX, screenY) => {
   );
   if (box.closeButton && pointInRect(box.closeButton)) {
     closeOverlay();
+    return true;
+  }
+  if (box.bypassButton && pointInRect(box.bypassButton)) {
+    useCrowbarOnActiveLock();
     return true;
   }
   return false;
@@ -238,6 +256,31 @@ const drawControls = (ctx, panel, lock) => {
   hitboxes().rightArrow = { x: rightX, y: arrowsY, x2: rightX + arrowWidth, y2: arrowsY + arrowHeight };
 };
 
+const drawCrowbarButton = (ctx, panel, lock) => {
+  const count = countCrowbars();
+  if (!count || lock?.isUnlocked) {
+    hitboxes().bypassButton = null;
+    return;
+  }
+  const width = 210;
+  const height = 42;
+  const x = panel.x + 32;
+  const y = panel.y + 24;
+  ctx.save();
+  ctx.fillStyle = '#1f4d3f';
+  ctx.strokeStyle = '#3dd17a';
+  ctx.lineWidth = 2;
+  ctx.fillRect(x, y, width, height);
+  ctx.strokeRect(x, y, width, height);
+  ctx.fillStyle = '#8effd6';
+  ctx.font = '18px "Courier New", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(`Use Crowbar ${formatCrowbarCount(count)}`, x + width / 2, y + height / 2);
+  ctx.restore();
+  hitboxes().bypassButton = { x, y, x2: x + width, y2: y + height };
+};
+
 export const renderLockpick = (ctx) => {
   const lockId = gameState.ui.openLockpickId;
   if (!lockId) {
@@ -256,4 +299,5 @@ export const renderLockpick = (ctx) => {
   drawRows(ctx, panel, lock);
   drawDial(ctx, panel, lock);
   drawControls(ctx, panel, lock);
+  drawCrowbarButton(ctx, panel, lock);
 };

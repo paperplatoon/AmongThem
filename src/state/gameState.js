@@ -12,6 +12,7 @@ import { lockpickState } from './lockpickState.js';
 
 export const gameState = Object.seal({
   testing: true,
+  testingModeEnabled: false,
   config,
   grid: gridState,
   map: Object.freeze({ rooms, corridors, vents, shafts, doors, roomById, cellTraits: cellTraitMask, cellTraitFlags: CELL_TRAITS }),

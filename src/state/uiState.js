@@ -37,7 +37,7 @@ export const uiState = Object.seal({
       closeButton: null
     }),
     upgradeButton: null,
-    upgradesOverlay: Object.seal({ closeButton: null }),
+    upgradesOverlay: Object.seal({ closeButton: null, testingToggle: null }),
     hacking: Object.seal({
       enterButton: null,
       exitButton: null

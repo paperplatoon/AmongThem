@@ -172,3 +172,27 @@ export const applyFastLockpickToLocks = () => {
     }
   });
 };
+
+const crowbarCount = () => (
+  gameState.inventory.reduce((total, item) => (
+    item?.type === 'crowbar' ? total + 1 : total
+  ), 0)
+);
+
+const consumeCrowbar = () => {
+  const index = gameState.inventory.findIndex((item) => item?.type === 'crowbar');
+  if (index === -1) return false;
+  gameState.inventory.splice(index, 1);
+  return true;
+};
+
+export const useCrowbarOnActiveLock = () => {
+  const activeId = gameState.lockpick.activeId;
+  if (!activeId) return false;
+  const lock = getLockpickById(activeId);
+  if (!lock || lock.isUnlocked) return false;
+  if (!crowbarCount()) return false;
+  if (!consumeCrowbar()) return false;
+  finalizeLockUnlock(activeId);
+  return true;
+};

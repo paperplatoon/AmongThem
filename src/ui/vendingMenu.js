@@ -78,6 +78,7 @@ export const handleVendingClick = (screenX, screenY) => {
       return gameState.testing ? 20 : option.cost;
     }
     if (option.itemId === 'efficient_hack') return gameState.testing ? 0 : option.cost;
+    if (option.itemId === 'crowbar') return gameState.testing ? 0 : option.cost;
     if (option.itemId === 'fast_lockpick') return gameState.testing ? 0 : option.cost;
     if (option.itemId === 'skeleton_key') return gameState.testing ? 0 : option.cost;
     if (option.itemId === 'master_virus') return gameState.testing ? 0 : option.cost;

@@ -6,7 +6,8 @@ export const ITEM_TYPES = Object.freeze({
   EFFICIENT_HACK: 'efficient_hack',
   FAST_LOCKPICK: 'fast_lockpick',
   SKELETON_KEY: 'skeleton_key',
-  MASTER_VIRUS: 'master_virus'
+  MASTER_VIRUS: 'master_virus',
+  CROWBAR: 'crowbar'
 });
 
 export const ITEM_DEFINITIONS = Object.freeze({
@@ -41,6 +42,10 @@ export const ITEM_DEFINITIONS = Object.freeze({
   [ITEM_TYPES.MASTER_VIRUS]: Object.freeze({
     label: 'Master Virus',
     effect: { type: 'master_virus' }
+  }),
+  [ITEM_TYPES.CROWBAR]: Object.freeze({
+    label: 'Crowbar',
+    effect: null
   })
 });
 

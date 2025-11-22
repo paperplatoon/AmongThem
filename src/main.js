@@ -16,6 +16,7 @@ import { updateVillain } from './villain/villainSystem.js';
 import { tryFireTaser } from './combat/taserSystem.js';
 import { handleHackingKeyInput, isHackingActive, updateHackingSystem, applyEfficientHackToLocks, applyMasterVirusToLocks } from './hacking/hackingState.js';
 import { updateLockpickSystem, applyFastLockpickToLocks } from './lockpick/lockpickSystem.js';
+import { setTestingModeEnabled, applyTestingModeEffects } from './state/testingMode.js';
 
 const createCanvas = () => {
   const canvas = document.createElement('canvas');
@@ -44,6 +45,7 @@ const stepFrame = (ctx, time) => {
   updateInteractions();
   updateHackingSystem(delta);
   updateLockpickSystem(delta);
+  applyTestingModeEffects();
   renderFrame(ctx);
   requestAnimationFrame((next) => stepFrame(ctx, next));
 };
@@ -54,12 +56,11 @@ const start = () => {
   buildSolidMask();
   applyCaseObstacles();
   if (gameState.testing) {
+    setTestingModeEnabled(true);
     gameState.player.upgrades.efficientHack = true;
     applyEfficientHackToLocks();
     gameState.player.upgrades.fastLockpick = true;
     applyFastLockpickToLocks();
-    gameState.player.upgrades.skeletonKey = true;
-    gameState.player.upgrades.masterVirus = true;
     applyMasterVirusToLocks();
   }
   const canvas = createCanvas();

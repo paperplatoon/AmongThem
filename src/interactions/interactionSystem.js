@@ -7,6 +7,7 @@ import { resetVillainLockdown } from '../villain/villainSystem.js';
 import { cellToWorldCenter } from '../state/gridState.js';
 import { closeVendingMenu } from '../ui/vendingMenu.js';
 import { startHackingForProp, isPropComputerLocked } from '../hacking/hackingState.js';
+import { hasSkeletonKeyUpgrade } from '../state/upgradeSelectors.js';
 
 const scannerRange = 96;
 const propRange = 88;
@@ -113,7 +114,7 @@ const canAccessProp = (prop) => (!prop.requiresKey || hasKeycard(prop.lockId));
 
 const tryAutoUnlockLocker = (prop) => {
   if (!prop?.lockpickId) return false;
-  if (!prop.lockId || hasKeycard(prop.lockId) || gameState.player.upgrades.skeletonKey) {
+  if (!prop.lockId || hasKeycard(prop.lockId) || hasSkeletonKeyUpgrade()) {
     prop.lockpickUnlocked = true;
     prop.promptText = 'CLICK TO SEARCH';
     return true;
@@ -224,7 +225,7 @@ export const updateInteractions = () => {
       prop.promptText = prop.isEmpty ? 'EMPTY' : 'CLICK TO SEARCH';
     }
     if (prop.lockpickId && !prop.lockpickUnlocked) {
-      const hasKey = hasKeycard(prop.lockId) || gameState.player.upgrades.skeletonKey;
+      const hasKey = hasKeycard(prop.lockId) || hasSkeletonKeyUpgrade();
       prop.promptText = hasKey ? 'CLICK TO USE KEYCARD' : 'CLICK TO PICK LOCK';
     }
     if (prop.type === 'vending_machine') prop.promptText = 'CLICK TO BUY';

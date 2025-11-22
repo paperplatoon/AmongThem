@@ -1,5 +1,6 @@
 import { gameState } from '../state/gameState.js';
 import { PASSWORD_WORDS } from '../state/passwords.js';
+import { hasMasterVirusUpgrade } from '../state/upgradeSelectors.js';
 
 const uppercaseWord = (word) => (word || '').toUpperCase();
 
@@ -131,7 +132,7 @@ export const seedComputerLocks = () => {
     gameState.computerLocks.byPropId[prop.id] = lock;
     prop.computerLockId = lock.id;
   });
-  if (gameState.player.upgrades?.masterVirus) {
+  if (hasMasterVirusUpgrade()) {
     applyMasterVirusToLocks();
   }
 };
@@ -144,7 +145,7 @@ export const listComputerLocks = () => gameState.computerLocks.locks;
 
 export const isPropComputerLocked = (prop) => {
   if (!prop) return false;
-  if (gameState.player.upgrades?.masterVirus) return false;
+  if (hasMasterVirusUpgrade()) return false;
   const lock = getComputerLockByPropId(prop.id);
   if (!lock) return false;
   return !isLockHacked(lock);
@@ -156,7 +157,7 @@ export const applyEfficientHackToLocks = () => {
 };
 
 export const applyMasterVirusToLocks = () => {
-  if (!gameState.player.upgrades?.masterVirus) return;
+  if (!hasMasterVirusUpgrade()) return;
   listComputerLocks().forEach((lock) => unlockComputerLock(lock));
 };
 
@@ -164,7 +165,7 @@ export const startHackingForProp = (propId) => {
   const lock = getComputerLockByPropId(propId);
   if (!lock) return false;
   if (isLockHacked(lock)) return false;
-  if (gameState.player.upgrades?.masterVirus) {
+  if (hasMasterVirusUpgrade()) {
     applyMasterVirusToLocks();
     return false;
   }

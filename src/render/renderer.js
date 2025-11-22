@@ -313,7 +313,7 @@ export const renderFrame = (ctx) => {
   renderUpgrades(ctx);
   renderAccusation(ctx);
   renderGameOver(ctx);
-  if (gameState.testing) {
+  if (gameState.testingModeEnabled) {
     ctx.save();
     ctx.fillStyle = '#ffaa33';
     ctx.font = '14px "Courier New", monospace';

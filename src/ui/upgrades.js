@@ -1,4 +1,6 @@
 import { gameState } from '../state/gameState.js';
+import { hasSkeletonKeyUpgrade, hasMasterVirusUpgrade } from '../state/upgradeSelectors.js';
+import { isTestingModeEnabled, toggleTestingMode } from '../state/testingMode.js';
 
 const hitboxes = () => gameState.ui.hitboxes;
 
@@ -16,7 +18,12 @@ export const handleUpgradeButtonClick = (screenX, screenY) => {
 
 export const handleUpgradesClick = (screenX, screenY) => {
   if (!gameState.ui.showUpgrades) return false;
-  const closeRect = hitboxes().upgradesOverlay.closeButton;
+  const overlay = hitboxes().upgradesOverlay;
+  if (buttonRect(screenX, screenY, overlay.testingToggle)) {
+    toggleTestingMode();
+    return true;
+  }
+  const closeRect = overlay.closeButton;
   if (buttonRect(screenX, screenY, closeRect)) {
     gameState.ui.showUpgrades = false;
     return true;
@@ -53,14 +60,37 @@ const upgradeList = () => {
     { label: 'Faster Hack', active: upgrades.hasFasterHack },
     { label: 'Efficient Hacking', active: upgrades.efficientHack },
     { label: 'Fast Lockpick', active: upgrades.fastLockpick },
-    { label: 'Skeleton Key', active: upgrades.skeletonKey },
-    { label: 'Master Virus', active: upgrades.masterVirus }
+    { label: 'Skeleton Key', active: hasSkeletonKeyUpgrade() },
+    { label: 'Master Virus', active: hasMasterVirusUpgrade() }
   ];
+};
+
+const drawTestingToggle = (ctx, panel) => {
+  const active = isTestingModeEnabled();
+  const width = panel.width - 40;
+  const height = 44;
+  const x = panel.x + 20;
+  const y = panel.y + panel.height - height - 40;
+  ctx.save();
+  ctx.fillStyle = active ? '#1f4d3f' : '#2f3e69';
+  ctx.strokeStyle = active ? '#3dd17a' : '#6d8cff';
+  ctx.lineWidth = 2;
+  ctx.fillRect(x, y, width, height);
+  ctx.strokeRect(x, y, width, height);
+  ctx.fillStyle = '#fefefe';
+  ctx.font = '20px "Courier New", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  const label = active ? 'Testing Mode: ON' : 'Testing Mode: OFF';
+  ctx.fillText(label, x + width / 2, y + height / 2);
+  ctx.restore();
+  hitboxes().upgradesOverlay.testingToggle = { x, y, x2: x + width, y2: y + height };
 };
 
 export const renderUpgrades = (ctx) => {
   if (!gameState.ui.showUpgrades) {
     hitboxes().upgradesOverlay.closeButton = null;
+    hitboxes().upgradesOverlay.testingToggle = null;
     return;
   }
   drawBackdrop(ctx);
@@ -83,6 +113,7 @@ export const renderUpgrades = (ctx) => {
     ctx.fillText(`${entry.active ? '✓' : '✕'} ${entry.label}`, panel.x + 20, y);
   });
   ctx.restore();
+  drawTestingToggle(ctx, panel);
   const closeSize = 28;
   const closeX = panel.x + panel.width - closeSize - 12;
   const closeY = panel.y + 12;
