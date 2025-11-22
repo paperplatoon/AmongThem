@@ -1,5 +1,6 @@
 import { gameState } from '../state/gameState.js';
 import { createItemFromDefinition } from '../state/itemDefinitions.js';
+import { applyEfficientHackToLocks } from '../hacking/hackingState.js';
 
 const purchaseTaser = () => {
   const taser = gameState.player.taser;
@@ -26,6 +27,15 @@ const purchaseFasterHack = () => {
   return { success: true, item: { id: 'faster_hack_upgrade', label: 'Faster Hack', type: 'upgrade' } };
 };
 
+const purchaseEfficientHack = () => {
+  const upgrades = gameState.player.upgrades;
+  if (!upgrades) return { success: false, reason: 'no_player' };
+  if (upgrades.efficientHack) return { success: false, reason: 'already_owned' };
+  upgrades.efficientHack = true;
+  applyEfficientHackToLocks();
+  return { success: true, item: { id: 'efficient_hack_upgrade', label: 'Efficient Hacking', type: 'upgrade' } };
+};
+
 export const spendMoneyOnVending = (itemType, cost) => {
   const player = gameState.player;
   if (!player) return { success: false, reason: 'no_player' };
@@ -44,6 +54,12 @@ export const spendMoneyOnVending = (itemType, cost) => {
   }
   if (itemType === 'faster_hack') {
     const result = purchaseFasterHack();
+    if (!result.success) return result;
+    player.money -= cost;
+    return result;
+  }
+  if (itemType === 'efficient_hack') {
+    const result = purchaseEfficientHack();
     if (!result.success) return result;
     player.money -= cost;
     return result;

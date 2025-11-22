@@ -26,7 +26,8 @@ const VENDING_OPTIONS = Object.freeze([
   Object.freeze({ itemId: 'bandage', label: 'Bandage', cost: 50 }),
   Object.freeze({ itemId: 'taser', label: 'Taser', cost: config.taser.cost, unique: true }),
   Object.freeze({ itemId: 'keycard_locator', label: 'Keycard Locator', cost: 150, unique: true }),
-  Object.freeze({ itemId: 'faster_hack', label: 'Faster Hack', cost: 100, unique: false })
+  Object.freeze({ itemId: 'faster_hack', label: 'Faster Hack', cost: 100, unique: false }),
+  Object.freeze({ itemId: 'efficient_hack', label: 'Efficient Hacking', cost: 200, unique: true })
 ]);
 
 const INNER_CACHE_CONFIG = Object.freeze({

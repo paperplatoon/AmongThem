@@ -23,6 +23,14 @@ const defaultModifiers = () => Object.seal({
   orderedReveal: false
 });
 
+const hasEfficientHack = () => Boolean(gameState.player.upgrades?.efficientHack);
+
+const applyEfficientHackToLock = (lock) => {
+  if (!lock || !hasEfficientHack()) return;
+  lock.scrambled = [...lock.letters];
+  lock.modifiers.orderedReveal = true;
+};
+
 const shuffleArray = (letters) => {
   const array = [...letters];
   for (let i = array.length - 1; i > 0; i -= 1) {
@@ -117,6 +125,7 @@ export const seedComputerLocks = () => {
     const password = passwords[index];
     if (!password) return;
     const lock = createLockEntry(prop, password);
+    applyEfficientHackToLock(lock);
     gameState.computerLocks.locks.push(lock);
     gameState.computerLocks.byPropId[prop.id] = lock;
     prop.computerLockId = lock.id;
@@ -134,6 +143,11 @@ export const isPropComputerLocked = (prop) => {
   const lock = getComputerLockByPropId(prop.id);
   if (!lock) return false;
   return !isLockHacked(lock);
+};
+
+export const applyEfficientHackToLocks = () => {
+  if (!hasEfficientHack()) return;
+  listComputerLocks().forEach((lock) => applyEfficientHackToLock(lock));
 };
 
 export const startHackingForProp = (propId) => {

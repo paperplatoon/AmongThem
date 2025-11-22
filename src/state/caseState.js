@@ -102,35 +102,40 @@ const seedKiller = (victimRole) => {
   return killerRole;
 };
 
-const selectSuspects = (victimRole, killerRole) => {
-  const pool = roleKeys.filter((role) => role !== victimRole && role !== killerRole);
-  const suspects = [killerRole];
-  while (suspects.length < 3 && pool.length) {
-    const index = Math.floor(Math.random() * pool.length);
-    const role = pool.splice(index, 1)[0];
-    if (role) suspects.push(role);
-  }
-  gameState.case.suspects = suspects;
-  return suspects;
-};
-
-const selectInnocents = (victimRole, killerRole, count = 2) => {
+const buildSuspectPools = (victimRole, killerRole) => {
   const pool = roleKeys.filter((role) => role !== victimRole && role !== killerRole);
   const innocents = [];
-  while (innocents.length < count && pool.length) {
+  while (innocents.length < 2 && pool.length) {
     const index = Math.floor(Math.random() * pool.length);
     const role = pool.splice(index, 1)[0];
     if (role) innocents.push(role);
   }
-  return innocents;
+  const motiveCandidates = [killerRole];
+  while (motiveCandidates.length < 3 && pool.length) {
+    const index = Math.floor(Math.random() * pool.length);
+    const role = pool.splice(index, 1)[0];
+    if (role) motiveCandidates.push(role);
+  }
+  const remaining = [...pool];
+  gameState.case.suspects = motiveCandidates;
+  return { innocents, motiveCandidates, remainingInnocents: remaining };
 };
 
-const populateSuspectTerminals = (suspects, killerRole) => {
+const populateSuspectTerminals = (suspects, killerRole, motiveSuspects, innocenceSuspects) => {
   suspects.forEach((roleId) => {
     const desk = gameState.props.find((prop) => prop.roomId === roleId && prop.type === 'desk');
     if (!desk) return;
     desk.contents = desk.contents || [];
     desk.contents = desk.contents.filter((item) => item.type !== EVIDENCE_TYPES.INCRIMINATING && item.type !== EVIDENCE_TYPES.CLEAN_ALIBI);
+    if (motiveSuspects.includes(roleId)) {
+      desk.contents.push({
+        id: `desk_motive_${roleId}`,
+        type: EVIDENCE_TYPES.MOTIVE,
+        label: `Possible Motive: ${gameState.config.roles[roleId].name}`,
+        roleId,
+        persistent: true
+      });
+    }
     if (roleId === killerRole) {
       desk.contents.push({
         id: `desk_evidence_${roleId}`,
@@ -138,13 +143,16 @@ const populateSuspectTerminals = (suspects, killerRole) => {
         label: 'Incriminating Evidence',
         roleId: killerRole
       });
-    } else {
+    }
+    if (innocenceSuspects.includes(roleId)) {
       desk.contents.push({
-        id: `desk_alibi_${roleId}`,
-        type: EVIDENCE_TYPES.CLEAN_ALIBI,
-        label: 'Clean Alibi',
-        roleId
+        id: `desk_innocence_${roleId}`,
+        type: EVIDENCE_TYPES.INNOCENCE,
+        label: `Terminal Log: ${gameState.config.roles[roleId].name} accounted for`,
+        roleId,
+        persistent: true
       });
+      markInnocenceEvidence(roleId);
     }
     desk.promptText = 'CLICK TO SEARCH';
     desk.isEmpty = false;
@@ -175,11 +183,10 @@ const addInnocenceEvidenceToVictimDesk = (victimRole, innocents) => {
 export const initializeCase = () => {
   const victimRole = seedVictim();
   const killerRole = seedKiller(victimRole);
-  const suspects = selectSuspects(victimRole, killerRole);
-  const innocents = selectInnocents(victimRole, killerRole);
+  const { innocents, motiveCandidates, remainingInnocents } = buildSuspectPools(victimRole, killerRole);
   addInnocenceEvidenceToVictimDesk(victimRole, innocents);
-  gameState.case.innocents = innocents;
-  populateSuspectTerminals(suspects, killerRole);
+  gameState.case.innocents = [...innocents, ...remainingInnocents];
+  populateSuspectTerminals(motiveCandidates, killerRole, motiveCandidates, remainingInnocents);
   spawnBody(victimRole);
   spawnScanner();
   seedComputerLocks();

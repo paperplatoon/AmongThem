@@ -51,6 +51,10 @@ export const handleVendingClick = (screenX, screenY) => {
     gameState.ui.vendingMessage = 'Faster hack already owned.';
     return true;
   }
+  if (option.itemId === 'efficient_hack' && gameState.player.upgrades?.efficientHack) {
+    gameState.ui.vendingMessage = 'Efficient hacking already owned.';
+    return true;
+  }
   const price = (() => {
     if (option.itemId === 'taser') {
       return gameState.testing ? gameState.config.taser.testCost : option.cost;
@@ -60,6 +64,9 @@ export const handleVendingClick = (screenX, screenY) => {
     }
     if (option.itemId === 'faster_hack') {
       return gameState.testing ? 20 : option.cost;
+    }
+    if (option.itemId === 'efficient_hack') {
+      return gameState.testing ? 0 : option.cost;
     }
     return option.cost;
   })();
@@ -144,11 +151,13 @@ const drawOptions = (ctx, panel, prop) => {
     const y = startY + index * lineHeight;
     const owned = (option.itemId === 'taser' && gameState.player.taser?.hasTaser)
       || (option.itemId === 'keycard_locator' && gameState.player.upgrades?.keycardLocator)
-      || (option.itemId === 'faster_hack' && gameState.player.upgrades?.hasFasterHack);
+      || (option.itemId === 'faster_hack' && gameState.player.upgrades?.hasFasterHack)
+      || (option.itemId === 'efficient_hack' && gameState.player.upgrades?.efficientHack);
     const price = (() => {
       if (option.itemId === 'taser') return gameState.testing ? gameState.config.taser.testCost : option.cost;
       if (option.itemId === 'keycard_locator') return gameState.testing ? 0 : option.cost;
       if (option.itemId === 'faster_hack') return gameState.testing ? 20 : option.cost;
+      if (option.itemId === 'efficient_hack') return gameState.testing ? 0 : option.cost;
       return option.cost;
     })();
     const affordable = gameState.player.money >= price;

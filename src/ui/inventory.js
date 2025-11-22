@@ -7,6 +7,7 @@ import * as journalUi from './journal.js';
 import { handleGameOverClick } from './gameOver.js';
 import { forceVillainEscape, resetVillainLockdown } from '../villain/villainSystem.js';
 import { handleHackingClick } from './hacking.js';
+import { applyEfficientHackToLocks } from '../hacking/hackingState.js';
 import { handleLockpickClick, handleLockpickPointerDown, handleLockpickPointerUp } from './lockpick.js';
 
 const applyItemEffect = (entry) => {
@@ -39,6 +40,12 @@ const applyItemEffect = (entry) => {
   }
   if (entry.effect.type === 'lockdown') {
     resetVillainLockdown();
+    return true;
+  }
+  if (entry.effect.type === 'efficient_hack') {
+    if (player.upgrades.efficientHack) return false;
+    player.upgrades.efficientHack = true;
+    applyEfficientHackToLocks();
     return true;
   }
   return false;

@@ -14,7 +14,7 @@ import { updateInteractions } from './interactions/interactionSystem.js';
 import { initializeCase, applyCaseObstacles } from './state/caseState.js';
 import { updateVillain } from './villain/villainSystem.js';
 import { tryFireTaser } from './combat/taserSystem.js';
-import { handleHackingKeyInput, isHackingActive, updateHackingSystem } from './hacking/hackingState.js';
+import { handleHackingKeyInput, isHackingActive, updateHackingSystem, applyEfficientHackToLocks } from './hacking/hackingState.js';
 import { updateLockpickSystem } from './lockpick/lockpickSystem.js';
 
 const createCanvas = () => {
@@ -56,6 +56,8 @@ const start = () => {
   if (gameState.testing) {
     gameState.inventory.push({ id: 'test_disable_power', type: 'disable_power', label: 'Disable Power', effect: { type: 'force_escape' } });
     gameState.inventory.push({ id: 'test_remote_lockdown', type: 'remote_lockdown', label: 'Remote Lockdown', effect: { type: 'lockdown' } });
+    gameState.player.upgrades.efficientHack = true;
+    applyEfficientHackToLocks();
   }
   const canvas = createCanvas();
   const ctx = canvas.getContext('2d');
