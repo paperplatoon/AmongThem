@@ -68,7 +68,9 @@ export const handleContainerClick = (screenX, screenY) => {
   } else {
     gameState.inventory.push(item);
   }
-  prop.contents.splice(hit.index, 1);
+  if (!item.persistent) {
+    prop.contents.splice(hit.index, 1);
+  }
   if (!prop.contents.length) {
     markPropEmpty(prop);
     closeContainer();

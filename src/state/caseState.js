@@ -1,6 +1,6 @@
 import { gameState } from './gameState.js';
 import { cellToWorldCenter, worldPointToCell, markCell, WORLD_SOLID } from './gridState.js';
-import { markVictimRole, markKillerRole, markVictimIdentified } from './journalState.js';
+import { markVictimRole, markKillerRole, markVictimIdentified, markInnocenceEvidence } from './journalState.js';
 import { addIncriminatingEvidence } from './roomProps.js';
 import { EVIDENCE_TYPES } from '../evidence/evidenceHandlers.js';
 import { seedComputerLocks } from '../hacking/hackingState.js';
@@ -114,6 +114,17 @@ const selectSuspects = (victimRole, killerRole) => {
   return suspects;
 };
 
+const selectInnocents = (victimRole, killerRole, count = 2) => {
+  const pool = roleKeys.filter((role) => role !== victimRole && role !== killerRole);
+  const innocents = [];
+  while (innocents.length < count && pool.length) {
+    const index = Math.floor(Math.random() * pool.length);
+    const role = pool.splice(index, 1)[0];
+    if (role) innocents.push(role);
+  }
+  return innocents;
+};
+
 const populateSuspectTerminals = (suspects, killerRole) => {
   suspects.forEach((roleId) => {
     const desk = gameState.props.find((prop) => prop.roomId === roleId && prop.type === 'desk');
@@ -140,21 +151,24 @@ const populateSuspectTerminals = (suspects, killerRole) => {
   });
 };
 
-const addDeathThreatsToVictimDesk = (victimRole, suspects) => {
+const addInnocenceEvidenceToVictimDesk = (victimRole, innocents) => {
   const desk = gameState.props.find((prop) => prop.roomId === victimRole && prop.type === 'desk');
   if (!desk) return;
 
   desk.contents = desk.contents || [];
-  desk.contents = desk.contents.filter((item) => item.type !== EVIDENCE_TYPES.DEATH_THREAT);
-  suspects.forEach((roleId) => {
+  desk.contents = desk.contents.filter((item) => item.type !== EVIDENCE_TYPES.INNOCENCE);
+  innocents.forEach((roleId) => {
+    const roleName = gameState.config.roles[roleId].name;
     desk.contents.push({
-      id: `death_threat_${victimRole}_${roleId}`,
-      type: EVIDENCE_TYPES.DEATH_THREAT,
-      label: `Death Threat from ${gameState.config.roles[roleId].name}`,
-      roleId
+      id: `innocence_${victimRole}_${roleId}`,
+      type: EVIDENCE_TYPES.INNOCENCE,
+      label: `Terminal Log: ${roleName} accounted for`,
+      roleId,
+      persistent: true
     });
+    markInnocenceEvidence(roleId);
   });
-  desk.promptText = 'CLICK TO SEARCH';
+  desk.promptText = 'CLICK TO REVIEW';
   desk.isEmpty = false;
 };
 
@@ -162,7 +176,9 @@ export const initializeCase = () => {
   const victimRole = seedVictim();
   const killerRole = seedKiller(victimRole);
   const suspects = selectSuspects(victimRole, killerRole);
-  addDeathThreatsToVictimDesk(victimRole, suspects);
+  const innocents = selectInnocents(victimRole, killerRole);
+  addInnocenceEvidenceToVictimDesk(victimRole, innocents);
+  gameState.case.innocents = innocents;
   populateSuspectTerminals(suspects, killerRole);
   spawnBody(victimRole);
   spawnScanner();

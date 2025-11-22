@@ -20,7 +20,8 @@ const buildEntry = (roleId) => {
     isKiller: false,
     killerConfirmed: false,
     personName: randomCrewName(roleId),
-    status: 'unknown'
+    status: 'unknown',
+    hasInnocenceEvidence: false
   });
 };
 
@@ -98,4 +99,10 @@ export const addEvidenceToJournal = (roleId, evidence) => {
   const entry = byId[roleId];
   if (!entry || !evidence) return;
   entry.evidence.push({ ...evidence });
+};
+
+export const markInnocenceEvidence = (roleId) => {
+  const entry = byId[roleId];
+  if (!entry) return;
+  entry.hasInnocenceEvidence = true;
 };
