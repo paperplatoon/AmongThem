@@ -35,7 +35,21 @@ const drawClickRipples = (ctx) => {
   });
 };
 
+const drawParticles = (ctx) => {
+  visualEffectsState.particles.forEach((particle) => {
+    const alpha = particle.life / particle.maxLife;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = particle.color;
+    ctx.beginPath();
+    ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  });
+};
+
 export const renderVisualEffects = (ctx) => {
   drawClickRipples(ctx);
+  drawParticles(ctx);
   drawFloatingText(ctx);
 };

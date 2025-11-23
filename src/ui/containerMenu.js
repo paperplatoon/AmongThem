@@ -2,7 +2,7 @@ import { gameState } from '../state/gameState.js';
 import { markKeycardKnown, markComputerDiscovered, addEvidenceToJournal, markWeaponCategory } from '../state/journalState.js';
 import { handleEvidenceItem } from '../evidence/evidenceHandlers.js';
 import { OverlayId, closeOverlay, openOverlay, isOverlayActive } from '../state/overlayManager.js';
-import { addFloatingText, addClickRipple } from '../state/visualEffects.js';
+import { addFloatingText, addClickRipple, addParticleBurst, addPropFlash } from '../state/visualEffects.js';
 
 const hitboxes = () => gameState.ui.hitboxes;
 
@@ -81,6 +81,10 @@ export const handleContainerClick = (screenX, screenY) => {
   const item = prop.contents[hit.index];
   if (!item) return false;
   if (prop.type === 'computer' && prop.roomId) markComputerDiscovered(prop.roomId);
+
+  // Add prop flash effect when searching
+  if (prop.id) addPropFlash(prop.id);
+
   if (item.type === 'keycard') {
     collectKeycardItem(item);
     prop.contents.splice(hit.index, 1);

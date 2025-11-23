@@ -1,6 +1,8 @@
 export const visualEffectsState = Object.seal({
   floatingText: [],   // {x, y, text, color, life, maxLife, velocityY}
-  clickRipples: []    // {x, y, radius, maxRadius, color, life, maxLife}
+  clickRipples: [],   // {x, y, radius, maxRadius, color, life, maxLife}
+  particles: [],      // {x, y, vx, vy, color, size, life, maxLife, gravity}
+  propFlashes: new Map() // propId -> {intensity, maxIntensity, duration}
 });
 
 // Floating text configuration
@@ -10,6 +12,14 @@ const FLOAT_SPEED = -40;     // pixels per second (negative = upward)
 // Click ripple configuration
 const RIPPLE_DURATION = 0.4;  // seconds
 const RIPPLE_MAX_RADIUS = 40; // pixels
+
+// Particle configuration
+const PARTICLE_DURATION = 1.0; // seconds
+const PARTICLE_GRAVITY = 120;   // pixels per second squared
+const PARTICLE_SPEED = 80;      // initial speed
+
+// Prop flash configuration
+const FLASH_DURATION = 0.2;     // seconds
 
 export const addFloatingText = (x, y, text, color = '#ffd24a') => {
   visualEffectsState.floatingText.push({
@@ -32,6 +42,35 @@ export const addClickRipple = (x, y, color = '#8effd6') => {
     color,
     life: RIPPLE_DURATION,
     maxLife: RIPPLE_DURATION
+  });
+};
+
+export const addParticleBurst = (x, y, color = '#8effd6', count = 8) => {
+  for (let i = 0; i < count; i++) {
+    const angle = (Math.PI * 2 * i) / count;
+    const speed = PARTICLE_SPEED + (Math.random() - 0.5) * 20;
+    const vx = Math.cos(angle) * speed;
+    const vy = Math.sin(angle) * speed;
+
+    visualEffectsState.particles.push({
+      x,
+      y,
+      vx,
+      vy,
+      color,
+      size: 4 + Math.random() * 2,
+      life: PARTICLE_DURATION,
+      maxLife: PARTICLE_DURATION,
+      gravity: PARTICLE_GRAVITY
+    });
+  }
+};
+
+export const addPropFlash = (propId) => {
+  visualEffectsState.propFlashes.set(propId, {
+    intensity: 1.0,
+    maxIntensity: 1.0,
+    duration: FLASH_DURATION
   });
 };
 
@@ -60,9 +99,43 @@ export const updateVisualEffects = (deltaSeconds) => {
       visualEffectsState.clickRipples.splice(i, 1);
     }
   }
+
+  // Update particles
+  for (let i = visualEffectsState.particles.length - 1; i >= 0; i--) {
+    const particle = visualEffectsState.particles[i];
+    particle.life -= deltaSeconds;
+
+    // Apply velocity
+    particle.x += particle.vx * deltaSeconds;
+    particle.y += particle.vy * deltaSeconds;
+
+    // Apply gravity
+    particle.vy += particle.gravity * deltaSeconds;
+
+    if (particle.life <= 0) {
+      visualEffectsState.particles.splice(i, 1);
+    }
+  }
+
+  // Update prop flashes
+  for (const [propId, flash] of visualEffectsState.propFlashes.entries()) {
+    flash.duration -= deltaSeconds;
+    flash.intensity = Math.max(0, flash.duration / FLASH_DURATION);
+
+    if (flash.duration <= 0) {
+      visualEffectsState.propFlashes.delete(propId);
+    }
+  }
 };
 
 export const clearVisualEffects = () => {
   visualEffectsState.floatingText.length = 0;
   visualEffectsState.clickRipples.length = 0;
+  visualEffectsState.particles.length = 0;
+  visualEffectsState.propFlashes.clear();
+};
+
+export const getPropFlashIntensity = (propId) => {
+  const flash = visualEffectsState.propFlashes.get(propId);
+  return flash ? flash.intensity : 0;
 };

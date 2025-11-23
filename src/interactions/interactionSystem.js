@@ -8,6 +8,7 @@ import { cellToWorldCenter } from '../state/gridState.js';
 import { closeVendingMenu } from '../ui/vendingMenu.js';
 import { startHackingForProp, isPropComputerLocked } from '../hacking/hackingState.js';
 import { closeOverlay, openOverlay, OverlayId } from '../state/overlayManager.js';
+import { addParticleBurst } from '../state/visualEffects.js';
 
 const scannerRange = 96;
 const propRange = 88;
@@ -72,6 +73,9 @@ const makeLockdownZone = () => {
     action: () => {
       if (!gameState.villain.isEscaped) return;
       resetVillainLockdown();
+      const screenX = center.x - gameState.camera.x;
+      const screenY = center.y - gameState.camera.y;
+      addParticleBurst(screenX, screenY, '#ff6b6b', 12);
     }
   };
 };
@@ -119,6 +123,9 @@ const handleScannerClick = () => {
   applyScannerResults();
   syncOxygenState();
   gameState.scanner.promptActive = false;
+  const screenX = gameState.scanner.x - gameState.camera.x;
+  const screenY = gameState.scanner.y - gameState.camera.y;
+  addParticleBurst(screenX, screenY, '#66bfff', 12);
 };
 
 const hasKeycard = (lockId) => (

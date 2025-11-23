@@ -15,6 +15,7 @@ import { renderLockpick } from '../ui/lockpick.js';
 import { renderUpgrades } from '../ui/upgrades.js';
 import { renderWeaponTesting } from '../ui/weaponTesting.js';
 import { renderVisualEffects } from './visualEffects.js';
+import { getPropFlashIntensity } from '../state/visualEffects.js';
 import { cellToWorldCenter } from '../state/gridState.js';
 const { WALL } = CELL_TYPES;
 
@@ -270,6 +271,13 @@ const drawProps = (ctx) => {
       ctx.textAlign = 'center';
       ctx.textBaseline = 'bottom';
       ctx.fillText(prop.promptText || 'CLICK TO SEARCH', prop.x, prop.y - size / 2 - 12);
+    }
+    // Draw flash effect
+    const flashIntensity = getPropFlashIntensity(prop.id);
+    if (flashIntensity > 0) {
+      ctx.globalAlpha = flashIntensity * 0.5;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(prop.x - size / 2, prop.y - size / 2, size, size);
     }
     ctx.restore();
   });
