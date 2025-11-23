@@ -19,6 +19,24 @@ export const initializeTestingStation = () => {
   });
 };
 
+export const initializeBioDataTerminal = () => {
+  const engineering = gameState.map.rooms.find((room) => room.id === 'engineering');
+  if (!engineering) return;
+
+  // Position at center of top wall (back wall)
+  const x = engineering.x + engineering.width / 2;
+  const y = engineering.y + 20;
+  const cell = worldPointToCell({ x, y });
+  const worldPos = cellToWorldCenter(cell.x, cell.y);
+
+  Object.assign(gameState.bioDataTerminal, {
+    cellX: cell.x,
+    cellY: cell.y,
+    x: worldPos.x,
+    y: worldPos.y
+  });
+};
+
 const simpleHash = (str) => {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {

@@ -3,9 +3,10 @@ import { cellToWorldCenter, worldPointToCell, markCell, WORLD_SOLID } from './gr
 import { markVictimRole, markKillerRole, markVictimIdentified, markInnocenceEvidence, markWeaponCategory } from './journalState.js';
 import { EVIDENCE_TYPES } from '../evidence/evidenceHandlers.js';
 import { seedComputerLocks } from '../hacking/hackingState.js';
-import { initializeTestingStation, generateWeaponTestResults } from './weaponTestingState.js';
+import { initializeTestingStation, generateWeaponTestResults, initializeBioDataTerminal } from './weaponTestingState.js';
 import { generateRoomTraits, selectMurderRoom } from './roomTraitsState.js';
 import { initializeDoorTerminals } from './doorTerminalState.js';
+import { generateNPCBioData } from './bioDataState.js';
 
 const roleKeys = Object.keys(gameState.config.roles);
 
@@ -74,6 +75,11 @@ export const applyCaseObstacles = () => {
   const stationY = gameState.testingStation.cellY;
   if (stationX != null && stationY != null) {
     markCell(stationX, stationY, WORLD_SOLID);
+  }
+  const bioDataX = gameState.bioDataTerminal.cellX;
+  const bioDataY = gameState.bioDataTerminal.cellY;
+  if (bioDataX != null && bioDataY != null) {
+    markCell(bioDataX, bioDataY, WORLD_SOLID);
   }
   gameState.doorTerminals.forEach((terminal) => {
     if (terminal.cellX != null && terminal.cellY != null) {
@@ -246,6 +252,7 @@ export const initializeCase = () => {
   spawnBody(victimRole);
   spawnScanner();
   initializeTestingStation();
+  initializeBioDataTerminal();
   gameState.case.weaponTestResults = generateWeaponTestResults();
   seedComputerLocks();
 
@@ -257,4 +264,11 @@ export const initializeCase = () => {
   const bodyRoom = findRoomContainingPoint(gameState.body.x, gameState.body.y);
   const bodyRoomId = bodyRoom ? bodyRoom.id : null;
   gameState.case.murderRoomId = selectMurderRoom(gameState.case.roomTraits, bodyRoomId);
+
+  // Generate NPC biodata (victim matches murder room)
+  gameState.case.npcBioData = generateNPCBioData(
+    gameState.case.murderRoomId,
+    victimRole,
+    gameState.case.roomTraits
+  );
 };

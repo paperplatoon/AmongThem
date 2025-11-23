@@ -56,5 +56,8 @@ export const uiState = Object.seal({
   doorTerminal: Object.seal({
     activeRoomId: null,
     closeButton: null
+  }),
+  bioData: Object.seal({
+    closeButton: null
   })
 });

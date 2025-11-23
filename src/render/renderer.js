@@ -15,6 +15,7 @@ import { renderLockpick } from '../ui/lockpick.js';
 import { renderUpgrades } from '../ui/upgrades.js';
 import { renderWeaponTesting } from '../ui/weaponTesting.js';
 import { renderDoorTerminalOverlay } from '../ui/doorTerminalOverlay.js';
+import { renderBioDataOverlay } from '../ui/bioDataOverlay.js';
 import { renderVisualEffects } from './visualEffects.js';
 import { getPropFlashIntensity } from '../state/visualEffects.js';
 import { cellToWorldCenter } from '../state/gridState.js';
@@ -192,6 +193,28 @@ const drawTestingStation = (ctx) => {
   ctx.restore();
 };
 
+const drawBioDataTerminal = (ctx) => {
+  const terminal = gameState.bioDataTerminal;
+  if (terminal.x == null) return;
+  const size = cellSize() * 0.8;
+  ctx.save();
+  ctx.fillStyle = '#2dd4bf';
+  ctx.fillRect(terminal.x - size / 2, terminal.y - size / 2, size, size);
+  ctx.fillStyle = '#0d1b3d';
+  ctx.font = '14px "Courier New", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('BIO', terminal.x, terminal.y);
+  if (terminal.promptActive) {
+    ctx.fillStyle = '#f4f9ff';
+    ctx.font = '18px "Courier New", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText('CLICK TO ACCESS', terminal.x, terminal.y - size * 0.7);
+  }
+  ctx.restore();
+};
+
 const drawDoorTerminals = (ctx) => {
   const terminals = gameState.doorTerminals || [];
   const size = cellSize() * 0.6;
@@ -346,6 +369,7 @@ export const renderFrame = (ctx) => {
   drawBody(ctx);
   drawScanner(ctx);
   drawTestingStation(ctx);
+  drawBioDataTerminal(ctx);
   drawDoorTerminals(ctx);
   drawProps(ctx);
   drawTaserBursts(ctx);
@@ -368,6 +392,7 @@ export const renderFrame = (ctx) => {
   renderAccusation(ctx);
   renderWeaponTesting(ctx);
   renderDoorTerminalOverlay(ctx);
+  renderBioDataOverlay(ctx);
   renderGameOver(ctx);
   renderVisualEffects(ctx);
   if (gameState.testingModeEnabled) {

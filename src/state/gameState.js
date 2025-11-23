@@ -52,7 +52,8 @@ export const gameState = Object.seal({
     methodExact: null,
     weaponTestResults: {},
     roomTraits: {},
-    murderRoomId: null
+    murderRoomId: null,
+    npcBioData: {}
   },
   body: {
     cellX: null,
@@ -74,6 +75,13 @@ export const gameState = Object.seal({
     cellY: null,
     x: null,
     y: null
+  },
+  bioDataTerminal: {
+    cellX: null,
+    cellY: null,
+    x: null,
+    y: null,
+    promptActive: false
   },
   doorTerminals: [],
   props: generateRoomProps(),

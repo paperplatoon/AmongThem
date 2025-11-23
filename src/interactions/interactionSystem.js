@@ -59,6 +59,21 @@ const makeTestingStationZone = () => {
   };
 };
 
+const makeBioDataTerminalZone = () => {
+  const size = gameState.grid.cellSize;
+  return {
+    id: 'bio_data_terminal',
+    x: gameState.bioDataTerminal.x - size / 2,
+    y: gameState.bioDataTerminal.y - size / 2,
+    width: size,
+    height: size,
+    action: () => {
+      closeOpenMenus();
+      openOverlay(OverlayId.BIO_DATA);
+    }
+  };
+};
+
 const makeDoorTerminalZone = (terminal) => {
   const size = gameState.grid.cellSize * 0.6;
   return {
@@ -233,6 +248,7 @@ export const updateInteractions = () => {
   const zones = gameState.interactions.clickZones;
   zones.length = 0;
   gameState.scanner.promptActive = false;
+  gameState.bioDataTerminal.promptActive = false;
   if (!gameState.case.identified && hasMedicalSample() && gameState.scanner.x != null) {
     const distance = distanceBetween(gameState.player, gameState.scanner);
     if (distance <= scannerRange) {
@@ -244,6 +260,13 @@ export const updateInteractions = () => {
     const distance = distanceBetween(gameState.player, gameState.testingStation);
     if (distance <= scannerRange) {
       zones.push(makeTestingStationZone());
+    }
+  }
+  if (gameState.bioDataTerminal.x != null) {
+    const distance = distanceBetween(gameState.player, gameState.bioDataTerminal);
+    if (distance <= scannerRange) {
+      gameState.bioDataTerminal.promptActive = true;
+      zones.push(makeBioDataTerminalZone());
     }
   }
   gameState.doorTerminals.forEach((terminal) => {

@@ -13,6 +13,7 @@ import { applyFastLockpickToLocks } from '../lockpick/lockpickSystem.js';
 import { handleUpgradeButtonClick, handleUpgradesClick } from './upgrades.js';
 import { handleWeaponTestingClick } from './weaponTesting.js';
 import { handleDoorTerminalClick } from './doorTerminalOverlay.js';
+import { handleBioDataClick } from './bioDataOverlay.js';
 import { OverlayId, openOverlay, closeOverlay, toggleOverlay, isOverlayActive } from '../state/overlayManager.js';
 
 const hitboxes = () => gameState.ui.hitboxes;
@@ -185,6 +186,7 @@ const handleCanvasClick = (canvas, event) => {
   if (handleAccusationClick(screenX, screenY)) return;
   if (handleWeaponTestingClick(screenX, screenY)) return;
   if (handleDoorTerminalClick(screenX, screenY)) return;
+  if (handleBioDataClick(screenX, screenY)) return;
   if (tryHandleInteractionClick(worldX, worldY)) return;
   if (journalUi.handleJournalClick && journalUi.handleJournalClick(screenX, screenY)) return;
   if (handleVendingClick(screenX, screenY)) return;

@@ -1,24 +1,45 @@
 import { gameState } from './gameState.js';
 import { worldPointToCell, cellToWorldCenter } from './gridState.js';
 
-const getTerminalOffset = (side) => {
-  const offsetDistance = gameState.grid.cellSize * 1.5;
-  switch (side) {
-    case 'north': return { x: 0, y: -offsetDistance };
-    case 'south': return { x: 0, y: offsetDistance };
-    case 'east': return { x: offsetDistance, y: 0 };
-    case 'west': return { x: -offsetDistance, y: 0 };
-    default: return { x: 0, y: 0 };
-  }
-};
-
 const createTerminalForDoor = (door, roomId) => {
-  const doorCenterX = door.x + door.width / 2;
-  const doorCenterY = door.y + door.height / 2;
-  const offset = getTerminalOffset(door.side);
-  const worldX = doorCenterX + offset.x;
-  const worldY = doorCenterY + offset.y;
-  const cell = worldPointToCell({ x: worldX, y: worldY });
+  const cellSize = gameState.grid.cellSize;
+
+  let terminalX, terminalY;
+
+  // Position terminal: 2 cells to the right of door edge, flush against corridor wall
+  // "Right" is relative to standing in corridor facing the door
+  switch (door.side) {
+    case 'north':
+      // Door on north side, corridor above
+      // Facing south into room, right = east
+      // Terminal: 2 cells east of door's right edge, flush against wall
+      terminalX = door.x + door.width + (cellSize * 2);
+      terminalY = door.y;
+      break;
+    case 'south':
+      // Door on south side, corridor below
+      // Facing north into room, right = west
+      // Terminal: 2 cells west of door's left edge, flush against wall
+      terminalX = door.x - (cellSize * 2);
+      terminalY = door.y + door.height;
+      break;
+    case 'east':
+      // Door on east side, corridor to the right
+      // Facing west into room, right = north
+      // Terminal: 2 cells north of door's top edge, flush against wall
+      terminalX = door.x + door.width;
+      terminalY = door.y - (cellSize * 2);
+      break;
+    case 'west':
+      // Door on west side, corridor to the left
+      // Facing east into room, right = south
+      // Terminal: 2 cells south of door's bottom edge, flush against wall
+      terminalX = door.x;
+      terminalY = door.y + door.height + (cellSize * 2);
+      break;
+  }
+
+  const cell = worldPointToCell({ x: terminalX, y: terminalY });
   const worldPos = cellToWorldCenter(cell.x, cell.y);
 
   return {
