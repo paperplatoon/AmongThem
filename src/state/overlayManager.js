@@ -12,6 +12,7 @@ export const OverlayId = Object.freeze({
   CONTAINER: 'container',
   VENDING: 'vending',
   WEAPON_TESTING: 'weapon_testing',
+  DOOR_TERMINAL: 'door_terminal',
   GAME_OVER: 'game_over'
 });
 

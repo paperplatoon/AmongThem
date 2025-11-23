@@ -52,5 +52,9 @@ export const uiState = Object.seal({
   weaponTesting: Object.seal({
     testedWeapons: new Set(),
     buttons: []
+  }),
+  doorTerminal: Object.seal({
+    activeRoomId: null,
+    closeButton: null
   })
 });

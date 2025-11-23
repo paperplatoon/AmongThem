@@ -59,6 +59,22 @@ const makeTestingStationZone = () => {
   };
 };
 
+const makeDoorTerminalZone = (terminal) => {
+  const size = gameState.grid.cellSize * 0.6;
+  return {
+    id: terminal.id,
+    x: terminal.x - size / 2,
+    y: terminal.y - size / 2,
+    width: size,
+    height: size,
+    action: () => {
+      closeOpenMenus();
+      gameState.ui.doorTerminal.activeRoomId = terminal.roomId;
+      openOverlay(OverlayId.DOOR_TERMINAL);
+    }
+  };
+};
+
 const makeLockdownZone = () => {
   const aiCore = gameState.map.rooms.find((room) => room.id === 'ai_core');
   if (!aiCore) return null;
@@ -149,6 +165,7 @@ const closeOpenMenus = () => {
   gameState.ui.openVendingId = null;
   gameState.ui.openLockpickId = null;
   gameState.ui.openAccusation = false;
+  gameState.ui.doorTerminal.activeRoomId = null;
   gameState.accusation.active = false;
   gameState.accusation.result = 'idle';
   gameState.lockpick.activeId = null;
@@ -229,6 +246,16 @@ export const updateInteractions = () => {
       zones.push(makeTestingStationZone());
     }
   }
+  gameState.doorTerminals.forEach((terminal) => {
+    terminal.promptActive = false;
+    if (terminal.x != null) {
+      const distance = distanceBetween(gameState.player, terminal);
+      if (distance <= scannerRange) {
+        terminal.promptActive = true;
+        zones.push(makeDoorTerminalZone(terminal));
+      }
+    }
+  });
   const lockdownZone = makeLockdownZone();
   if (lockdownZone) {
     const center = { x: lockdownZone.x + lockdownZone.width / 2, y: lockdownZone.y + lockdownZone.height / 2 };

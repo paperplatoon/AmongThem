@@ -4,6 +4,8 @@ import { markVictimRole, markKillerRole, markVictimIdentified, markInnocenceEvid
 import { EVIDENCE_TYPES } from '../evidence/evidenceHandlers.js';
 import { seedComputerLocks } from '../hacking/hackingState.js';
 import { initializeTestingStation, generateWeaponTestResults } from './weaponTestingState.js';
+import { generateRoomTraits, selectMurderRoom } from './roomTraitsState.js';
+import { initializeDoorTerminals } from './doorTerminalState.js';
 
 const roleKeys = Object.keys(gameState.config.roles);
 
@@ -32,6 +34,12 @@ const randomTimeWindow = () => {
 };
 
 const randomRoom = () => gameState.map.rooms[Math.floor(Math.random() * gameState.map.rooms.length)];
+
+const findRoomContainingPoint = (x, y) => {
+  return gameState.map.rooms.find((room) => (
+    x >= room.x && x < room.x + room.width && y >= room.y && y < room.y + room.height
+  ));
+};
 
 const randomCellInsideRoom = (room) => {
   const minCell = worldPointToCell({ x: room.x, y: room.y });
@@ -67,6 +75,11 @@ export const applyCaseObstacles = () => {
   if (stationX != null && stationY != null) {
     markCell(stationX, stationY, WORLD_SOLID);
   }
+  gameState.doorTerminals.forEach((terminal) => {
+    if (terminal.cellX != null && terminal.cellY != null) {
+      markCell(terminal.cellX, terminal.cellY, WORLD_SOLID);
+    }
+  });
   gameState.props.forEach((prop) => {
     if (prop.cellX == null) return;
     markCell(prop.cellX, prop.cellY, WORLD_SOLID);
@@ -235,4 +248,13 @@ export const initializeCase = () => {
   initializeTestingStation();
   gameState.case.weaponTestResults = generateWeaponTestResults();
   seedComputerLocks();
+
+  // Initialize door terminals
+  gameState.doorTerminals = initializeDoorTerminals();
+
+  // Generate room traits and select murder room
+  gameState.case.roomTraits = generateRoomTraits();
+  const bodyRoom = findRoomContainingPoint(gameState.body.x, gameState.body.y);
+  const bodyRoomId = bodyRoom ? bodyRoom.id : null;
+  gameState.case.murderRoomId = selectMurderRoom(gameState.case.roomTraits, bodyRoomId);
 };

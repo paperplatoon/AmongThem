@@ -50,7 +50,9 @@ export const gameState = Object.seal({
     identified: false,
     methodCategory: '???',
     methodExact: null,
-    weaponTestResults: {}
+    weaponTestResults: {},
+    roomTraits: {},
+    murderRoomId: null
   },
   body: {
     cellX: null,
@@ -73,6 +75,7 @@ export const gameState = Object.seal({
     x: null,
     y: null
   },
+  doorTerminals: [],
   props: generateRoomProps(),
   interactions: {
     clickZones: []

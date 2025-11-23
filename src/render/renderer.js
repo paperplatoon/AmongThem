@@ -14,6 +14,7 @@ import { renderAccuseConsole } from './accuseConsole.js';
 import { renderLockpick } from '../ui/lockpick.js';
 import { renderUpgrades } from '../ui/upgrades.js';
 import { renderWeaponTesting } from '../ui/weaponTesting.js';
+import { renderDoorTerminalOverlay } from '../ui/doorTerminalOverlay.js';
 import { renderVisualEffects } from './visualEffects.js';
 import { getPropFlashIntensity } from '../state/visualEffects.js';
 import { cellToWorldCenter } from '../state/gridState.js';
@@ -191,6 +192,32 @@ const drawTestingStation = (ctx) => {
   ctx.restore();
 };
 
+const drawDoorTerminals = (ctx) => {
+  const terminals = gameState.doorTerminals || [];
+  const size = cellSize() * 0.6;
+  terminals.forEach((terminal) => {
+    ctx.save();
+    ctx.fillStyle = '#6d8cff';
+    ctx.fillRect(terminal.x - size / 2, terminal.y - size / 2, size, size);
+    ctx.strokeStyle = '#8effd6';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(terminal.x - size / 2, terminal.y - size / 2, size, size);
+    ctx.fillStyle = '#0d1b3d';
+    ctx.font = '11px "Courier New", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('TERM', terminal.x, terminal.y);
+    if (terminal.promptActive) {
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '16px "Courier New", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText('CLICK TO READ', terminal.x, terminal.y - size / 2 - 12);
+    }
+    ctx.restore();
+  });
+};
+
 const drawScannerPrompt = (ctx) => {
   if (!gameState.scanner.promptActive) return;
   const scanner = gameState.scanner;
@@ -319,6 +346,7 @@ export const renderFrame = (ctx) => {
   drawBody(ctx);
   drawScanner(ctx);
   drawTestingStation(ctx);
+  drawDoorTerminals(ctx);
   drawProps(ctx);
   drawTaserBursts(ctx);
   drawDoorPanels(ctx);
@@ -339,6 +367,7 @@ export const renderFrame = (ctx) => {
   renderUpgrades(ctx);
   renderAccusation(ctx);
   renderWeaponTesting(ctx);
+  renderDoorTerminalOverlay(ctx);
   renderGameOver(ctx);
   renderVisualEffects(ctx);
   if (gameState.testingModeEnabled) {
