@@ -18,6 +18,7 @@ import { handleHackingKeyInput, isHackingActive, updateHackingSystem } from './h
 import { updateLockpickSystem } from './lockpick/lockpickSystem.js';
 import { closeOverlay, OverlayId } from './state/overlayManager.js';
 import { updateVisualEffects } from './state/visualEffects.js';
+import { updateBloodDetector } from './bloodDetector/bloodDetectorSystem.js';
 
 const createCanvas = () => {
   const canvas = document.createElement('canvas');
@@ -46,6 +47,7 @@ const stepFrame = (ctx, time) => {
   updateInteractions();
   updateHackingSystem(delta);
   updateLockpickSystem(delta);
+  updateBloodDetector(delta);
   updateVisualEffects(delta);
   renderFrame(ctx);
   requestAnimationFrame((next) => stepFrame(ctx, next));

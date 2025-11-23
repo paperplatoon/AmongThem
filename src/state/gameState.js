@@ -53,7 +53,10 @@ export const gameState = Object.seal({
     weaponTestResults: {},
     roomTraits: {},
     murderRoomId: null,
-    npcBioData: {}
+    murderCellX: null,
+    murderCellY: null,
+    npcBioData: {},
+    bloodSampleCollected: false
   },
   body: {
     cellX: null,
@@ -70,6 +73,12 @@ export const gameState = Object.seal({
     y: null,
     promptActive: false
   },
+  bloodDetector: Object.seal({
+    active: false,
+    countdownRemaining: 0,
+    lastReading: null,
+    hasBeenUsed: false
+  }),
   testingStation: {
     cellX: null,
     cellY: null,

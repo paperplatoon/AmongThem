@@ -1,4 +1,6 @@
 import { gameState } from '../state/gameState.js';
+import { activateBloodDetector } from '../bloodDetector/bloodDetectorSystem.js';
+import { addClickRipple } from '../state/visualEffects.js';
 
 const barWidth = 220;
 const barHeight = 16;
@@ -100,6 +102,96 @@ const drawUpgradeButton = (ctx) => {
   gameState.ui.hitboxes.upgradeButton = { x, y, x2: x + width, y2: y + height };
 };
 
+const drawBloodDetector = (ctx) => {
+  const detector = gameState.bloodDetector;
+  const width = 180;
+  const height = 36;
+  const x = padding;
+  const y = gameState.config.canvasHeight - padding - barHeight - height - 12;
+
+  ctx.save();
+
+  // Background
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+  ctx.fillRect(x - 4, y - 4, width + 8, height + 8);
+
+  // Determine state and colors
+  let bgColor, borderColor, textColor, displayText;
+  let isClickable = false;
+
+  if (gameState.case.bloodSampleCollected) {
+    // Sample collected - grey out
+    bgColor = '#2f3e69';
+    borderColor = '#7b84a2';
+    textColor = '#7b84a2';
+    displayText = 'Sample Collected';
+  } else if (detector.active) {
+    // Counting down
+    bgColor = '#3d2f1f';
+    borderColor = '#ffd24a';
+    textColor = '#ffd24a';
+    const remaining = Math.ceil(detector.countdownRemaining);
+    displayText = `Scanning... ${remaining}s`;
+  } else if (detector.lastReading !== null) {
+    // Showing result
+    if (detector.lastReading === 'none') {
+      bgColor = '#3d1f1f';
+      borderColor = '#ff6b6b';
+      textColor = '#ff6b6b';
+      displayText = 'None detected';
+    } else {
+      bgColor = '#1f3d1f';
+      borderColor = '#6bff92';
+      textColor = '#6bff92';
+      displayText = `Distance: ${detector.lastReading} cells`;
+    }
+    isClickable = true;
+  } else {
+    // Idle
+    bgColor = '#1f2a4f';
+    borderColor = '#8effd6';
+    textColor = '#fefefe';
+    displayText = 'Blood Detector';
+    isClickable = true;
+  }
+
+  // Draw button
+  ctx.fillStyle = bgColor;
+  ctx.strokeStyle = borderColor;
+  ctx.lineWidth = 2;
+  ctx.fillRect(x, y, width, height);
+  ctx.strokeRect(x, y, width, height);
+
+  // Draw text
+  ctx.fillStyle = textColor;
+  ctx.font = '14px "Courier New", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(displayText, x + width / 2, y + height / 2);
+
+  ctx.restore();
+
+  // Store hitbox only if clickable
+  if (isClickable) {
+    gameState.ui.hitboxes.bloodDetectorButton = { x, y, x2: x + width, y2: y + height };
+  } else {
+    gameState.ui.hitboxes.bloodDetectorButton = null;
+  }
+};
+
+export const handleBloodDetectorClick = (screenX, screenY) => {
+  const hitbox = gameState.ui.hitboxes.bloodDetectorButton;
+  if (!hitbox) return false;
+
+  if (screenX >= hitbox.x && screenX <= hitbox.x2 && screenY >= hitbox.y && screenY <= hitbox.y2) {
+    addClickRipple((hitbox.x + hitbox.x2) / 2, (hitbox.y + hitbox.y2) / 2, '#8effd6');
+    activateBloodDetector();
+    return true;
+  }
+
+  return false;
+};
+
 const drawOutline = (ctx, x, y) => {
   ctx.strokeStyle = '#1d3520';
   ctx.lineWidth = 2;
@@ -154,4 +246,5 @@ export const renderHud = (ctx) => {
   ctx.textBaseline = 'top';
   ctx.fillText(`O2: ${oxygenPercent.toFixed(1)}%`, oxygenX, oxygenY);
   drawUpgradeButton(ctx);
+  drawBloodDetector(ctx);
 };

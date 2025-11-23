@@ -40,7 +40,8 @@ export const uiState = Object.seal({
       enterButton: null,
       exitButton: null,
       virusButton: null
-    })
+    }),
+    bloodDetectorButton: null
   }),
   inventorySwap: Object.seal({
     active: false,

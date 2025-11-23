@@ -265,6 +265,14 @@ export const initializeCase = () => {
   const bodyRoomId = bodyRoom ? bodyRoom.id : null;
   gameState.case.murderRoomId = selectMurderRoom(gameState.case.roomTraits, bodyRoomId);
 
+  // Select murder cell within murder room
+  const murderRoom = gameState.map.rooms.find((room) => room.id === gameState.case.murderRoomId);
+  if (murderRoom) {
+    const { cellX, cellY } = randomCellInsideRoom(murderRoom);
+    gameState.case.murderCellX = cellX;
+    gameState.case.murderCellY = cellY;
+  }
+
   // Generate NPC biodata (victim matches murder room)
   gameState.case.npcBioData = generateNPCBioData(
     gameState.case.murderRoomId,
