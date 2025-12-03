@@ -1,6 +1,6 @@
 import { gameState } from '../state/gameState.js';
-import { markKeycardKnown, markComputerDiscovered, addEvidenceToJournal, markWeaponCategory } from '../state/journalState.js';
-import { handleEvidenceItem } from '../evidence/evidenceHandlers.js';
+import { markKeycardKnown, markComputerDiscovered, addEvidenceToJournal, markWeaponCategory, addMotiveClues } from '../state/journalState.js';
+import { handleEvidenceItem, EVIDENCE_TYPES } from '../evidence/evidenceHandlers.js';
 import { OverlayId, closeOverlay, openOverlay, isOverlayActive } from '../state/overlayManager.js';
 import { addFloatingText, addClickRipple, addParticleBurst, addPropFlash } from '../state/visualEffects.js';
 
@@ -93,6 +93,9 @@ export const handleContainerClick = (screenX, screenY) => {
     addEvidenceToJournal(targetRole, item);
     if (item.type === 'weapon_category') {
       markWeaponCategory(targetRole, item.label);
+    }
+    if (item.type === EVIDENCE_TYPES.MOTIVE && item.clues) {
+      addMotiveClues(targetRole, item.clues);
     }
     prop.contents.splice(hit.index, 1);
   } else if (item.type === 'credits') {

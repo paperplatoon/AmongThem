@@ -56,15 +56,32 @@ export const gameState = Object.seal({
     murderCellX: null,
     murderCellY: null,
     npcBioData: {},
-    bloodSampleCollected: false
+    bloodSampleCollected: false,
+    timeOfDeath: null,
+    timeOfDeathWindow8h: null,
+    timeOfDeathWindow4h: null,
+    doorLogs: {},
+    redHerringRole: null,
+    autopsyPerformed: false,
+
+    // Trait-based motive system
+    roleTraits: {},         // roleKey → { politicalIdeology, shipRank }
+    canonicalMotive: null,  // 'ideology' | 'promotion'
+    plausibleSuspects: [],  // array of roleKeys with compatible motives
+    weaponEvidence: {},     // roleKey → weaponCategory (for lockers)
+
+    // Debug info (optional, for development/tuning)
+    murderDebug: {
+      murderabilityScores: {},  // roleKey → murderability score
+      killerMotiveScores: {}    // 'roleKey::motive' → final score
+    }
   },
   body: {
     cellX: null,
     cellY: null,
     x: null,
     y: null,
-    collectedSample: false,
-    playerHasSample: false
+    collectedSample: false
   },
   scanner: {
     cellX: null,

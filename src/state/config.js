@@ -162,3 +162,143 @@ export const config = Object.freeze({
     }
   })
 });
+
+export const MURDER_CONFIG = Object.freeze({
+  traits: {
+    politicalIdeology: {
+      values: ['communist', 'fascist', 'liberal', 'conservative'],
+
+      // Slightly more extremists than centrists
+      baseFrequency: {
+        communist: 1.3,
+        fascist: 1.2,
+        liberal: 1.0,
+        conservative: 1.0
+      },
+
+      // Victim ideology → Killer ideology → compatibility weight
+      // Higher weight = more likely motive
+      compatibility: {
+        communist: {
+          fascist: 60,
+          conservative: 40
+        },
+        fascist: {
+          communist: 50,
+          liberal: 30
+        },
+        liberal: {
+          conservative: 20,
+          fascist: 15
+        },
+        conservative: {
+          communist: 10,
+          liberal: 10
+        }
+      },
+
+      // Text clues found on computers for each ideology
+      clueTemplates: {
+        communist: [
+          'Folder of scanned pamphlets about workers\' councils.',
+          'PDF titled "The Necessity of Revolution".',
+          'Essay draft criticizing private property as theft.',
+          'Bookmarked articles about collective ownership.',
+          'Saved manifesto on class struggle.',
+          'Research notes on historical uprisings.',
+          'Audio files of labor organizing speeches.',
+          'Encrypted messages to off-world radical groups.'
+        ],
+        fascist: [
+          'Saved speech praising "national rebirth" and "order".',
+          'Bookmark to a blog discussing "strong leadership".',
+          'Manifesto draft about "cleansing internal enemies".',
+          'Collection of propaganda posters (authoritarian themes).',
+          'Notes on hierarchical power structures.',
+          'Archived broadcasts promoting "unity through strength".',
+          'Personal journal entries about "weakness" and "discipline".',
+          'Encrypted comms with extremist networks.'
+        ],
+        liberal: [
+          'Ebook: "Defending the Liberal Order".',
+          'Archive of opinion pieces on civil liberties.',
+          'Podcast queue of centrist policy debates.',
+          'Saved articles about democratic reforms.',
+          'Debate notes on individual rights vs. collective good.',
+          'Bookmarked human rights manifestos.',
+          'Subscription to moderate political journals.',
+          'Draft letter to ship council about fair governance.'
+        ],
+        conservative: [
+          'Essay titled "The Case for Traditional Values".',
+          'Bookmarks to op-eds about preserving heritage.',
+          'Spreadsheet of donations to right-leaning think tanks.',
+          'Saved articles critiquing rapid social change.',
+          'Personal reflections on "stability" and "order".',
+          'Collection of historical texts about continuity.',
+          'Audio recordings of traditionalist philosophy.',
+          'Notes on maintaining established hierarchies.'
+        ]
+      }
+    },
+
+    shipRank: {
+      values: [1, 2, 3, 4, 5, 6, 7, 8],
+
+      // Victim rank → Killer rank → compatibility weight
+      // Adjacent ranks (±1) are promotion-compatible
+      promotionCompatibility: {
+        '1': { '1': 1, '2': 1 },
+        '2': { '1': 1, '2': 1, '3': 1 },
+        '3': { '2': 1, '3': 1, '4': 1 },
+        '4': { '3': 1, '4': 1, '5': 1 },
+        '5': { '4': 1, '5': 1, '6': 1 },
+        '6': { '5': 1, '6': 1, '7': 1 },
+        '7': { '6': 1, '7': 1, '8': 1 },
+        '8': { '7': 1, '8': 1 }
+      },
+
+      // Promotion-related clue templates (rank-agnostic)
+      clueTemplates: [
+        'Draft complaint about unfair promotion decisions.',
+        'Performance review file with heated comments.',
+        'Email thread about upcoming officer evaluations.',
+        'Saved articles about advancement opportunities.',
+        'Personal journal: frustration with career stagnation.',
+        'Notes comparing qualifications with other crew members.',
+        'Spreadsheet tracking promotion timelines.',
+        'Angry message drafts to superior officers.',
+        'Research on ship hierarchy and rank requirements.',
+        'Bookmarked regulations about succession protocols.'
+      ]
+    }
+  },
+
+  motives: {
+    ideology: {
+      globalWeight: 1.0,
+
+      // Per-victim-ideology bias for ideology vs promotion motives
+      // Extremists (communist/fascist) more likely killed for ideology
+      // Centrists more balanced or lean promotion
+      victimBias: {
+        communist:    { ideology: 3.0, promotion: 1.0 },
+        fascist:      { ideology: 3.0, promotion: 1.0 },
+        liberal:      { ideology: 2.0, promotion: 2.0 },
+        conservative: { ideology: 1.0, promotion: 3.0 }
+      },
+
+      driverTrait: 'politicalIdeology'
+    },
+
+    promotion: {
+      globalWeight: 1.0,
+      driverTrait: 'shipRank'
+    }
+  },
+
+  suspectRules: {
+    targetMinPlausible: 4,
+    targetMaxPlausible: 6
+  }
+});

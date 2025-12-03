@@ -22,7 +22,12 @@ const buildEntry = (roleId) => {
     personName: randomCrewName(roleId),
     status: 'unknown',
     hasInnocenceEvidence: false,
-    weaponCategory: null
+    weaponCategory: null,
+
+    // Trait tracking - player's deductions
+    trackedIdeology: null,  // 'communist'/'fascist'/'liberal'/'conservative' or null
+    trackedRank: null,       // 1-8 or null
+    motiveClues: []          // Array of clue strings from computers
   });
 };
 
@@ -112,4 +117,22 @@ export const markWeaponCategory = (roleId, category) => {
   const entry = byId[roleId];
   if (!entry) return;
   entry.weaponCategory = category;
+};
+
+export const markIdeology = (roleId, ideology) => {
+  const entry = byId[roleId];
+  if (!entry) return;
+  entry.trackedIdeology = ideology;
+};
+
+export const markRank = (roleId, rank) => {
+  const entry = byId[roleId];
+  if (!entry) return;
+  entry.trackedRank = rank;
+};
+
+export const addMotiveClues = (roleId, clues) => {
+  const entry = byId[roleId];
+  if (!entry) return;
+  entry.motiveClues = clues;
 };

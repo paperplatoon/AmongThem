@@ -1,9 +1,10 @@
 import { gameState } from '../state/gameState.js';
-import { OverlayId, closeOverlay, isOverlayActive } from '../state/overlayManager.js';
+import { OverlayId, closeOverlay, isOverlayActive, openOverlay } from '../state/overlayManager.js';
 import { addClickRipple } from '../state/visualEffects.js';
 
 const clearHitboxes = () => {
   gameState.ui.doorTerminal.closeButton = null;
+  gameState.ui.doorLog.viewLogButton = null;
 };
 
 const getRoomName = (roomId) => {
@@ -24,6 +25,15 @@ export const handleDoorTerminalClick = (screenX, screenY) => {
     addClickRipple((closeHitbox.x + closeHitbox.x2) / 2, (closeHitbox.y + closeHitbox.y2) / 2, '#ff6b6b');
     gameState.ui.doorTerminal.activeRoomId = null;
     closeOverlay();
+    return true;
+  }
+
+  const viewLogHitbox = gameState.ui.doorLog.viewLogButton;
+  if (viewLogHitbox && screenX >= viewLogHitbox.x && screenX <= viewLogHitbox.x2 && screenY >= viewLogHitbox.y && screenY <= viewLogHitbox.y2) {
+    addClickRipple((viewLogHitbox.x + viewLogHitbox.x2) / 2, (viewLogHitbox.y + viewLogHitbox.y2) / 2, '#8effd6');
+    const roomId = gameState.ui.doorTerminal.activeRoomId;
+    gameState.ui.doorLog.activeRoomId = roomId;
+    openOverlay(OverlayId.DOOR_LOG);
     return true;
   }
 
@@ -103,6 +113,29 @@ const drawReadings = (ctx, panel, temperature, humidity) => {
   ctx.restore();
 };
 
+const drawViewLogButton = (ctx, panel) => {
+  const buttonWidth = 200;
+  const buttonHeight = 40;
+  const x = panel.x + (panel.width - buttonWidth) / 2;
+  const y = panel.y + panel.height - buttonHeight - 20;
+
+  ctx.save();
+  ctx.fillStyle = '#1f2a4f';
+  ctx.strokeStyle = '#8effd6';
+  ctx.lineWidth = 2;
+  ctx.fillRect(x, y, buttonWidth, buttonHeight);
+  ctx.strokeRect(x, y, buttonWidth, buttonHeight);
+
+  ctx.fillStyle = '#fefefe';
+  ctx.font = '18px "Courier New", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('View Door Log', x + buttonWidth / 2, y + buttonHeight / 2);
+  ctx.restore();
+
+  gameState.ui.doorLog.viewLogButton = { x, y, x2: x + buttonWidth, y2: y + buttonHeight };
+};
+
 export const renderDoorTerminalOverlay = (ctx) => {
   if (!isOverlayActive(OverlayId.DOOR_TERMINAL)) {
     clearHitboxes();
@@ -130,4 +163,5 @@ export const renderDoorTerminalOverlay = (ctx) => {
   drawCloseButton(ctx, panel);
   drawTitle(ctx, panel, roomName);
   drawReadings(ctx, panel, roomTraits.temperature, roomTraits.humidity);
+  drawViewLogButton(ctx, panel);
 };

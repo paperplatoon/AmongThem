@@ -104,50 +104,32 @@ const drawUpgradeButton = (ctx) => {
 
 const drawBloodDetector = (ctx) => {
   const detector = gameState.bloodDetector;
-  const width = 180;
-  const height = 36;
+  const buttonWidth = 150;
+  const buttonHeight = 36;
+  const resultWidth = 80;
+  const gap = 4;
+
   const x = padding;
-  const y = gameState.config.canvasHeight - padding - barHeight - height - 12;
+  const y = gameState.config.canvasHeight - padding - barHeight - buttonHeight - 12;
 
   ctx.save();
 
-  // Background
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
-  ctx.fillRect(x - 4, y - 4, width + 8, height + 8);
-
-  // Determine state and colors
+  // === BUTTON (left side) ===
   let bgColor, borderColor, textColor, displayText;
   let isClickable = false;
 
   if (gameState.case.bloodSampleCollected) {
-    // Sample collected - grey out
     bgColor = '#2f3e69';
     borderColor = '#7b84a2';
     textColor = '#7b84a2';
     displayText = 'Sample Collected';
   } else if (detector.active) {
-    // Counting down
     bgColor = '#3d2f1f';
     borderColor = '#ffd24a';
     textColor = '#ffd24a';
     const remaining = Math.ceil(detector.countdownRemaining);
     displayText = `Scanning... ${remaining}s`;
-  } else if (detector.lastReading !== null) {
-    // Showing result
-    if (detector.lastReading === 'none') {
-      bgColor = '#3d1f1f';
-      borderColor = '#ff6b6b';
-      textColor = '#ff6b6b';
-      displayText = 'None detected';
-    } else {
-      bgColor = '#1f3d1f';
-      borderColor = '#6bff92';
-      textColor = '#6bff92';
-      displayText = `Distance: ${detector.lastReading} cells`;
-    }
-    isClickable = true;
   } else {
-    // Idle
     bgColor = '#1f2a4f';
     borderColor = '#8effd6';
     textColor = '#fefefe';
@@ -155,25 +137,69 @@ const drawBloodDetector = (ctx) => {
     isClickable = true;
   }
 
+  // Draw button background
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+  ctx.fillRect(x - 4, y - 4, buttonWidth + 8, buttonHeight + 8);
+
   // Draw button
   ctx.fillStyle = bgColor;
   ctx.strokeStyle = borderColor;
   ctx.lineWidth = 2;
-  ctx.fillRect(x, y, width, height);
-  ctx.strokeRect(x, y, width, height);
+  ctx.fillRect(x, y, buttonWidth, buttonHeight);
+  ctx.strokeRect(x, y, buttonWidth, buttonHeight);
 
-  // Draw text
+  // Button text
   ctx.fillStyle = textColor;
   ctx.font = '14px "Courier New", monospace';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(displayText, x + width / 2, y + height / 2);
+  ctx.fillText(displayText, x + buttonWidth / 2, y + buttonHeight / 2);
+
+  // === RESULT BOX (right side) ===
+  const resultX = x + buttonWidth + gap;
+
+  // Determine result display
+  let resultBg, resultBorder, resultText;
+  if (detector.lastReading === null) {
+    // No reading yet
+    resultBg = '#1f2a4f';
+    resultBorder = '#4f7bd9';
+    resultText = '---';
+  } else if (detector.lastReading === 'none') {
+    // No blood detected
+    resultBg = '#3d1f1f';
+    resultBorder = '#ff6b6b';
+    resultText = 'NONE';
+  } else {
+    // Distance detected
+    resultBg = '#1f3d1f';
+    resultBorder = '#6bff92';
+    resultText = detector.lastReading.toString();
+  }
+
+  // Draw result box background
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+  ctx.fillRect(resultX - 4, y - 4, resultWidth + 8, buttonHeight + 8);
+
+  // Draw result box
+  ctx.fillStyle = resultBg;
+  ctx.strokeStyle = resultBorder;
+  ctx.lineWidth = 2;
+  ctx.fillRect(resultX, y, resultWidth, buttonHeight);
+  ctx.strokeRect(resultX, y, resultWidth, buttonHeight);
+
+  // Result text
+  ctx.fillStyle = '#fefefe';
+  ctx.font = '16px "Courier New", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(resultText, resultX + resultWidth / 2, y + buttonHeight / 2);
 
   ctx.restore();
 
-  // Store hitbox only if clickable
+  // Store hitbox only for button (if clickable)
   if (isClickable) {
-    gameState.ui.hitboxes.bloodDetectorButton = { x, y, x2: x + width, y2: y + height };
+    gameState.ui.hitboxes.bloodDetectorButton = { x, y, x2: x + buttonWidth, y2: y + buttonHeight };
   } else {
     gameState.ui.hitboxes.bloodDetectorButton = null;
   }

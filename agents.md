@@ -53,8 +53,34 @@
 - Add seeded RNG wrapper for villain escape rolls, perimeter targeting, and loot so runs replay identically.
 - Make LoS aware of dynamic doors/props during chase/escape.
 
+### Things to Implement Later
+*(Low-priority improvements that would increase robustness but aren't critical)*
+
+**Red Herring Door Log Placement (doorLogState.js:120-141)**
+- **Current:** Uses retry loop (up to 100 attempts) to place red herring "inside 8h window but outside 4h window". Has console.error fallback if placement fails.
+- **Issue:** Probabilistic approach with edge case fallback that doesn't guarantee correct placement (though probability of failure is ~10^-30).
+- **Better Solution:** Calculate non-overlapping ranges explicitly:
+  ```javascript
+  const findGapBetweenWindows = (window8h, window4h) => {
+    // Calculate portions of 8h window NOT in 4h window
+    // Handle midnight wrapping correctly
+    // Return array of valid time ranges
+  };
+  const gaps = findGapBetweenWindows(window8h, window4h);
+  const randomGap = gaps[Math.floor(Math.random() * gaps.length)];
+  const redHerringTime = randomTimeBetween(randomGap.start, randomGap.end);
+  ```
+- **Effort:** 30-40 minutes (need to handle midnight wrapping edge cases)
+- **Priority:** LOW - current implementation works fine in practice, fallback includes diagnostic logging
+
+**Seeded RNG Conversion**
+- **Current:** Heavy use of `Math.random()` throughout caseState.js, timeWindowState.js, doorLogState.js prevents deterministic/replayable runs.
+- **Better Solution:** Hash-based randomness like weaponTestingState.js uses
+- **Effort:** High (would require refactoring case generation)
+- **Priority:** MEDIUM - needed for deterministic runs, but not blocking current gameplay
+
 ### System Design Guideline
-- Route every major interaction through a single helper (e.g., hacking, vending pricing, lockpicking). These gate functions read the current state and expose deterministic controls (like “Use Virus” buttons) so cheats/testing toggles can add modifiers without permanently mutating game data. Keeping these gates centralized ensures new upgrades and testing tools layer cleanly without scattering special cases across the codebase.
+- Route every major interaction through a single helper (e.g., hacking, vending pricing, lockpicking). These gate functions read the current state and expose deterministic controls (like "Use Virus" buttons) so cheats/testing toggles can add modifiers without permanently mutating game data. Keeping these gates centralized ensures new upgrades and testing tools layer cleanly without scattering special cases across the codebase.
 
 ### Collaboration Preferences
 - For large or multi-layered features, don’t jump straight into implementation. First, pause to reason through the requirements, propose the architecture (functions, state, modules to touch), and confirm it aligns with the project’s declarative/state-driven philosophy before writing code. This keeps future changes predictable and aligns with the way I like to iterate.

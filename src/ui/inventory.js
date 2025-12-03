@@ -14,6 +14,7 @@ import { handleUpgradeButtonClick, handleUpgradesClick } from './upgrades.js';
 import { handleWeaponTestingClick } from './weaponTesting.js';
 import { handleDoorTerminalClick } from './doorTerminalOverlay.js';
 import { handleBioDataClick } from './bioDataOverlay.js';
+import { handleDoorLogClick } from './doorLogOverlay.js';
 import { handleBloodDetectorClick } from '../render/hud.js';
 import { OverlayId, openOverlay, closeOverlay, toggleOverlay, isOverlayActive } from '../state/overlayManager.js';
 
@@ -188,6 +189,7 @@ const handleCanvasClick = (canvas, event) => {
   if (handleWeaponTestingClick(screenX, screenY)) return;
   if (handleDoorTerminalClick(screenX, screenY)) return;
   if (handleBioDataClick(screenX, screenY)) return;
+  if (handleDoorLogClick(screenX, screenY)) return;
   if (handleBloodDetectorClick(screenX, screenY)) return;
   if (tryHandleInteractionClick(worldX, worldY)) return;
   if (journalUi.handleJournalClick && journalUi.handleJournalClick(screenX, screenY)) return;
@@ -232,7 +234,7 @@ const drawBackground = (ctx) => {
 };
 
 const drawPanel = (ctx) => {
-  const width = gameState.config.canvasWidth * 0.6;
+  const width = gameState.config.canvasWidth * 0.75;
   const height = gameState.config.canvasHeight * 0.6;
   const x = (gameState.config.canvasWidth - width) / 2;
   const y = (gameState.config.canvasHeight - height) / 2;

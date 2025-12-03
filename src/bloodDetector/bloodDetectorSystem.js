@@ -60,8 +60,8 @@ const collectBloodSample = () => {
   const bloodSample = {
     id: 'blood_sample',
     type: 'evidence_blood',
-    label: 'Blood Sample',
-    persistent: true
+    label: 'Blood Sample for Medbay Scanner',
+    persistent: false
   };
   gameState.inventory.push(bloodSample);
 

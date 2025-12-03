@@ -16,6 +16,7 @@ import { renderUpgrades } from '../ui/upgrades.js';
 import { renderWeaponTesting } from '../ui/weaponTesting.js';
 import { renderDoorTerminalOverlay } from '../ui/doorTerminalOverlay.js';
 import { renderBioDataOverlay } from '../ui/bioDataOverlay.js';
+import { renderDoorLogOverlay } from '../ui/doorLogOverlay.js';
 import { renderVisualEffects } from './visualEffects.js';
 import { getPropFlashIntensity } from '../state/visualEffects.js';
 import { cellToWorldCenter } from '../state/gridState.js';
@@ -249,7 +250,7 @@ const drawScannerPrompt = (ctx) => {
   ctx.font = '18px "Courier New", monospace';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'bottom';
-  ctx.fillText('CLICK TO SCAN', scanner.x, scanner.y - cellSize() * 0.7);
+  ctx.fillText('Scan', scanner.x, scanner.y - cellSize() * 0.7);
   ctx.restore();
 };
 
@@ -393,6 +394,7 @@ export const renderFrame = (ctx) => {
   renderWeaponTesting(ctx);
   renderDoorTerminalOverlay(ctx);
   renderBioDataOverlay(ctx);
+  renderDoorLogOverlay(ctx);
   renderGameOver(ctx);
   renderVisualEffects(ctx);
   if (gameState.testingModeEnabled) {

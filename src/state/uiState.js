@@ -19,6 +19,8 @@ export const uiState = Object.seal({
     inventoryCancelButton: null,
     journalTabs: [],
     journalStatus: [],
+    journalIdeology: [],
+    journalRank: [],
     containerSlots: [],
     containerCloseButton: null,
     gameOverButton: null,
@@ -60,5 +62,10 @@ export const uiState = Object.seal({
   }),
   bioData: Object.seal({
     closeButton: null
+  }),
+  doorLog: Object.seal({
+    activeRoomId: null,
+    closeButton: null,
+    viewLogButton: null
   })
 });

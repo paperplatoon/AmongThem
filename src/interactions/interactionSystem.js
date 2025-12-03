@@ -9,28 +9,23 @@ import { closeVendingMenu } from '../ui/vendingMenu.js';
 import { startHackingForProp, isPropComputerLocked } from '../hacking/hackingState.js';
 import { closeOverlay, openOverlay, OverlayId } from '../state/overlayManager.js';
 import { addParticleBurst } from '../state/visualEffects.js';
+import { calculateTimeWindow8h, calculateTimeWindow4h } from '../state/timeWindowState.js';
 
 const scannerRange = 96;
 const propRange = 88;
 const lockedPrompt = 'LOCKED - KEYCARD REQUIRED';
 
-const hasMedicalSample = () => Boolean(gameState.body.playerHasSample);
-
-const removeMedicalSample = () => {
-  gameState.body.playerHasSample = false;
+const hasSampleInInventory = (type) => {
+  return gameState.inventory.some(item => item.type === type);
 };
 
-const applyScannerResults = () => {
-  const pending = gameState.case.pending;
-  if (!pending) return;
-  gameState.case.identified = true;
-  gameState.case.victimName = pending.victimName;
-  gameState.case.victimOccupation = pending.victimOccupation;
-  gameState.case.methodCategory = pending.methodCategory;
-  gameState.case.timeWindow = pending.timeWindow;
-  gameState.case.pending = null;
-  markVictimIdentified(gameState.case.victim?.roleKey);
+const removeSampleFromInventory = (type) => {
+  const index = gameState.inventory.findIndex(item => item.type === type);
+  if (index !== -1) {
+    gameState.inventory.splice(index, 1);
+  }
 };
+
 
 const makeScannerZone = () => {
   const size = gameState.grid.cellSize;
@@ -149,14 +144,47 @@ const makeBodyZone = () => {
 };
 
 const handleScannerClick = () => {
-  if (!hasMedicalSample()) return;
-  removeMedicalSample();
-  applyScannerResults();
-  syncOxygenState();
-  gameState.scanner.promptActive = false;
+  const hasBodySample = hasSampleInInventory('evidence_body');
+  const hasBloodSample = hasSampleInInventory('evidence_blood');
+
+  if (!hasBodySample && !hasBloodSample) return;
+
+  // Visual feedback at scanner
   const screenX = gameState.scanner.x - gameState.camera.x;
   const screenY = gameState.scanner.y - gameState.camera.y;
   addParticleBurst(screenX, screenY, '#66bfff', 12);
+  addFloatingText(screenX, screenY, 'Scanned', '#66bfff');
+
+  // Scan body sample (reveals 8h window + method category)
+  if (hasBodySample) {
+    removeSampleFromInventory('evidence_body');
+
+    // Calculate 8h window
+    const timeOfDeath = gameState.case.timeOfDeath;
+    if (timeOfDeath) {
+      gameState.case.timeOfDeathWindow8h = calculateTimeWindow8h(timeOfDeath);
+    }
+
+    // Mark that autopsy was performed (for journal display)
+    gameState.case.autopsyPerformed = true;
+
+    syncOxygenState();
+  }
+  // Scan blood sample (narrows to 4h window)
+  else if (hasBloodSample) {
+    // Require 8h window first
+    if (!gameState.case.timeOfDeathWindow8h) return;
+
+    removeSampleFromInventory('evidence_blood');
+
+    // Calculate 4h window
+    const timeOfDeath = gameState.case.timeOfDeath;
+    if (timeOfDeath) {
+      gameState.case.timeOfDeathWindow4h = calculateTimeWindow4h(timeOfDeath);
+    }
+  }
+
+  gameState.scanner.promptActive = false;
 };
 
 const hasKeycard = (lockId) => (
@@ -249,7 +277,12 @@ export const updateInteractions = () => {
   zones.length = 0;
   gameState.scanner.promptActive = false;
   gameState.bioDataTerminal.promptActive = false;
-  if (!gameState.case.identified && hasMedicalSample() && gameState.scanner.x != null) {
+
+  // Show scanner prompt if player has either body sample or blood sample in inventory
+  const canUseScanner = hasSampleInInventory('evidence_body') ||
+                        (hasSampleInInventory('evidence_blood') && gameState.case.timeOfDeathWindow8h);
+
+  if (canUseScanner && gameState.scanner.x != null) {
     const distance = distanceBetween(gameState.player, gameState.scanner);
     if (distance <= scannerRange) {
       gameState.scanner.promptActive = true;
