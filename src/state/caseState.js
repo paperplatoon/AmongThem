@@ -8,8 +8,9 @@ import { initializeTestingStation, generateWeaponTestResults, initializeBioDataT
 import { generateRoomTraits, selectMurderRoom } from './roomTraitsState.js';
 import { initializeDoorTerminals } from './doorTerminalState.js';
 import { generateNPCBioData } from './bioDataState.js';
-import { generateTimeOfDeath, calculateTimeWindow8h, calculateTimeWindow4h } from './timeWindowState.js';
+import { generateTimeOfDeath, calculateTimeWindow12h, calculateTimeWindow4h } from './timeWindowState.js';
 import { generateAllDoorLogs } from './doorLogState.js';
+import { initializeUpgradeTerminal } from '../upgrades/upgradeTerminalState.js';
 
 const roleKeys = Object.keys(gameState.config.roles);
 
@@ -484,13 +485,19 @@ const generateTraitClues = (roleKey) => {
     clues.push(...shuffledIdeo.slice(0, ideoCount));
   }
 
-  // 0-1 rank clues (50% chance)
+  // 0-1 rank clues (50% chance) - includes actual rank number
   if (Math.random() < 0.5) {
-    const rankTemplates = MURDER_CONFIG.traits.shipRank.clueTemplates;
-    if (rankTemplates && rankTemplates.length > 0) {
-      const rankClue = rankTemplates[Math.floor(Math.random() * rankTemplates.length)];
-      clues.push(rankClue);
-    }
+    const rank = traits.shipRank;
+    const rankClueTemplates = [
+      `Report titled "For Rank ${rank} Eyes Only".`,
+      `Directive addressed to all Rank ${rank} personnel.`,
+      `Notice for Rank ${rank} crew regarding promotions.`,
+      `Authorization form requiring Rank ${rank} clearance.`,
+      `Performance review for Rank ${rank} officers.`,
+      `Memo: "All Rank ${rank} staff report to bridge."`
+    ];
+    const rankClue = rankClueTemplates[Math.floor(Math.random() * rankClueTemplates.length)];
+    clues.push(rankClue);
   }
 
   return clues;
@@ -856,6 +863,7 @@ export const initializeCase = () => {
   spawnScanner();
   initializeTestingStation();
   initializeBioDataTerminal();
+  initializeUpgradeTerminal();
   gameState.case.weaponTestResults = generateWeaponTestResults();
   seedComputerLocks();
 
@@ -886,13 +894,10 @@ export const initializeCase = () => {
   // Generate time of death
   gameState.case.timeOfDeath = generateTimeOfDeath();
 
-  // Calculate time windows (needed for door log generation)
-  const window8h = calculateTimeWindow8h(gameState.case.timeOfDeath);
+  // Calculate time windows (needed for door log generation only)
+  // Note: These are NOT stored in gameState until player scans samples
+  const window12h = calculateTimeWindow12h(gameState.case.timeOfDeath);
   const window4h = calculateTimeWindow4h(gameState.case.timeOfDeath);
-
-  // Store time windows in game state
-  gameState.case.timeOfDeathWindow8h = window8h;
-  gameState.case.timeOfDeathWindow4h = window4h;
 
   // NEW: Generate door logs using constraint-based elimination
   gameState.case.doorLogs = generateAllDoorLogs(
@@ -902,7 +907,7 @@ export const initializeCase = () => {
     gameState.case.weaponEvidence,
     gameState.case.victim.methodCategory,
     gameState.case.timeOfDeath,
-    window8h,
+    window12h,
     window4h
   );
 };

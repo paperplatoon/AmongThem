@@ -23,8 +23,7 @@ const HALL_PROP_CONFIG = Object.freeze([
 
 const VENDING_OPTIONS = Object.freeze([
   Object.freeze({ itemId: 'energy_bar', label: 'Energy Bar', cost: 30 }),
-  Object.freeze({ itemId: 'bandage', label: 'Bandage', cost: 50 }),
-  Object.freeze({ itemId: 'taser', label: 'Taser', cost: 300, unique: true }),
+  Object.freeze({ itemId: 'bandage', label: 'Medkit', cost: 125 }),
   Object.freeze({ itemId: 'crowbar', label: 'Crowbar', cost: 85, unique: false }),
   Object.freeze({ itemId: 'computer_virus', label: 'Computer Virus', cost: 100, unique: false })
 ]);

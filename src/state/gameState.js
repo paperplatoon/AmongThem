@@ -109,6 +109,15 @@ export const gameState = Object.seal({
     y: null,
     promptActive: false
   },
+  upgradeTerminal: Object.seal({
+    cellX: null,
+    cellY: null,
+    x: null,
+    y: null,
+    promptActive: false,
+    availableUpgrades: [],
+    saleUpgradeId: null
+  }),
   doorTerminals: [],
   props: generateRoomProps(),
   interactions: {

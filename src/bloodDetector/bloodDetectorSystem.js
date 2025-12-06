@@ -2,8 +2,17 @@ import { gameState } from '../state/gameState.js';
 import { worldPointToCell } from '../state/gridState.js';
 import { addFloatingText, addParticleBurst } from '../state/visualEffects.js';
 
-const COUNTDOWN_DURATION = 5; // seconds
-const DETECTION_RANGE = 20; // grid cells
+const getCountdownDuration = () => {
+  const baseTime = 5; // seconds
+  const multiplier = gameState.player.upgrades?.bloodScannerSpeedMultiplier || 1;
+  return baseTime / multiplier; // Higher multiplier = less time
+};
+
+const getDetectionRange = () => {
+  const baseRange = 20; // grid cells
+  const multiplier = gameState.player.upgrades?.bloodDetectorRangeMultiplier || 1;
+  return baseRange * multiplier; // Higher multiplier = more range
+};
 
 const getManhattanDistance = (x1, y1, x2, y2) => {
   return Math.abs(x2 - x1) + Math.abs(y2 - y1);
@@ -46,7 +55,7 @@ const calculateBloodDistance = () => {
     murderCellY
   );
 
-  if (distance <= DETECTION_RANGE) {
+  if (distance <= getDetectionRange()) {
     return distance;
   }
 
@@ -80,7 +89,7 @@ export const activateBloodDetector = () => {
   if (detector.active) return; // Already active
 
   detector.active = true;
-  detector.countdownRemaining = COUNTDOWN_DURATION;
+  detector.countdownRemaining = getCountdownDuration();
   detector.lastReading = null;
   detector.hasBeenUsed = true;
 };

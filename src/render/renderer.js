@@ -16,6 +16,7 @@ import { renderUpgrades } from '../ui/upgrades.js';
 import { renderWeaponTesting } from '../ui/weaponTesting.js';
 import { renderDoorTerminalOverlay } from '../ui/doorTerminalOverlay.js';
 import { renderBioDataOverlay } from '../ui/bioDataOverlay.js';
+import { renderUpgradeTerminal } from '../ui/upgradeTerminal.js';
 import { renderDoorLogOverlay } from '../ui/doorLogOverlay.js';
 import { renderVisualEffects } from './visualEffects.js';
 import { getPropFlashIntensity } from '../state/visualEffects.js';
@@ -394,6 +395,7 @@ export const renderFrame = (ctx) => {
   renderWeaponTesting(ctx);
   renderDoorTerminalOverlay(ctx);
   renderBioDataOverlay(ctx);
+  renderUpgradeTerminal(ctx);
   renderDoorLogOverlay(ctx);
   renderGameOver(ctx);
   renderVisualEffects(ctx);

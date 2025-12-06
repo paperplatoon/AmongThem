@@ -10,23 +10,23 @@ const STATUS_OPTIONS = Object.freeze([
 ]);
 
 const IDEOLOGY_OPTIONS = Object.freeze([
-  { key: null, label: 'Unknown', color: '#666' },
-  { key: 'communist', label: 'Communist', color: '#d32f2f' },
-  { key: 'fascist', label: 'Fascist', color: '#6d4c41' },
-  { key: 'liberal', label: 'Liberal', color: '#1976d2' },
-  { key: 'conservative', label: 'Conservative', color: '#7b1fa2' }
+  { key: null, label: '?' },
+  { key: 'communist', label: 'Comm' },
+  { key: 'fascist', label: 'Fasc' },
+  { key: 'liberal', label: 'Lib' },
+  { key: 'conservative', label: 'Cons' }
 ]);
 
 const RANK_OPTIONS = Object.freeze([
-  { key: null, label: '?', color: '#666' },
-  { key: 1, label: '1', color: '#ffd700' },
-  { key: 2, label: '2', color: '#c0c0c0' },
-  { key: 3, label: '3', color: '#cd7f32' },
-  { key: 4, label: '4', color: '#4a90e2' },
-  { key: 5, label: '5', color: '#50c878' },
-  { key: 6, label: '6', color: '#9b59b6' },
-  { key: 7, label: '7', color: '#e74c3c' },
-  { key: 8, label: '8', color: '#f39c12' }
+  { key: null, label: '?' },
+  { key: 1, label: '1' },
+  { key: 2, label: '2' },
+  { key: 3, label: '3' },
+  { key: 4, label: '4' },
+  { key: 5, label: '5' },
+  { key: 6, label: '6' },
+  { key: 7, label: '7' },
+  { key: 8, label: '8' }
 ]);
 
 const setActiveTab = (tabId) => {
@@ -216,55 +216,76 @@ const drawStatusControls = (ctx, area, entry, topY) => {
   });
 };
 
-const drawIdeologyControls = (ctx, area, entry, topY) => {
-  const buttonWidth = 90;
-  const buttonHeight = 32;
-  const spacing = 8;
-  const startX = area.x;
-  const hitboxes = gameState.ui.hitboxes.journalIdeology;
+const drawTraitControls = (ctx, area, entry, topY) => {
+  const ideologyButtonWidth = 48;
+  const rankButtonSize = 24;
+  const buttonHeight = 24;
+  const spacing = 4;
+  const labelGap = 80;
+
+  const offWhite = '#c5d8ff';
+  const activeColor = '#6d8cff';
+
+  let currentX = area.x;
+
+  // Ideology label
+  ctx.save();
+  ctx.fillStyle = offWhite;
+  ctx.font = '16px "Courier New", monospace';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('Ideology:', currentX, topY + buttonHeight / 2);
+  currentX += labelGap;
+
+  // Ideology buttons
+  const ideologyHitboxes = gameState.ui.hitboxes.journalIdeology;
   IDEOLOGY_OPTIONS.forEach((option, index) => {
-    const x = startX + index * (buttonWidth + spacing);
+    const x = currentX + index * (ideologyButtonWidth + spacing);
     const y = topY;
     const isActive = entry.trackedIdeology === option.key;
-    ctx.save();
-    ctx.fillStyle = isActive ? option.color : 'rgba(15, 20, 34, 0.6)';
-    ctx.strokeStyle = option.color;
-    ctx.lineWidth = 2;
-    ctx.fillRect(x, y, buttonWidth, buttonHeight);
-    ctx.strokeRect(x, y, buttonWidth, buttonHeight);
-    ctx.fillStyle = isActive ? '#fff' : option.color;
-    ctx.font = '14px "Courier New", monospace';
+    ctx.fillStyle = isActive ? activeColor : 'rgba(15, 20, 34, 0.6)';
+    ctx.strokeStyle = offWhite;
+    ctx.lineWidth = 1;
+    ctx.fillRect(x, y, ideologyButtonWidth, buttonHeight);
+    ctx.strokeRect(x, y, ideologyButtonWidth, buttonHeight);
+    ctx.fillStyle = offWhite;
+    ctx.font = '13px "Courier New", monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(option.label, x + buttonWidth / 2, y + buttonHeight / 2);
-    ctx.restore();
-    hitboxes.push({ roleId: entry.id, ideology: option.key, x, y, x2: x + buttonWidth, y2: y + buttonHeight });
+    ctx.fillText(option.label, x + ideologyButtonWidth / 2, y + buttonHeight / 2);
+    ideologyHitboxes.push({ roleId: entry.id, ideology: option.key, x, y, x2: x + ideologyButtonWidth, y2: y + buttonHeight });
   });
-};
 
-const drawRankControls = (ctx, area, entry, topY) => {
-  const buttonSize = 32;
-  const spacing = 8;
-  const startX = area.x;
-  const hitboxes = gameState.ui.hitboxes.journalRank;
+  currentX += IDEOLOGY_OPTIONS.length * (ideologyButtonWidth + spacing) + 20;
+
+  // Rank label
+  ctx.fillStyle = offWhite;
+  ctx.font = '16px "Courier New", monospace';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('Rank:', currentX, topY + buttonHeight / 2);
+  currentX += 50;
+
+  // Rank buttons
+  const rankHitboxes = gameState.ui.hitboxes.journalRank;
   RANK_OPTIONS.forEach((option, index) => {
-    const x = startX + index * (buttonSize + spacing);
+    const x = currentX + index * (rankButtonSize + spacing);
     const y = topY;
     const isActive = entry.trackedRank === option.key;
-    ctx.save();
-    ctx.fillStyle = isActive ? option.color : 'rgba(15, 20, 34, 0.6)';
-    ctx.strokeStyle = option.color;
-    ctx.lineWidth = 2;
-    ctx.fillRect(x, y, buttonSize, buttonSize);
-    ctx.strokeRect(x, y, buttonSize, buttonSize);
-    ctx.fillStyle = isActive ? '#fff' : option.color;
-    ctx.font = '16px "Courier New", monospace';
+    ctx.fillStyle = isActive ? activeColor : 'rgba(15, 20, 34, 0.6)';
+    ctx.strokeStyle = offWhite;
+    ctx.lineWidth = 1;
+    ctx.fillRect(x, y, rankButtonSize, buttonHeight);
+    ctx.strokeRect(x, y, rankButtonSize, buttonHeight);
+    ctx.fillStyle = offWhite;
+    ctx.font = '13px "Courier New", monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(option.label, x + buttonSize / 2, y + buttonSize / 2);
-    ctx.restore();
-    hitboxes.push({ roleId: entry.id, rank: option.key, x, y, x2: x + buttonSize, y2: y + buttonSize });
+    ctx.fillText(option.label, x + rankButtonSize / 2, y + buttonHeight / 2);
+    rankHitboxes.push({ roleId: entry.id, rank: option.key, x, y, x2: x + rankButtonSize, y2: y + buttonHeight });
   });
+
+  ctx.restore();
 };
 
 const formatMethods = (role) => (
@@ -292,21 +313,10 @@ const drawContent = (ctx, area, activeTab) => {
   drawStatusControls(ctx, area, entry, currentY);
   currentY += 48;
 
-  // Ideology controls (only for non-victim)
+  // Trait controls (only for non-victim)
   if (entry.id !== gameState.case.victim?.roleKey) {
-    ctx.fillStyle = '#a0c0ff';
-    ctx.font = '18px "Courier New", monospace';
-    ctx.fillText('Political Ideology:', area.x, currentY);
-    currentY += 24;
-    drawIdeologyControls(ctx, area, entry, currentY);
-    currentY += 44;
-
-    // Rank controls
-    ctx.fillStyle = '#a0c0ff';
-    ctx.fillText('Ship Rank:', area.x, currentY);
-    currentY += 24;
-    drawRankControls(ctx, area, entry, currentY);
-    currentY += 48;
+    drawTraitControls(ctx, area, entry, currentY);
+    currentY += 36;
   } else {
     currentY += 8;
   }

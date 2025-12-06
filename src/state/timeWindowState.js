@@ -44,11 +44,11 @@ export const generateTimeOfDeath = () => {
   return minutesToTime(randomMinutes);
 };
 
-export const generateAll8HourWindows = () => {
+export const generateAll12HourWindows = () => {
   const windows = [];
   for (let startHour = 0; startHour < 24; startHour++) {
     const start = formatTime(startHour, 0);
-    const endHour = (startHour + 8) % 24;
+    const endHour = (startHour + 12) % 24;
     const end = formatTime(endHour, 0);
     windows.push({ start, end });
   }
@@ -79,8 +79,8 @@ export const findRandomWindowContaining = (time, windows) => {
   return `${selected.start}-${selected.end}`;
 };
 
-export const calculateTimeWindow8h = (timeOfDeath) => {
-  const windows = generateAll8HourWindows();
+export const calculateTimeWindow12h = (timeOfDeath) => {
+  const windows = generateAll12HourWindows();
   return findRandomWindowContaining(timeOfDeath, windows);
 };
 

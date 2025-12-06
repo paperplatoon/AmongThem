@@ -8,8 +8,8 @@ import { cellToWorldCenter } from '../state/gridState.js';
 import { closeVendingMenu } from '../ui/vendingMenu.js';
 import { startHackingForProp, isPropComputerLocked } from '../hacking/hackingState.js';
 import { closeOverlay, openOverlay, OverlayId } from '../state/overlayManager.js';
-import { addParticleBurst } from '../state/visualEffects.js';
-import { calculateTimeWindow8h, calculateTimeWindow4h } from '../state/timeWindowState.js';
+import { addParticleBurst, addFloatingText } from '../state/visualEffects.js';
+import { calculateTimeWindow12h, calculateTimeWindow4h } from '../state/timeWindowState.js';
 
 const scannerRange = 96;
 const propRange = 88;
@@ -65,6 +65,21 @@ const makeBioDataTerminalZone = () => {
     action: () => {
       closeOpenMenus();
       openOverlay(OverlayId.BIO_DATA);
+    }
+  };
+};
+
+const makeUpgradeTerminalZone = () => {
+  const size = gameState.grid.cellSize;
+  return {
+    id: 'upgrade_terminal',
+    x: gameState.upgradeTerminal.x - size / 2,
+    y: gameState.upgradeTerminal.y - size / 2,
+    width: size,
+    height: size,
+    action: () => {
+      closeOpenMenus();
+      openOverlay(OverlayId.UPGRADE_TERMINAL);
     }
   };
 };
@@ -159,10 +174,10 @@ const handleScannerClick = () => {
   if (hasBodySample) {
     removeSampleFromInventory('evidence_body');
 
-    // Calculate 8h window
+    // Calculate 12h window
     const timeOfDeath = gameState.case.timeOfDeath;
     if (timeOfDeath) {
-      gameState.case.timeOfDeathWindow8h = calculateTimeWindow8h(timeOfDeath);
+      gameState.case.timeOfDeathWindow8h = calculateTimeWindow12h(timeOfDeath);
     }
 
     // Mark that autopsy was performed (for journal display)
@@ -277,6 +292,7 @@ export const updateInteractions = () => {
   zones.length = 0;
   gameState.scanner.promptActive = false;
   gameState.bioDataTerminal.promptActive = false;
+  gameState.upgradeTerminal.promptActive = false;
 
   // Show scanner prompt if player has either body sample or blood sample in inventory
   const canUseScanner = hasSampleInInventory('evidence_body') ||
@@ -300,6 +316,13 @@ export const updateInteractions = () => {
     if (distance <= scannerRange) {
       gameState.bioDataTerminal.promptActive = true;
       zones.push(makeBioDataTerminalZone());
+    }
+  }
+  if (gameState.upgradeTerminal.x != null) {
+    const distance = distanceBetween(gameState.player, gameState.upgradeTerminal);
+    if (distance <= scannerRange) {
+      gameState.upgradeTerminal.promptActive = true;
+      zones.push(makeUpgradeTerminalZone());
     }
   }
   gameState.doorTerminals.forEach((terminal) => {

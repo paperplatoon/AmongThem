@@ -51,6 +51,10 @@ export const playerState = Object.seal({
     electricBoots: false,
     testingSkeletonKey: false,
     testingMasterVirus: false,
-    testingElectricBoots: false
+    testingElectricBoots: false,
+    bloodScannerSpeedMultiplier: 1,
+    bloodDetectorRangeMultiplier: 1,
+    fastBloodScanner: false,
+    extendedBloodDetector: false
   })
 });

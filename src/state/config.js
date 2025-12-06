@@ -34,9 +34,9 @@ export const config = Object.freeze({
   blueprintGlow: '#103c80',
   stamina: Object.freeze({
     max: 100,
-    sprintMultiplier: 3,
+    sprintMultiplier: 1.8,
     drainIntervalSeconds: 0.1,
-    drainPerInterval: 0.1
+    drainPerInterval: 0.01,
   }),
   oxygen: Object.freeze({
     max: 100,

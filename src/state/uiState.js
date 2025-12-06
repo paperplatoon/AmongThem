@@ -67,5 +67,9 @@ export const uiState = Object.seal({
     activeRoomId: null,
     closeButton: null,
     viewLogButton: null
+  }),
+  upgradeTerminal: Object.seal({
+    closeButton: null,
+    upgradeButtons: []
   })
 });

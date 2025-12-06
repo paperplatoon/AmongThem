@@ -15,6 +15,7 @@ export const OverlayId = Object.freeze({
   DOOR_TERMINAL: 'door_terminal',
   BIO_DATA: 'bio_data',
   DOOR_LOG: 'door_log',
+  UPGRADE_TERMINAL: 'upgrade_terminal',
   GAME_OVER: 'game_over'
 });
 
